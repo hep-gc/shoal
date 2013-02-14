@@ -1,4 +1,5 @@
 $def with (items, ACTIVE_TIME)
+
 <div class="row-fluid">
     <div class="row">
         <div class="span6 offset3" style="text-align:center">
@@ -6,42 +7,33 @@ $def with (items, ACTIVE_TIME)
             <h5 class="text-success">$len(items) active in the last $ACTIVE_TIME seconds</h5>
         </div>
     </div>
-    $if len(items) > 0: 
-        <div>
-            <table class="table table-condensed table-hover">
-                <tr>
-                    <th>#</th>
-                    <th>IP</th>
-                    <th>Load</th>
-                    <th>Hostname</th>
-                    <th>City</th>
-                    <th>Region</th>
-                    <th>Country</th>
-                    <th>Latitude</th>
-                    <th>Longitude</th>
-                    <th>Sent</th>
-                </tr>
-                $for i,item in enumerate(items):
-                    $ num = i + 1
-                <tr>
-                    <td><span class="badge badge-success">$num</td>
-                    <td>$item</td>
-                    <td>$items[item]['load']</td>
-                    <td>$items[item]['hostname']</td>
-                    <td>$items[item]['city']</td>
-                    <td>$items[item]['region_name']</td>
-                    <td>$items[item]['country_name']</td>
-                    <td>$items[item]['latitude']</td>
-                    <td>$items[item]['longitude']</td>
-                    <td>$items[item]['timestamp']</td>
-                </tr>
-            </table>
-        </div>
-    $else:
-        <div class="span3 offset4">
-            <div class='alert alert-info'>
-                <a class="close" data-dismiss="alert" href="#">&times;</a>
-                <strong style="text-align:center">No active squids</strong>
-            </div>
-        </div>
+    <div>
+        <table class="table table-condensed table-hover">
+            <tr>
+                <th>#</th>
+                <th>IP</th>
+                <th>Load</th>
+                <th>Hostname</th>
+                <th>City</th>
+                <th>Region</th>
+                <th>Country</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Sent</th>
+            </tr>
+            $for num, item in enumerate(items):
+            <tr>
+                <td><span class="badge badge-success">$num</td>
+                <td>$item</td>
+                <td>$items[item]['load']</td>
+                <td>$items[item]['hostname']</td>
+                <td>$items[item]['city']</td>
+                <td>$items[item]['region_name']</td>
+                <td>$items[item]['country_name']</td>
+                <td>$items[item]['latitude']</td>
+                <td>$items[item]['longitude']</td>
+                <td>$items[item]['timestamp']</td>
+            </tr>
+        </table>
+    </div>
 </div>

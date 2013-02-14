@@ -71,6 +71,7 @@ class WebServer(object):
     def run(self):
         urls = (
             '/', 'webpy.urls.index',
+            '/nearest', 'webpy.urls.nearest',
         )
         self.app = web.application(urls,globals())
         self.app.internalerror = web.debugerror

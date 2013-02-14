@@ -1,6 +1,7 @@
 import web
 import config
 import time
+from datetime import datetime
 
 t_globals = dict(
   datestr=web.datestr,
@@ -14,6 +15,7 @@ render._keywords['globals']['render'] = render
 def index(**k):
     data = {}
     curr = time.time()
+    web.debug(web.shoal)
     local_shoal = web.shoal
 
     for s in local_shoal:
