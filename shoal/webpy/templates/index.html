@@ -1,10 +1,9 @@
-$def with (items, ACTIVE_TIME)
-
+$def with (ACTIVE_TIME, now)
 <div class="row-fluid">
     <div class="row">
         <div class="span6 offset3" style="text-align:center">
             <h2>List of Active Squids</h2>
-            <h5 class="text-success">$len(items) active in the last $ACTIVE_TIME seconds</h5>
+            <h5 class="text-success">$len(shoal) active in the last $ACTIVE_TIME seconds</h5>
         </div>
     </div>
     <div>
@@ -19,20 +18,28 @@ $def with (items, ACTIVE_TIME)
                 <th>Country</th>
                 <th>Latitude</th>
                 <th>Longitude</th>
-                <th>Sent</th>
+                <th>Received</th>
             </tr>
-            $for num, item in enumerate(items):
-            <tr>
-                <td><span class="badge badge-success">$num</td>
-                <td>$item</td>
-                <td>$items[item]['load']</td>
-                <td>$items[item]['hostname']</td>
-                <td>$items[item]['city']</td>
-                <td>$items[item]['region_name']</td>
-                <td>$items[item]['country_name']</td>
-                <td>$items[item]['latitude']</td>
-                <td>$items[item]['longitude']</td>
-                <td>$items[item]['timestamp']</td>
+            $for i,squid in enumerate(shoal.values()):
+                $ time_diff = now - squid.last_active
+                $if time_diff < 60:
+                    <tr class='success'>
+                        <td><span class="badge badge-success">$i</td>
+                $elif time_diff > 60 and time_diff < 120:
+                    <tr class='warning'>
+                        <td><span class="badge badge-warning">$i</td>
+                $else:
+                    <tr class='error'>
+                        <td><span class="badge badge-error">$i</td>
+                <td>$squid.key</td>
+                <td>$squid.data['load']</td>
+                <td>$squid.data['hostname']</td>
+                <td>$squid.data['city']</td>
+                <td>$squid.data['region_name']</td>
+                <td>$squid.data['country_name']</td>
+                <td>$squid.data['latitude']</td>
+                <td>$squid.data['longitude']</td>
+                <td>$time_diff ago</td>
             </tr>
         </table>
     </div>

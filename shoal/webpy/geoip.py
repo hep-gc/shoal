@@ -1,46 +1,42 @@
 import pygeoip, math
 import web
+import datetime
+import time
+import subprocess
+import os
 
-def download_db():
-    cmd = ['wget',DB_URL]
-    ungz = ['gunzip','{0}.gz'.format(DB_PATH)]
-    with open(LOG_FILE,'wb') as log:
-        try:
-            dl = subprocess.Popen(cmd,stdout=log,stderr=log)
-            dl.wait()
-            time.sleep(2)
-            gz = subprocess.Popen(ungz,stdout=log,stderr=log)
-            gz.wait()
-        except Exception as e:
-            log.write("Could not download the database. - {0}".format(e))
-            sys.exit(1)
+DB_PATH = '/home/mchester/shoal/shoal/GeoLiteCity.dat'
 
 def get_geolocation(ip):
     diff = datetime.datetime.now() - datetime.timedelta(7)
     diff = time.mktime(diff.timetuple())
-    # if DB doesnt exist yet
     if not os.path.isfile(DB_PATH):
-        print "Database does not exist, downloading IP database"
-        download_db()
-    elif os.path.getmtime(DB_PATH) - diff > 2592000: # older than 30 days
-        print "Database last modified: {}, trying to update.".format(datetime.fromtimestamp(os.path.getmtime(DB_PATH)))
-        download_db()
+        print "Database does not exist"
+
     gi = pygeoip.GeoIP(DB_PATH)
+    web.debug(ip)
     return gi.record_by_addr(ip)
 
 def get_nearest_squid(ip):
-    request = get_geolocation(ip)
-    r_lat = request['latitude']
-    r_long = request['longitude']
+    web.debug('looking for squid')
+    web.debug(ip)
+    request_data = get_geolocation(ip)
+    r_lat = request_data['latitude']
+    r_long = request_data['longitude']
+
     smallest_distance = float("inf")
     nearest_squid = None
-    for squid in web.shoal:
-        s_lat = squid['latitude']
-        s_long = squid['longitude']
+
+    for squid in web.shoal.values():
+        s_lat = float(squid.data['latitude'])
+        s_long = float(squid.data['longitude'])
+
         distance = get_distance_between_nodes(r_lat,r_long,s_lat,s_long)
+        web.debug(distance)
         if distance < smallest_distance:
             smallest_distance = distance
             nearest_squid = squid
+    web.debug(nearest_squid)
     return nearest_squid
 
 # haversine forumla
