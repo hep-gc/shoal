@@ -94,7 +94,7 @@ class ShoalMiddleware():
             except Exception as e:
                 print "Could not update GeoLiteCity database."
             finally:
-                continue
+                pass
         while True:
             time.sleep(int(self.interval/2))
             self.process_messages()

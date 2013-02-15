@@ -22,10 +22,10 @@ $def with (ACTIVE_TIME, now)
             </tr>
             $for i,squid in enumerate(shoal.values()):
                 $ time_diff = now - squid.last_active
-                $if time_diff < 60:
+                $if time_diff < ACTIVE_TIME/3:
                     <tr class='success'>
                         <td><span class="badge badge-success">$i</td>
-                $elif time_diff > 60 and time_diff < 120:
+                $elif time_diff > ACTIVE_TIME/3 and time_diff < ACTIVE_TIME*2/3:
                     <tr class='warning'>
                         <td><span class="badge badge-warning">$i</td>
                 $else:
