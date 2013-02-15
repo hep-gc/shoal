@@ -7,6 +7,7 @@ from threading import Thread
 import os.path
 import time
 import subprocess
+from webpy import geoip
 
 DB_PATH = '/home/mchester/shoal/shoal/GeoLiteCity.dat'
 DB_URL = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
@@ -15,18 +16,23 @@ DB_URL = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
     Basic class to store information about each squid server.
 """
 class SquidNode(object):
-    def __init__(self,ip):
-        self.key = ip
+    def __init__(self,key, public_ip, private_ip, load, geo_data):
+        self.key = key
         self.created = time.time()
-
         self.last_active = time.time()
-        self.rabbitmq = {}
-        self.data = {}
 
-    def update(self, rabbitmq, data):
+        self.public_ip = public_ip
+        self.private_ip = private_id
+        self.load = load
+        self.geo_data = geo_data
+
+    def update(self, public_ip, private_ip, load, geo_data):
         self.last_active = time.time()
-        self.rabbitmq = rabbitmq
-        self.data = data
+
+        self.public_ip = data['public_ip']
+        self.private_ip = data['private_ip']
+        self.load = data['load']
+        self.geo_data = geo_data
 
 """
     Main application that will delegate threads.
@@ -79,18 +85,23 @@ class ShoalMiddleware():
     def __init__(self, interval, shoal):
         self.shoal = shoal
         self.interval = interval
+        self.update_database = self.check_database()
 
     def run(self):
-        curr = time.time()
-        if os.path.exists(DB_PATH):
-            if os.path.getmtime(DB_PATH) - curr > 2592000:
-                self.download_db()
-        else:
-            self.download_db()
+        if self.update_database:
+            try:
+                download_database()
+            except Exception as e:
+                print "Could not update GeoLiteCity database."
+            finally:
+                continue
         while True:
             time.sleep(int(self.interval/2))
             self.process_messages()
             time.sleep(int(self.interval/2))
+
+    def stop(self):
+        sys.exit()
 
     def process_messages(self):
         curr = time.time()
@@ -99,21 +110,16 @@ class ShoalMiddleware():
             if curr - squid.last_active > 180:
                 self.shoal.pop(squid.key)
 
-    def download_db(self):
-        cmd = ['wget',DB_URL]
-        ungz = ['gunzip','{0}.gz'.format(DB_PATH)]
-        try:
-            dl = subprocess.Popen(cmd)
-            dl.wait()
-            time.sleep(2)
-            gz = subprocess.Popen(ungz)
-            gz.wait()
-        except Exception as e:
-            print "Could not download the database. - {0}".format(e)
-            sys.exit(1)
+    def check_database(self):
+        curr = time.time()
+        if os.path.exists(DB_PATH):
+            if os.path.getmtime(DB_PATH) - curr > 2592000:
+                return True
+            else:
+                return False
+        else:
+            return True
 
-    def stop(self):
-        sys.exit()
 
 """
     Webpy webserver used to serve up active squid lists and restul API calls. For now we just use the development webpy server to serve requests.
@@ -137,6 +143,12 @@ class WebServer(object):
 
 """
     Basic RabbitMQ asynchronous consumer. Consumes messages from `QUEUE` takes the json in body, and put it into the dictionary `shoal`
+    Messages received must be a json string with keys:
+    {
+      'public_ip': '142.11.52.1',
+      'private_ip: '192.168.0.1',
+      'load': '12324432',
+    }
 """
 class RabbitMQConsumer(object):
     def __init__(self, amqp_url, shoal):
@@ -156,23 +168,42 @@ class RabbitMQConsumer(object):
         self.channel.start_consuming()
 
     def on_message(self, ch, method_frame, properties, body):
-        data = json.loads(body)
-        rabbitmq = {'method_frame':method_frame, 'properties':properties,}
-        key = data['public_ip']
+        try:
+            data = json.loads(body)
 
-        if key in self.shoal:
-            self.shoal[key].update(rabbitmq,data)
-        else:
-            new_squid = SquidNode(key)
-            new_squid.rabbitmq = rabbitmq
-            new_squid.data = data
-            self.shoal[key] = new_squid
+            key = data['public_ip']
+            public_ip = data['public_ip']
+            private_ip = data['private_ip']
+            load = data['load']
+            geo_data = geoip.get_geolocation(public_ip)
 
-        self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+            if key in self.shoal:
+                self.shoal[key].update(public_ip, private_ip, load, geo_data)
+            else:
+                new_squid = SquidNode(key, public_ip, private_ip, load, geo_data)
+                self.shoal[key] = new_squid
+
+        except KeyError as e:
+            print "Message received was not the proper format (missing:{}), discarding...".format(e)
+        finally:
+            self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
     def stop(self):
         self.channel.stop_consuming()
         self.connection.close()
+
+def download_database(self):
+    cmd = ['wget',DB_URL]
+    ungz = ['gunzip','{0}.gz'.format(DB_PATH)]
+    try:
+        dl = subprocess.Popen(cmd)
+        dl.wait()
+        time.sleep(2)
+        gz = subprocess.Popen(ungz)
+        gz.wait()
+    except Exception as e:
+        print "Could not download the database. - {0}".format(e)
+        sys.exit(1)
 
 """
     Main function to run Shoal.

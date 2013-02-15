@@ -1,5 +1,5 @@
 import web
-import view, config
+import view
 from view import render
 
 class index:
