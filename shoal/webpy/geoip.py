@@ -22,8 +22,8 @@ def get_nearest_squid(ip):
     nearest_squid = None
 
     for squid in web.shoal.values():
-        s_lat = float(squid.data['latitude'])
-        s_long = float(squid.data['longitude'])
+        s_lat = float(squid.geo_data['latitude'])
+        s_long = float(squid.geo_data['longitude'])
 
         distance = get_distance_between_nodes(r_lat,r_long,s_lat,s_long)
 

@@ -10,9 +10,9 @@ $def with (ACTIVE_TIME, now)
         <table class="table table-condensed table-hover">
             <tr>
                 <th>#</th>
-                <th>IP</th>
+                <th>Public IP</th>
+                <th>Private IP</th>
                 <th>Load</th>
-                <th>Hostname</th>
                 <th>City</th>
                 <th>Region</th>
                 <th>Country</th>
@@ -21,7 +21,7 @@ $def with (ACTIVE_TIME, now)
                 <th>Received</th>
             </tr>
             $for i,squid in enumerate(shoal.values()):
-                $ time_diff = now - squid.last_active
+                $ time_diff = int(now - squid.last_active)
                 $if time_diff < ACTIVE_TIME/3:
                     <tr class='success'>
                         <td><span class="badge badge-success">$i</td>
@@ -31,15 +31,15 @@ $def with (ACTIVE_TIME, now)
                 $else:
                     <tr class='error'>
                         <td><span class="badge badge-error">$i</td>
-                <td>$squid.key</td>
-                <td>$squid.data['load']</td>
-                <td>$squid.data['hostname']</td>
-                <td>$squid.data['city']</td>
-                <td>$squid.data['region_name']</td>
-                <td>$squid.data['country_name']</td>
-                <td>$squid.data['latitude']</td>
-                <td>$squid.data['longitude']</td>
-                <td>$time_diff ago</td>
+                <td>$squid.public_ip</td>
+                <td>$squid.private_ip</td>
+                <td>$squid.load</td>
+                <td>$squid.geo_data['city']</td>
+                <td>$squid.geo_data['region_name']</td>
+                <td>$squid.geo_data['country_name']</td>
+                <td>$squid.geo_data['latitude']</td>
+                <td>$squid.geo_data['longitude']</td>
+                <td>$(time_diff)s ago</td>
             </tr>
         </table>
     </div>

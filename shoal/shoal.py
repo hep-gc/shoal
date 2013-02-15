@@ -22,16 +22,16 @@ class SquidNode(object):
         self.last_active = time.time()
 
         self.public_ip = public_ip
-        self.private_ip = private_id
+        self.private_ip = private_ip
         self.load = load
         self.geo_data = geo_data
 
     def update(self, public_ip, private_ip, load, geo_data):
         self.last_active = time.time()
 
-        self.public_ip = data['public_ip']
-        self.private_ip = data['private_ip']
-        self.load = data['load']
+        self.public_ip =public_ip
+        self.private_ip = private_ip
+        self.load = load
         self.geo_data = geo_data
 
 """
@@ -106,7 +106,6 @@ class ShoalMiddleware():
     def process_messages(self):
         curr = time.time()
         for squid in self.shoal.values():
-            print squid
             if curr - squid.last_active > 180:
                 self.shoal.pop(squid.key)
 

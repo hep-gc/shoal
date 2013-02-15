@@ -12,7 +12,7 @@ t_globals = dict(
 
 ACTIVE_TIME = 180
 
-render = web.template.render('webpy/templates/', cache=True,globals=t_globals)
+render = web.template.render('webpy/templates/', cache=False,globals=t_globals)
 render._keywords['globals']['render'] = render
 
 def index(**k):
@@ -27,6 +27,6 @@ def nearest(**k):
     squid = geoip.get_nearest_squid(ip)
 
     if squid:
-        return render.json(squid.data['public_ip'])
+        return render.json(squid.public_ip)
     else:
         return render.json(None)
