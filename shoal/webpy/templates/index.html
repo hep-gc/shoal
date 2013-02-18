@@ -12,7 +12,8 @@ $def with (shoal, ACTIVE_TIME, now)
                 <th>#</th>
                 <th>Public IP</th>
                 <th>Private IP</th>
-                <th>Load</th>
+                <th>Bytes In</th>
+                <th>Bytes Out</th>
                 <th>City</th>
                 <th>Region</th>
                 <th>Country</th>
@@ -39,7 +40,8 @@ $def with (shoal, ACTIVE_TIME, now)
                         <td><span class="badge badge-error">$i</td>
                 <td>$squid.public_ip</td>
                 <td>$squid.private_ip</td>
-                <td>$squid.load</td>
+                <td>$squid.load['in'] kB/s</td>
+                <td>$squid.load['out'] kB/s</td>
                 <td>$squid.geo_data['city']</td>
                 <td>$squid.geo_data['region_name']</td>
                 <td>$squid.geo_data['country_name']</td>

@@ -19,8 +19,10 @@ render._keywords['globals']['render'] = render
 def index(**k):
     web.debug(web.shoal)
     sorted_shoal = []
+
     for squid in (sorted(web.shoal.values(), key=operator.attrgetter('last_active'))):
         sorted_shoal.append(squid)
+
     sorted_shoal.reverse()
     web.debug(sorted_shoal)
     return render.index(sorted_shoal, ACTIVE_TIME, now=time())

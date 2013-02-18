@@ -18,21 +18,12 @@ INTERVAL = 30
     (name of your sensor) (current time) (value)
     eg. name.of.your.sensor 123412312 1000
 """
-TC_SCRIPT = '/home/mchester/rabbitmq_helloworld/ifstat.py'
+TC_SCRIPT = '/home/mchester/shoal/shoal-agent/netspeed'
+NIC = 'eth0'
 
-"""
-    Can ignore if using your own script (and change the get_load_data function).
-    If using T_Collector collectors, the sensor name is not unique and could contain other parametres
-    example output:
-                        proc.net.bytes 1360969715 1793351820 iface=eth0 direction=in
-                        proc.net.bytes 1360969715 1016418000 iface=eth0 direction=out
-                        proc.net.bytes 1360969715 1793351820 iface=eth1 direction=in
-                        proc.net.bytes 1360969715 1016418000 iface=eth1 direction=out
-
-    to get `proc.net.bytes 1360969715 1793351820 iface=eth1 direction=in`
-    add ['proc.net.bytes','direction=in','eth1'] to LOAD_SENSOR value.
-"""
-LOAD_SENSOR = ['proc.net.bytes','direction=out','eth0']
+# Sensors to get byte rate in and out, using above script.
+BYTE_RATE_IN = ['proc.net.bytes.inrate',NIC]
+BYTE_RATE_OUT = ['proc.net.bytes.outrate',NIC]
 
 def amqp_send(data):
     connection = pika.BlockingConnection(pika.ConnectionParameters(
@@ -44,21 +35,27 @@ def amqp_send(data):
     channel.basic_publish(exchange='',
                           routing_key=QUEUE,
                           body=data)
-    print " [x] Sent ",data
     connection.close()
 
 def get_load_data():
+    cmd = [TC_SCRIPT,NIC]
     try:
-        p = subprocess.Popen(TC_SCRIPT,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+        p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     except Exception as e:
         print "Could not get load information.",e
         sys.exit(1)
     p.wait()
     out,err = p.communicate()
     out = out.split('\n')
+
+    data = {}
     for line in out:
-        if all(s in line for s in LOAD_SENSOR):
-            return line.split()[2]
+        if all(s in line for s in BYTE_RATE_IN):
+            data['in'] = line.split()[2]
+        if all(s in line for s in BYTE_RATE_OUT):
+            data['out'] = line.split()[2]
+    return data
+
 def main():
     while True:
         data = {
