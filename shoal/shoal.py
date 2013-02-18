@@ -80,7 +80,10 @@ class Application(object):
     def middleware(self):
         self.update = ShoalMiddleware(10,self.shoal)
         self.update.run()
-
+"""
+    ShoalMiddleware is used for trimming inactive squids every set interval.
+    Also used for keeping GeoLiteCity database up to date (updated when older than 1 month).
+"""
 class ShoalMiddleware():
     def __init__(self, interval, shoal):
         self.shoal = shoal
