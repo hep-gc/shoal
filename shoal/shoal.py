@@ -11,7 +11,7 @@ from webpy import geoip
 
 DB_PATH = '/home/mchester/shoal/shoal/GeoLiteCity.dat'
 DB_URL = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
-
+RABBITMQ_SERVER = 'elephant105.heprc.uvic.ca'
 """
     Basic class to store information about each squid server.
 """
@@ -61,16 +61,16 @@ class Application(object):
                         sys.exit(1)
 
         except KeyboardInterrupt:
-            self.rabbitmq.stop()
             self.webpy.stop()
             self.update.stop()
+            self.rabbitmq.stop()
         except:
-            self.rabbitmq.stop()
             self.webpy.stop()
             self.update.stop()
+            self.rabbitmq.stop()
 
     def rabbitmq(self):
-        self.rabbitmq = RabbitMQConsumer('elephant106.heprc.uvic.ca', self.shoal)
+        self.rabbitmq = RabbitMQConsumer(RABBITMQ_SERVER, self.shoal)
         self.rabbitmq.run()
 
     def webpy(self):

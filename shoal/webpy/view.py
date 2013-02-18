@@ -1,22 +1,29 @@
 import web
 import re
 import geoip
+import json
+import operator
 
 from time import time
 from datetime import datetime
 
 t_globals = dict(
   datestr=web.datestr,
-  shoal=web.shoal,
 )
 
 ACTIVE_TIME = 180
 
-render = web.template.render('webpy/templates/', cache=False,globals=t_globals)
+render = web.template.render('webpy/templates/', cache=False, globals=t_globals)
 render._keywords['globals']['render'] = render
 
 def index(**k):
-    return render.index(ACTIVE_TIME, now=time())
+    web.debug(web.shoal)
+    sorted_shoal = []
+    for squid in (sorted(web.shoal.values(), key=operator.attrgetter('last_active'))):
+        sorted_shoal.append(squid)
+    sorted_shoal.reverse()
+    web.debug(sorted_shoal)
+    return render.index(sorted_shoal, ACTIVE_TIME, now=time())
 
 def nearest(**k):
     if web.ctx.query:
@@ -25,8 +32,10 @@ def nearest(**k):
         ip = web.ctx['ip']
 
     squid = geoip.get_nearest_squid(ip)
-
+    web.header('Content-Type', 'application/json')
     if squid:
-        return render.json(squid.public_ip)
+        squid_json = {'public_ip':squid.public_ip, 'private_ip':squid.private_ip,}
+        return json.dumps(squid_json)
     else:
-        return render.json(None)
+        squid_json = {'public_ip':None, 'private_ip':None,}
+        return json.dumps(squid_json)

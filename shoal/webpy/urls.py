@@ -8,4 +8,4 @@ class index:
 
 class nearest:
     def GET(self):
-        return render.json(view.nearest())
+        return view.nearest()

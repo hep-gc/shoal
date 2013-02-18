@@ -1,4 +1,4 @@
-$def with (ACTIVE_TIME, now)
+$def with (shoal, ACTIVE_TIME, now)
 <div class="row-fluid">
     <div class="row">
         <div class="span6 offset3" style="text-align:center">
@@ -18,10 +18,16 @@ $def with (ACTIVE_TIME, now)
                 <th>Country</th>
                 <th>Latitude</th>
                 <th>Longitude</th>
-                <th>Received</th>
+                <th>Last Received</th>
+                <th>Alive</th>
             </tr>
-            $for i,squid in enumerate(shoal.values()):
+            $for i,squid in enumerate(shoal):
                 $ time_diff = int(now - squid.last_active)
+                $ alive_time = int(now - squid.created); 
+                $ time_metric = 's'
+                $if alive_time/60 > 1: 
+                    $ alive_time = int(alive_time/60)
+                    $ time_metric = 'm'
                 $if time_diff < ACTIVE_TIME/3:
                     <tr class='success'>
                         <td><span class="badge badge-success">$i</td>
@@ -39,7 +45,8 @@ $def with (ACTIVE_TIME, now)
                 <td>$squid.geo_data['country_name']</td>
                 <td>$squid.geo_data['latitude']</td>
                 <td>$squid.geo_data['longitude']</td>
-                <td>$(time_diff)s ago</td>
+                <td>$(time_diff)s</td>
+                <td>$(alive_time)$time_metric</td>
             </tr>
         </table>
     </div>

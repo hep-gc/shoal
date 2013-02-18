@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 import json
 import pika
 import socket
@@ -6,7 +7,7 @@ import subprocess
 import time
 
 # RabbitMQ Server
-BROKER = 'elephant106.heprc.uvic.ca'
+BROKER = 'elephant105.heprc.uvic.ca'
 # RabbitMQ Queue message will be sent to
 QUEUE = 'squiddata'
 # Time interval to send data
