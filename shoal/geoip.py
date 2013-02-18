@@ -1,13 +1,17 @@
+import sys
+import os
+import subprocess
 import pygeoip, math
 import web
-
-DB_PATH = '/home/mchester/shoal/shoal/GeoLiteCity.dat'
-
+import config
+from time import time, sleep
 """
     Given an IP return all its geographical information (using GeoLiteCity.dat)
 """
 def get_geolocation(ip):
-    gi = pygeoip.GeoIP(DB_PATH)
+    geolitecity_path = config.geolitecity_path
+
+    gi = pygeoip.GeoIP(geolitecity_path)
     return gi.record_by_addr(ip)
 
 """
@@ -50,7 +54,36 @@ def get_distance_between_nodes(lat1,long1,lat2,long2):
     return d
 
 """
-    Helper function
+    Helper functions
 """
 def deg_to_rad(deg):
     return deg * (math.pi/180)
+
+def check_geolitecity():
+    curr = time()
+    geolitecity_update = config.geolitecity_update
+    geolitecity_path = config.geolitecity_path
+
+    if os.path.exists(geolitecity_path):
+        if os.path.getmtime(geolitecity_path) - curr > geolitecity_update:
+            return True
+        else:
+            return False
+    else:
+        return True
+
+def download_geolitecity():
+    geolitecity_path = config.geolitecity_path
+    cmd = ['wget',config.geolitecity_url]
+
+    ungz = ['gunzip','{0}.gz'.format(geolitecity_path)]
+    try:
+        dl = subprocess.Popen(cmd)
+        dl.wait()
+        sleep(2)
+        gz = subprocess.Popen(ungz)
+        gz.wait()
+
+    except Exception as e:
+        print "Could not download the database. - {0}".format(e)
+        sys.exit(1)

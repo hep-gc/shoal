@@ -5,6 +5,7 @@ import pika
 import subprocess
 import time
 import netifaces
+import uuid
 
 # RabbitMQ Server
 BROKER = 'elephant105.heprc.uvic.ca'
@@ -12,6 +13,9 @@ BROKER = 'elephant105.heprc.uvic.ca'
 QUEUE = 'squiddata'
 # Time interval to send data
 INTERVAL = 30
+# Unique ID for this squid.
+ID = str(uuid.uuid1())
+
 """
     T_Collector script (or any script) that will output metric data
     to keep it consistant with T_Collector used with phantom output should be of the format:
@@ -72,6 +76,7 @@ def main():
     while True:
         public, private = get_ip_addresses()
         data = {
+                'uuid': ID,
                 'public_ip': public,
                 'private_ip': private,
                 'load': get_load_data(),

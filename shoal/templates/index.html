@@ -1,9 +1,9 @@
-$def with (shoal, ACTIVE_TIME, now)
+$def with (shoal, squid_active_time, now)
 <div class="row-fluid">
     <div class="row">
         <div class="span6 offset3" style="text-align:center">
             <h2>List of Active Squids</h2>
-            <h5 class="text-success">$len(shoal) active in the last $ACTIVE_TIME seconds</h5>
+            <h5 class="text-success">$len(shoal) active in the last $squid_active_time seconds</h5>
         </div>
     </div>
     <div>
@@ -29,10 +29,10 @@ $def with (shoal, ACTIVE_TIME, now)
                 $if alive_time/60 > 0: 
                     $ alive_time = int(alive_time/60)
                     $ time_metric = 'm'
-                $if time_diff < ACTIVE_TIME/3:
+                $if time_diff < squid_active_time/3:
                     <tr class='success'>
                         <td><span class="badge badge-success">$i</td>
-                $elif time_diff > ACTIVE_TIME/3 and time_diff < ACTIVE_TIME*2/3:
+                $elif time_diff > squid_active_time/3 and time_diff < squid_active_time*2/3:
                     <tr class='warning'>
                         <td><span class="badge badge-warning">$i</td>
                 $else:

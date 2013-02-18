@@ -3,29 +3,30 @@ import re
 import geoip
 import json
 import operator
+import config
 
 from time import time
-from datetime import datetime
 
 t_globals = dict(
   datestr=web.datestr,
 )
 
-ACTIVE_TIME = 180
+CACHE = config.webpy_cache
+TEMPLATES = config.webpy_template_dir
 
-render = web.template.render('webpy/templates/', cache=False, globals=t_globals)
+
+render = web.template.render(TEMPLATES, cache=CACHE, globals=t_globals)
 render._keywords['globals']['render'] = render
 
 def index(**k):
-    web.debug(web.shoal)
+    squid_inactive_time = config.squid_inactive_time
     sorted_shoal = []
 
     for squid in (sorted(web.shoal.values(), key=operator.attrgetter('last_active'))):
         sorted_shoal.append(squid)
 
     sorted_shoal.reverse()
-    web.debug(sorted_shoal)
-    return render.index(sorted_shoal, ACTIVE_TIME, now=time())
+    return render.index(sorted_shoal, squid_inactive_time, time())
 
 def nearest(**k):
     if web.ctx.query:

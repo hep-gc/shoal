@@ -1,25 +1,23 @@
 import sys
 import time
 import pika
+from pika import exceptions
 import json
 import web
+from time import time, sleep
 from threading import Thread
-import os.path
-import time
-import subprocess
-from webpy import geoip
 
-DB_PATH = '/home/mchester/shoal/shoal/GeoLiteCity.dat'
-DB_URL = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
-RABBITMQ_SERVER = 'elephant105.heprc.uvic.ca'
+import config
+import geoip
+
 """
-    Basic class to store information about each squid server.
+    Basic class to store and update information about each squid server.
 """
 class SquidNode(object):
-    def __init__(self,key, public_ip, private_ip, load, geo_data):
+    def __init__(self, key, public_ip, private_ip, load, geo_data):
         self.key = key
-        self.created = time.time()
-        self.last_active = time.time()
+        self.created = time()
+        self.last_active = time()
 
         self.public_ip = public_ip
         self.private_ip = private_ip
@@ -27,9 +25,9 @@ class SquidNode(object):
         self.geo_data = geo_data
 
     def update(self, public_ip, private_ip, load, geo_data):
-        self.last_active = time.time()
+        self.last_active = time()
 
-        self.public_ip =public_ip
+        self.public_ip = public_ip
         self.private_ip = private_ip
         self.load = load
         self.geo_data = geo_data
@@ -38,9 +36,17 @@ class SquidNode(object):
     Main application that will delegate threads.
 """
 class Application(object):
+
     def __init__(self):
+        # setup configuration settings.
+        config.setup()
         self.shoal = {}
         self.threads = []
+
+        # check if geolitecity database needs updating
+        if geoip.check_geolitecity():
+            geoip.download_geolitecity()
+
         try:
             rabbitmq_thread = Thread(target=self.rabbitmq, name='RabbitMQ')
             self.threads.append(rabbitmq_thread)
@@ -48,8 +54,8 @@ class Application(object):
             webpy_thread = Thread(target=self.webpy, name='Webpy')
             self.threads.append(webpy_thread)
 
-            middleware = Thread(target=self.middleware, name="ShoalMiddleware")
-            self.threads.append(middleware)
+            update_thread = Thread(target=self.update, name="ShoalUpdate")
+            self.threads.append(update_thread)
 
             for thread in self.threads:
                 thread.start()
@@ -70,73 +76,57 @@ class Application(object):
             self.rabbitmq.stop()
 
     def rabbitmq(self):
-        self.rabbitmq = RabbitMQConsumer(RABBITMQ_SERVER, self.shoal)
+        self.rabbitmq = RabbitMQConsumer(self.shoal)
         self.rabbitmq.run()
 
     def webpy(self):
-        self.webpy = WebServer(self.shoal)
+        self.webpy = WebpyServer(self.shoal)
         self.webpy.run()
 
-    def middleware(self):
-        self.update = ShoalMiddleware(10,self.shoal)
+    def update(self):
+        self.update = ShoalUpdate(self.shoal)
         self.update.run()
+
+
 """
-    ShoalMiddleware is used for trimming inactive squids every set interval.
-    Also used for keeping GeoLiteCity database up to date (updated when older than 1 month).
+    ShoalUpdate is used for trimming inactive squids every set interval.
 """
-class ShoalMiddleware():
-    def __init__(self, interval, shoal):
+class ShoalUpdate(object):
+
+    def __init__(self, shoal):
         self.shoal = shoal
-        self.interval = interval
-        self.update_database = self.check_database()
+        self.interval = config.squid_cleanse_interval
+        self.inactive = config.squid_inactive_time
 
     def run(self):
-        if self.update_database:
-            try:
-                download_database()
-            except Exception as e:
-                print "Could not update GeoLiteCity database."
-            finally:
-                pass
         while True:
-            time.sleep(int(self.interval/2))
-            self.process_messages()
-            time.sleep(int(self.interval/2))
+            sleep(self.interval)
+            self.update()
 
     def stop(self):
         sys.exit()
 
-    def process_messages(self):
-        curr = time.time()
+    def update(self):
+        curr = time()
         for squid in self.shoal.values():
-            if curr - squid.last_active > 180:
+            if curr - squid.last_active > self.inactive:
                 self.shoal.pop(squid.key)
-
-    def check_database(self):
-        curr = time.time()
-        if os.path.exists(DB_PATH):
-            if os.path.getmtime(DB_PATH) - curr > 2592000:
-                return True
-            else:
-                return False
-        else:
-            return True
 
 
 """
     Webpy webserver used to serve up active squid lists and restul API calls. For now we just use the development webpy server to serve requests.
 """
-class WebServer(object):
+class WebpyServer(object):
 
     def __init__(self, shoal):
         web.shoal = shoal
 
     def run(self):
         urls = (
-            '/', 'webpy.urls.index',
-            '/nearest', 'webpy.urls.nearest',
+            '/', 'urls.index',
+            '/nearest', 'urls.nearest',
         )
-        self.app = web.application(urls,globals())
+        self.app = web.application(urls, globals())
         self.app.internalerror = web.debugerror
         self.app.run()
 
@@ -153,27 +143,33 @@ class WebServer(object):
     }
 """
 class RabbitMQConsumer(object):
-    def __init__(self, amqp_url, shoal):
-        self.url = amqp_url
-        self.queue = 'squiddata'
+
+    def __init__(self, shoal):
+        self.url = config.amqp_server_url
+        self.queue = config.amqp_server_queue
+        self.port = config.amqp_server_port
         self.shoal = shoal
         self.connection = None
         self.channel = None
 
     def run(self):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(self.url))
-        self.channel = self.connection.channel()
-        self.channel.queue_declare(queue=self.queue)
+        try:
+            self.connection = pika.BlockingConnection(pika.ConnectionParameters(self.url, self.port))
+            self.channel = self.connection.channel()
+            self.channel.queue_declare(queue=self.queue)
 
-        self.channel.basic_consume(self.on_message,queue=self.queue)
+            self.channel.basic_consume(self.on_message,queue=self.queue)
 
-        self.channel.start_consuming()
+            self.channel.start_consuming()
+        except exceptions.AMQPConnectionError as e:
+            print 'Could not connect to AMQP Server.', e
+            sys.exit(1)
 
     def on_message(self, ch, method_frame, properties, body):
         try:
             data = json.loads(body)
 
-            key = data['public_ip']
+            key = data['uuid']
             public_ip = data['public_ip']
             private_ip = data['private_ip']
             load = data['load']
@@ -194,18 +190,6 @@ class RabbitMQConsumer(object):
         self.channel.stop_consuming()
         self.connection.close()
 
-def download_database(self):
-    cmd = ['wget',DB_URL]
-    ungz = ['gunzip','{0}.gz'.format(DB_PATH)]
-    try:
-        dl = subprocess.Popen(cmd)
-        dl.wait()
-        time.sleep(2)
-        gz = subprocess.Popen(ungz)
-        gz.wait()
-    except Exception as e:
-        print "Could not download the database. - {0}".format(e)
-        sys.exit(1)
 
 """
     Main function to run Shoal.
