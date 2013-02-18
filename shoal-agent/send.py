@@ -2,9 +2,9 @@
 import sys
 import json
 import pika
-import socket
 import subprocess
 import time
+import netifaces
 
 # RabbitMQ Server
 BROKER = 'elephant105.heprc.uvic.ca'
@@ -56,11 +56,24 @@ def get_load_data():
             data['out'] = line.split()[2]
     return data
 
+def get_ip_addresses():
+    for interface in netifaces.interfaces():
+        try:
+            for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
+                if 'lo' in interface:
+                    private = link['addr']
+                else:
+                    public = link['addr']
+        except:
+            continue
+    return public, private
+
 def main():
     while True:
+        public, private = get_ip_addresses()
         data = {
-                'public_ip': socket.gethostbyname(socket.gethostname()),
-                'private_ip': '',
+                'public_ip': public,
+                'private_ip': private,
                 'load': get_load_data(),
                }
 

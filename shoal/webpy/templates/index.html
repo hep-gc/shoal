@@ -26,7 +26,7 @@ $def with (shoal, ACTIVE_TIME, now)
                 $ time_diff = int(now - squid.last_active)
                 $ alive_time = int(now - squid.created); 
                 $ time_metric = 's'
-                $if alive_time/60 > 1: 
+                $if alive_time/60 > 0: 
                     $ alive_time = int(alive_time/60)
                     $ time_metric = 'm'
                 $if time_diff < ACTIVE_TIME/3:
