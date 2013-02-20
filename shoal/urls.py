@@ -2,6 +2,11 @@ import web
 import view
 from view import render
 
+urls = (
+    '/', 'urls.index',
+    '/nearest', 'urls.nearest',
+)
+
 class index:
     def GET(self):
         return render.base(view.index())

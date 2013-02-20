@@ -3,7 +3,10 @@ $def with (shoal, squid_active_time, now)
     <div class="row">
         <div class="span6 offset3" style="text-align:center">
             <h2>List of Active Squids</h2>
-            <h5 class="text-success">$len(shoal) active in the last $squid_active_time seconds</h5>
+            $if len(shoal) > 0:
+                <h5 class="text-success">$len(shoal) active in the last $squid_active_time seconds</h5>
+            $else:
+                <h5 class="text-info">None active in the last $squid_active_time seconds</h5>
         </div>
     </div>
     <div>
@@ -23,33 +26,34 @@ $def with (shoal, squid_active_time, now)
                 <th>Alive</th>
             </tr>
             $for i,squid in enumerate(shoal):
-                $ time_diff = int(now - squid.last_active)
+                $ last_msg = int(now - squid.last_active)
                 $ alive_time = int(now - squid.created); 
                 $ time_metric = 's'
-                $if alive_time/60 > 0: 
-                    $ alive_time = int(alive_time/60)
-                    $ time_metric = 'm'
-                $if time_diff < squid_active_time/3:
-                    <tr class='success'>
-                        <td><span class="badge badge-success">$i</td>
-                $elif time_diff > squid_active_time/3 and time_diff < squid_active_time*2/3:
-                    <tr class='warning'>
-                        <td><span class="badge badge-warning">$i</td>
+                $ hour = int(alive_time/60/60)
+                $ minute = (alive_time/60)
+                $ second = alive_time - hour*60*60 - minute*60
+
+                $if last_msg < squid_active_time/3:
+                    $ state = 'success'
+                $elif last_msg >= squid_active_time/3 and last_msg < squid_active_time*2/3:
+                    $ state = 'warning'
                 $else:
-                    <tr class='error'>
-                        <td><span class="badge badge-error">$i</td>
-                <td>$squid.public_ip</td>
-                <td>$squid.private_ip</td>
-                <td>$squid.load['in'] kB/s</td>
-                <td>$squid.load['out'] kB/s</td>
-                <td>$squid.geo_data['city']</td>
-                <td>$squid.geo_data['region_name']</td>
-                <td>$squid.geo_data['country_name']</td>
-                <td>$squid.geo_data['latitude']</td>
-                <td>$squid.geo_data['longitude']</td>
-                <td>$(time_diff)s</td>
-                <td>$(alive_time)$time_metric</td>
-            </tr>
-        </table>
-    </div>
+                    $ state = 'error'
+
+                <tr class='$state'>
+                    <td><span class="badge badge-$state">$(i+1)</td>
+                    <td>$squid.public_ip</td>
+                    <td>$squid.private_ip</td>
+                    <td>$squid.load['in'] kB/s</td>
+                    <td>$squid.load['out'] kB/s</td>
+                    <td>$squid.geo_data['city']</td>
+                    <td>$squid.geo_data['region_name']</td>
+                    <td>$squid.geo_data['country_name']</td>
+                    <td>$squid.geo_data['latitude']</td>
+                    <td>$squid.geo_data['longitude']</td>
+                    <td>$(last_msg)s</td>
+                    <td>$(hour)h$(minute)m$(second)s</td>
+                </tr>
+            </table>
+        </div>
 </div>

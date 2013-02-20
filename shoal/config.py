@@ -8,11 +8,13 @@ import ConfigParser
 geolitecity_path = os.path.abspath('GeoLiteCity.dat')
 geolitecity_url = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
 geolitecity_update = 2592000
-squid_cleanse_interval = 30
+squid_cleanse_interval = 10
 squid_inactive_time = 180
-amqp_server_url = 'elephant105.heprc.uvic.ca'
-amqp_server_queue = 'squiddata'
+amqp_server_url = 'localhost'
 amqp_server_port = 5672
+amqp_server_queue = 'squiddata'
+amqp_exchange = 'shoal'
+amqp_exchange_type = 'topic'
 webpy_cache = False
 webpy_template_dir = 'templates/'
 
@@ -26,8 +28,10 @@ def setup(path=None):
     global squid_cleanse_interval
     global squid_inactive_time
     global amqp_server_url
-    global amqp_server_queue
     global amqp_server_port
+    global amqp_server_queue
+    global amqp_exchange
+    global amqp_exchange_type
     global webpy_cache
     global webpy_template_dir
 
@@ -100,10 +104,6 @@ def setup(path=None):
         amqp_server_url = config_file.get("rabbitmq",
                                                 "amqp_server_url")
 
-    if config_file.has_option("rabbitmq", "amqp_server_queue"):
-        amqp_server_queue = config_file.get("rabbitmq",
-                                                "amqp_server_queue")
-
     if config_file.has_option("rabbitmq", "amqp_server_port"):
         try:
             amqp_server_port = config_file.getint("rabbitmq", "amqp_server_port")
@@ -111,6 +111,18 @@ def setup(path=None):
             print "Configuration file problem: amqp_port must be an " \
                   "integer value."
             sys.exit(1)
+
+    if config_file.has_option("rabbitmq", "amqp_server_queue"):
+        amqp_server_queue = config_file.get("rabbitmq",
+                                                "amqp_server_queue")
+
+    if config_file.has_option("rabbitmq", "amqp_exchange"):
+        amqp_exchange = config_file.get("rabbitmq",
+                                                "amqp_exchange")
+
+    if config_file.has_option("rabbitmq", "amqp_exchange_type"):
+        amqp_exchange_type = config_file.get("rabbitmq",
+                                                "amqp_exchange_type")
 
     if config_file.has_option("webpy", "webpy_cache"):
         try:

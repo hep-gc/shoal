@@ -5,6 +5,7 @@ import pygeoip, math
 import web
 import config
 from time import time, sleep
+
 """
     Given an IP return all its geographical information (using GeoLiteCity.dat)
 """

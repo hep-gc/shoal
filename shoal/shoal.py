@@ -1,23 +1,25 @@
 import sys
 import time
-import pika
-from pika import exceptions
-import json
 import web
+import json
+
+import pika
+
 from time import time, sleep
 from threading import Thread
 
 import config
 import geoip
+import urls
 
 """
     Basic class to store and update information about each squid server.
 """
 class SquidNode(object):
-    def __init__(self, key, public_ip, private_ip, load, geo_data):
+    def __init__(self, key, public_ip, private_ip, load, geo_data, last_active=time()):
         self.key = key
         self.created = time()
-        self.last_active = time()
+        self.last_active = last_active
 
         self.public_ip = public_ip
         self.private_ip = private_ip
@@ -49,17 +51,20 @@ class Application(object):
 
         try:
             rabbitmq_thread = Thread(target=self.rabbitmq, name='RabbitMQ')
+            rabbitmq_thread.daemon = True
             self.threads.append(rabbitmq_thread)
 
             webpy_thread = Thread(target=self.webpy, name='Webpy')
+            webpy_thread.daemon = True
             self.threads.append(webpy_thread)
 
             update_thread = Thread(target=self.update, name="ShoalUpdate")
+            update_thread.daemon = True
             self.threads.append(update_thread)
 
             for thread in self.threads:
+                print 'Starting ', thread
                 thread.start()
-
             while True:
                 for thread in self.threads:
                     if not thread.is_alive():
@@ -68,12 +73,8 @@ class Application(object):
 
         except KeyboardInterrupt:
             self.webpy.stop()
-            self.update.stop()
             self.rabbitmq.stop()
-        except:
-            self.webpy.stop()
-            self.update.stop()
-            self.rabbitmq.stop()
+            sys.exit()
 
     def rabbitmq(self):
         self.rabbitmq = RabbitMQConsumer(self.shoal)
@@ -103,15 +104,11 @@ class ShoalUpdate(object):
             sleep(self.interval)
             self.update()
 
-    def stop(self):
-        sys.exit()
-
     def update(self):
         curr = time()
         for squid in self.shoal.values():
             if curr - squid.last_active > self.inactive:
                 self.shoal.pop(squid.key)
-
 
 """
     Webpy webserver used to serve up active squid lists and restul API calls. For now we just use the development webpy server to serve requests.
@@ -122,24 +119,21 @@ class WebpyServer(object):
         web.shoal = shoal
 
     def run(self):
-        urls = (
-            '/', 'urls.index',
-            '/nearest', 'urls.nearest',
-        )
-        self.app = web.application(urls, globals())
-        self.app.internalerror = web.debugerror
+        self.app = web.application(urls.urls, globals())
         self.app.run()
 
     def stop(self):
         self.app.stop()
 
 """
-    Basic RabbitMQ asynchronous consumer. Consumes messages from `QUEUE` takes the json in body, and put it into the dictionary `shoal`
+    Basic RabbitMQ blocking consumer. Consumes messages from `QUEUE` takes the json in body, and put it into the dictionary `shoal`
     Messages received must be a json string with keys:
     {
+      'uuid': '1231232',
       'public_ip': '142.11.52.1',
       'private_ip: '192.168.0.1',
       'load': '12324432',
+      'timestamp':'2121231313',
     }
 """
 class RabbitMQConsumer(object):
@@ -148,6 +142,9 @@ class RabbitMQConsumer(object):
         self.url = config.amqp_server_url
         self.queue = config.amqp_server_queue
         self.port = config.amqp_server_port
+        self.exchange = config.amqp_exchange
+        self.exchange_type = config.amqp_exchange_type
+        self.routing_key = '#'
         self.shoal = shoal
         self.connection = None
         self.channel = None
@@ -156,17 +153,28 @@ class RabbitMQConsumer(object):
         try:
             self.connection = pika.BlockingConnection(pika.ConnectionParameters(self.url, self.port))
             self.channel = self.connection.channel()
+
+            self.channel.exchange_declare(exchange=self.exchange,
+                                     type=self.exchange_type)
+
             self.channel.queue_declare(queue=self.queue)
 
-            self.channel.basic_consume(self.on_message,queue=self.queue)
+            self.channel.queue_bind(exchange=self.exchange, queue=self.queue,
+                               routing_key=self.routing_key)
 
-            self.channel.start_consuming()
-        except exceptions.AMQPConnectionError as e:
-            print 'Could not connect to AMQP Server.', e
-            sys.exit(1)
 
-    def on_message(self, ch, method_frame, properties, body):
+            for method_frame, properties, body in self.channel.consume(self.queue):
+                self.on_message(method_frame, properties, body)
+                self.channel.basic_ack(method_frame.delivery_tag)
+
+        except Exception as e:
+            print 'Could not connected to AMQP Server.', e
+            self.stop()
+
+    def on_message(self, method_frame, properties, body):
         try:
+            squid_inactive_time = config.squid_inactive_time
+            curr = time()
             data = json.loads(body)
 
             key = data['uuid']
@@ -174,26 +182,22 @@ class RabbitMQConsumer(object):
             private_ip = data['private_ip']
             load = data['load']
             geo_data = geoip.get_geolocation(public_ip)
+            last_active = data['timestamp']
 
             if key in self.shoal:
                 self.shoal[key].update(public_ip, private_ip, load, geo_data)
-            else:
-                new_squid = SquidNode(key, public_ip, private_ip, load, geo_data)
+            elif curr - last_active < squid_inactive_time:
+                new_squid = SquidNode(key, public_ip, private_ip, load, geo_data, last_active)
                 self.shoal[key] = new_squid
 
         except KeyError as e:
             print "Message received was not the proper format (missing:{}), discarding...".format(e)
-        finally:
-            self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+            pass
 
     def stop(self):
         self.channel.stop_consuming()
         self.connection.close()
 
-
-"""
-    Main function to run Shoal.
-"""
 def main():
     app = Application()
 
