@@ -38,13 +38,12 @@ def setup(path=None):
     homedir = os.path.expanduser('~')
     # find config file
     if not path:
-        if os.path.exists(os.path.join(homedir, ".shoal/.shoal.conf")):
-            path = os.path.join(homedir, ".shoal/.shoal.conf")
+        if os.path.exists(os.path.join(homedir, ".shoal/shoal.conf")):
+            path = os.path.join(homedir, ".shoal/shoal.conf")
         else:
             print >> sys.stderr, "Configuration file problem: There doesn't " \
                   "seem to be a configuration file. " \
-                  "You can specify one with the --config-file parameter, " \
-                  "or put one in ~/.shoal/shoal.conf or "
+                  "You can specify one in ~/.shoal/shoal.conf"
             sys.exit(1)
 
     # Read config file

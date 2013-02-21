@@ -8,68 +8,55 @@
 import sys
 import json
 import pika
-import subprocess
 import time
 import netifaces
 import uuid
-import os
+from os import fork, chdir, setsid, umask
 
 # RabbitMQ Server
 HOST = 'localhost'
 PORT = 5672
+QUEUE = 'squiddata'
 EXCHANGE = 'shoal'
 EXCHANGE_TYPE = 'topic'
 ROUTING_KEY = 'elephant.info'
-# RabbitMQ Queue message will be sent to
-QUEUE = 'squiddata'
+
 # Time interval to send data
 INTERVAL = 30
 # Unique ID for this squid.
 ID = str(uuid.uuid1())
-
-"""
-    T_Collector script (or any script) that will output metric data
-    to keep it consistant with T_Collector used with phantom output should be of the format:
-    (name of your sensor) (current time) (value)
-    eg. name.of.your.sensor 123412312 1000
-"""
-TC_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'netspeed.sh')
-NIC = 'eth0'
-
-# Sensors to get byte rate in and out, using above script.
-BYTE_RATE_IN = ['proc.net.bytes.inrate',NIC]
-BYTE_RATE_OUT = ['proc.net.bytes.outrate',NIC]
+IFACE = 'eth0'
 
 def amqp_send(data):
     connection = pika.BlockingConnection(pika.ConnectionParameters(
                     HOST, PORT))
     channel = connection.channel()
-
-    channel.exchange_declare(EXCHANGE, EXCHANGE_TYPE)
-
+    channel.exchange_declare(exchange=EXCHANGE, type=EXCHANGE_TYPE)
     channel.basic_publish(exchange=EXCHANGE,
                           routing_key=ROUTING_KEY,
                           body=data)
     connection.close()
 
 def get_load_data():
-    cmd = [TC_SCRIPT,NIC]
-    try:
-        p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-    except Exception as e:
-        print "Could not get load information.",e
-        sys.exit(1)
-    p.wait()
-    out,err = p.communicate()
-    out = out.split('\n')
+    received_file = '/sys/class/net/%s/statistics/rx_bytes' % IFACE
+    transmitted_file = '/sys/class/net/%s/statistics/tx_bytes' % IFACE
+    with open(received_file) as rx:
+        with open(transmitted_file) as tx:
+            rx1 = int(rx.read())
+            tx1 = int(tx.read())
+            rx.close()
+            tx.close()
+    time.sleep(1)
+    with open(received_file) as rx:
+        with open(transmitted_file) as tx:
+            rx2 = int(rx.read())
+            tx2 = int(tx.read())
+            rx.close()
+            tx.close()
 
-    data = {}
-    for line in out:
-        if all(s in line for s in BYTE_RATE_IN):
-            data['in'] = line.split()[2]
-        if all(s in line for s in BYTE_RATE_OUT):
-            data['out'] = line.split()[2]
-    return data
+    rx_rate = (rx2 - rx1) / 1024
+    tx_rate = (tx2 - tx1) / 1024
+    return {'in':rx_rate, 'out':tx_rate}
 
 def get_ip_addresses():
     for interface in netifaces.interfaces():
@@ -96,11 +83,25 @@ def main():
                    }
 
             json_str = json.dumps(data)
-
             amqp_send(json_str)
-            time.sleep(INTERVAL
+            time.sleep(INTERVAL)
         except KeyboardInterrupt:
             sys.exit()
 
 if __name__ == '__main__':
+    try:
+        pid = fork()
+        if pid > 0:
+            exit(0)
+    except OSError, e:
+        exit(1)
+    chdir("/")
+    setsid()
+    umask(0)
+    try:
+        pid = fork()
+        if pid > 0:
+            exit(0)
+    except OSError, e:
+        exit(1)
     main()
