@@ -8,7 +8,7 @@ import ConfigParser
 geolitecity_path = os.path.abspath('GeoLiteCity.dat')
 geolitecity_url = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
 geolitecity_update = 2592000
-squid_cleanse_interval = 10
+squid_cleanse_interval = 15
 squid_inactive_time = 180
 amqp_server_url = 'localhost'
 amqp_server_port = 5672
@@ -20,7 +20,7 @@ webpy_template_dir = 'templates/'
 
 def setup(path=None):
     """Setup shoal using config file.
-       setup will look for a configuration file specified in ~/.shoal/.shoal.conf
+       setup will look for a configuration file specified in /etc/shoal.conf
     """
     global geolitecity_path
     global geolitecity_url
@@ -35,15 +35,14 @@ def setup(path=None):
     global webpy_cache
     global webpy_template_dir
 
-    homedir = os.path.expanduser('~')
     # find config file
     if not path:
-        if os.path.exists(os.path.join(homedir, ".shoal/shoal.conf")):
-            path = os.path.join(homedir, ".shoal/shoal.conf")
+        if os.path.exists("/etc/shoal.conf"):
+            path = "/etc/shoal.conf"
         else:
             print >> sys.stderr, "Configuration file problem: There doesn't " \
                   "seem to be a configuration file. " \
-                  "You can specify one in ~/.shoal/shoal.conf"
+                  "You can specify one in /etc/shoal.conf"
             sys.exit(1)
 
     # Read config file

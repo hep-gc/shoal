@@ -29,7 +29,6 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
   </head>
 
   <body>
-
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
@@ -38,7 +37,7 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="brand" href="#">Shoal</a>
+          <a class="brand" href='#'>Shoal</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
               <li class="active"><a href="#">Latest</a></li>
@@ -50,11 +49,13 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
     </div>
 
     <div class="container">
+        <div class="row">
         $:page
+     </div>
     </div> <!-- /container -->
     <hr>
 
-    <footer>
+    <footer id="footer">
         <p style="text-align:center">Shoal 2013 || <a href="http://github.com/hep-gc/shoal">Visit GitHub Project</a><i class="icon-hand-up"></i></p>
     </footer>
     <!-- Le javascript
