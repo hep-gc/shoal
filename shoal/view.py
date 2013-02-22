@@ -22,8 +22,7 @@ def index(**k):
     squid_inactive_time = config.squid_inactive_time
     sorted_shoal = []
 
-    for squid in (sorted(web.shoal.values(), key=operator.attrgetter('last_active'))):
-        sorted_shoal.append(squid)
+    sorted_shoal = sorted(web.shoal.values(), key=operator.attrgetter('last_active'))
 
     sorted_shoal.reverse()
     return render.index(sorted_shoal, squid_inactive_time, time())

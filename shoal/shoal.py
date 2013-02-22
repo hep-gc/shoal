@@ -169,7 +169,6 @@ class RabbitMQConsumer(object):
 
         except Exception as e:
             print 'Could not connected to AMQP Server.', e
-            self.stop()
 
     def on_message(self, method_frame, properties, body):
         try:

@@ -1,0 +1,97 @@
+#!/bin/bash
+# Semi Universal start-stop script
+
+SHOAL_PATH=${SHOAL_PATH-'/usr/local/shoal-agent'}
+LOG=/var/log/shoal_agent.log
+PIDFILE=${PIDFILE-'/var/run/shoal_agent.pid'}
+PROG=$SHOAL_PATH/shoal_agent.py
+COMMAND=$1
+shift
+
+# Sanity checks.
+test -d "$SHOAL_PATH" || {
+    echo >&2 "No such directory: $SHOAL_PATH"
+    echo >&2 "You might need to set the SHOAL_PATH variable in $0"
+    exit 2
+}
+
+test -f "$PROG" || {
+    echo >&2 "No such file: $PROG"
+    echo >&2 "You might need to set the SHOAL_PATH variable in $0"
+    exit 3
+}
+
+for i in "$PIDFILE" "$LOG"; do
+    # If the file doesn't exist, check that we have write access to its parent
+    # directory to be able to create it.
+    test -e "$i" || i=`dirname "$i"`
+    test -w "$i" || {
+        echo >&2 "$0: error: Cannot write to $i"
+        exit 4
+    }
+done
+
+start () {
+    echo "Starting $PROG"
+    $PROG >> $LOG 2>&1 &
+}
+
+# stop [signum]
+stop () {
+    echo "Stopping $PROG"
+    pkill $1 -f "$PROG"
+}
+
+status () {
+    if pgrep -f "$PROG" >/dev/null; then
+        echo "$PROG" running
+        return 0
+    else
+        echo "$PROG" not running
+        return 1
+    fi
+}
+
+forcerestart () {
+    stop
+    try=1
+    sleep 1
+    while status; do
+        try=$((try + 1))
+        if [[ $try -gt 3 ]]; then
+            stop -9
+        else
+            stop
+        fi
+        echo "Waiting for $PROG to die.."
+        sleep 5
+    done
+    start
+}
+
+case $COMMAND in
+    start)  status || start
+        ;;
+    force-restart)
+        forcerestart
+        ;;
+    restart)
+        if status; then
+            newer=$(find $PROG -newer $PIDFILE | wc -l)
+            if [[ $newer -gt 0 ]]; then
+                forcerestart
+            fi
+        else
+            start
+        fi
+        ;;
+    stop) stop
+        ;;
+    status) status
+            exit $?
+        ;;
+    *)  echo >&2 "usage: $0 <start|stop|restart|status|force-restart>"
+        exit 1
+        ;;
+esac
+

@@ -11,52 +11,47 @@ import pika
 import time
 import netifaces
 import uuid
+import config
 from os import fork, chdir, setsid, umask
 
-# RabbitMQ Server
-HOST = 'localhost'
-PORT = 5672
-QUEUE = 'squiddata'
-EXCHANGE = 'shoal'
-EXCHANGE_TYPE = 'topic'
-ROUTING_KEY = 'elephant.info'
-
 # Time interval to send data
-INTERVAL = 30
+INTERVAL = config.interval
+
 # Unique ID for this squid.
 ID = str(uuid.uuid1())
-IFACE = 'eth0'
 
 def amqp_send(data):
+    exchange = config.amqp_exchange
+    exchange_type = config.amqp_exchange_type
+    host = config.amqp_server_url
+    port = config.amqp_server_port
+    cloud = config.cloud
+    routing_key = cloud + '.info'
+
+
     connection = pika.BlockingConnection(pika.ConnectionParameters(
-                    HOST, PORT))
+                    host, port))
     channel = connection.channel()
-    channel.exchange_declare(exchange=EXCHANGE, type=EXCHANGE_TYPE)
-    channel.basic_publish(exchange=EXCHANGE,
-                          routing_key=ROUTING_KEY,
+    channel.exchange_declare(exchange=exchange, type=exchange_type)
+    channel.basic_publish(exchange=exchange,
+                          routing_key=routing_key,
                           body=data)
     connection.close()
 
 def get_load_data():
-    received_file = '/sys/class/net/%s/statistics/rx_bytes' % IFACE
-    transmitted_file = '/sys/class/net/%s/statistics/tx_bytes' % IFACE
-    with open(received_file) as rx:
-        with open(transmitted_file) as tx:
-            rx1 = int(rx.read())
-            tx1 = int(tx.read())
-            rx.close()
-            tx.close()
-    time.sleep(1)
-    with open(received_file) as rx:
-        with open(transmitted_file) as tx:
-            rx2 = int(rx.read())
-            tx2 = int(tx.read())
-            rx.close()
-            tx.close()
+    with open('/sys/class/net/eth0/statistics/tx_bytes') as tx:
+        tx1 = int(tx.read())
+        tx.close()
 
-    rx_rate = (rx2 - rx1) / 1024
+    time.sleep(1)
+
+    with open('/sys/class/net/eth0/statistics/tx_bytes') as tx:
+        tx2 = int(tx.read())
+        tx.close()
+
     tx_rate = (tx2 - tx1) / 1024
-    return {'in':rx_rate, 'out':tx_rate}
+
+    return tx_rate
 
 def get_ip_addresses():
     for interface in netifaces.interfaces():
@@ -71,6 +66,7 @@ def get_ip_addresses():
     return public, private
 
 def main():
+    config.setup()
     while True:
         try:
             public, private = get_ip_addresses()
