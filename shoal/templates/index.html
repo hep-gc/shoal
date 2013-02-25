@@ -1,6 +1,15 @@
 $def with (shoal, squid_active_time, now)
 $ span = 12
 $ offset = 0
+<div class="row">
+    <div class="span6 offset3" style="text-align:center">
+        <h2>List of Active Squids</h2>
+        $if len(shoal) > 0:
+            <h5 class="text-success">$len(shoal) active in the last $squid_active_time seconds</h5>
+        $else:
+            <h5 class="text-info">None active in the last $squid_active_time seconds</h5>
+        </div>
+<div class="row">
 $if len(shoal) > 30:
   $ span = 11
   $ offset = 1
@@ -20,15 +29,6 @@ $if len(shoal) > 30:
      </li>
     </ul>
   </div>
-<div class="span12">
-    <div class="span6 offset3" style="text-align:center">
-        <h2>List of Active Squids</h2>
-        $if len(shoal) > 0:
-            <h5 class="text-success">$len(shoal) active in the last $squid_active_time seconds</h5>
-        $else:
-            <h5 class="text-info">None active in the last $squid_active_time seconds</h5>
-    </div>
-</div>
 <div class="span$span offset$offset">
   <table class="table table-condensed table-hover">
     <thead>
@@ -77,4 +77,5 @@ $if len(shoal) > 30:
           </tr>
     </tbody>
   </table>
+ </div>
  </div>

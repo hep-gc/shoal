@@ -74,7 +74,6 @@ class Application(object):
         except KeyboardInterrupt:
             self.webpy.stop()
             self.rabbitmq.stop()
-            sys.exit()
 
     def rabbitmq(self):
         self.rabbitmq = RabbitMQConsumer(self.shoal)
@@ -152,23 +151,22 @@ class RabbitMQConsumer(object):
     def run(self):
         try:
             self.connection = pika.BlockingConnection(pika.ConnectionParameters(self.url, self.port))
-            self.channel = self.connection.channel()
-
-            self.channel.exchange_declare(exchange=self.exchange,
-                                     type=self.exchange_type)
-
-            self.channel.queue_declare(queue=self.queue)
-
-            self.channel.queue_bind(exchange=self.exchange, queue=self.queue,
-                               routing_key=self.routing_key)
-
-
-            for method_frame, properties, body in self.channel.consume(self.queue):
-                self.on_message(method_frame, properties, body)
-                self.channel.basic_ack(method_frame.delivery_tag)
-
         except Exception as e:
             print 'Could not connected to AMQP Server.', e
+
+        self.channel = self.connection.channel()
+
+        self.channel.exchange_declare(exchange=self.exchange,
+                                 type=self.exchange_type)
+
+        self.channel.queue_declare(queue=self.queue)
+
+        self.channel.queue_bind(exchange=self.exchange, queue=self.queue,
+                           routing_key=self.routing_key)
+
+        for method_frame, properties, body in self.channel.consume(self.queue):
+            self.on_message(method_frame, properties, body)
+            self.channel.basic_ack(method_frame.delivery_tag)
 
     def on_message(self, method_frame, properties, body):
         try:
@@ -182,16 +180,16 @@ class RabbitMQConsumer(object):
             load = data['load']
             geo_data = geoip.get_geolocation(public_ip)
             last_active = data['timestamp']
-
-            if key in self.shoal:
-                self.shoal[key].update(public_ip, private_ip, load, geo_data)
-            elif curr - last_active < squid_inactive_time:
-                new_squid = SquidNode(key, public_ip, private_ip, load, geo_data, last_active)
-                self.shoal[key] = new_squid
-
         except KeyError as e:
             print "Message received was not the proper format (missing:{}), discarding...".format(e)
             pass
+
+        if key in self.shoal:
+            self.shoal[key].update(public_ip, private_ip, load, geo_data)
+        elif curr - last_active < squid_inactive_time:
+            new_squid = SquidNode(key, public_ip, private_ip, load, geo_data, last_active)
+            self.shoal[key] = new_squid
+
 
     def stop(self):
         self.channel.stop_consuming()
