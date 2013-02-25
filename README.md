@@ -12,7 +12,7 @@ A squid cache publishing and advertising tool designed to work in fast changing 
 More information coming soon...
 
 ##Basic configurations
-Change the shoal.conf file with y
+Change the shoal.conf file with your own settings in `/etc/shoal.conf`
 ###General
 - Path to the GeoLiteCity database if not in root directory of shoal.
  - `geolitecity_path = '/usr/local/shoal/GeoLiteCity.dat`
@@ -20,11 +20,13 @@ Change the shoal.conf file with y
  - `geolitecity_url = http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz`
 - If GeoLiteCity database is older than this number (in seconds) it will update.
  - `geolitecity_update_time = 2592000`
+
 ###Squid
 - Interval that ShoalUpdate will run to cleanse any inactive squids. This should be set to a reasonable number to keep the shoal up to date.
  - `squid_cleanse_interval = 15`
 - Squids will be cleansed from the shoal if we have not received an amqp message from it within this time.
  - `squid_inactive_time = 180`
+
 ###RabbitMQ
 *Note: see [RabbitMQ](http://www.rabbitmq.com) documentation for more info on these settings*
 
@@ -38,6 +40,7 @@ Change the shoal.conf file with y
  - `amqp_exchange = shoal`
 - Type of exchange. 
  - `amqp_exchange_type = topic`
+
 ###Webpy
 - Whether webpy should use its cache.
  - `webpy_cache = False`

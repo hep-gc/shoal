@@ -52,7 +52,7 @@ $if len(shoal) > 30:
           $ alive_time = int(now - squid.created); 
           $ time_metric = 's'
           $ hour = int(alive_time/60/60)
-          $ minute = (alive_time/60)
+          $ minute = (alive_time - hour*60*60) / 60
           $ second = alive_time - hour*60*60 - minute*60
 
           $if last_msg < squid_active_time/3:
