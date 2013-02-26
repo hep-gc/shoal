@@ -2,6 +2,7 @@ import sys
 import time
 import web
 import json
+import logging
 
 import pika
 
@@ -11,6 +12,8 @@ from threading import Thread
 import config
 import geoip
 import urls
+
+log = logging.getLogger('shoal')
 
 """
     Basic class to store and update information about each squid server.
@@ -63,12 +66,11 @@ class Application(object):
             self.threads.append(update_thread)
 
             for thread in self.threads:
-                print 'Starting ', thread
                 thread.start()
             while True:
                 for thread in self.threads:
                     if not thread.is_alive():
-                        print thread, " died."
+                        log.error('{} died.'.format(thread))
                         sys.exit(1)
 
         except KeyboardInterrupt:
@@ -152,7 +154,7 @@ class RabbitMQConsumer(object):
         try:
             self.connection = pika.BlockingConnection(pika.ConnectionParameters(self.url, self.port))
         except Exception as e:
-            print 'Could not connected to AMQP Server.', e
+            log.error('Could not connected to AMQP Server.', e)
 
         self.channel = self.connection.channel()
 
@@ -180,22 +182,34 @@ class RabbitMQConsumer(object):
             load = data['load']
             geo_data = geoip.get_geolocation(public_ip)
             last_active = data['timestamp']
+
+            if key in self.shoal:
+                self.shoal[key].update(public_ip, private_ip, load, geo_data)
+            elif curr - last_active < squid_inactive_time:
+                new_squid = SquidNode(key, public_ip, private_ip, load, geo_data, last_active)
+                self.shoal[key] = new_squid
+
         except KeyError as e:
-            print "Message received was not the proper format (missing:{}), discarding...".format(e)
-            pass
-
-        if key in self.shoal:
-            self.shoal[key].update(public_ip, private_ip, load, geo_data)
-        elif curr - last_active < squid_inactive_time:
-            new_squid = SquidNode(key, public_ip, private_ip, load, geo_data, last_active)
-            self.shoal[key] = new_squid
-
+            log.error("Message received was not the proper format (missing:{}), discarding...\nmethod_frame:{}\nproperties:{}\nbody:{}\n".format(e,method_frame,properties,body))
 
     def stop(self):
         self.channel.stop_consuming()
         self.connection.close()
 
+def set_logger():
+    log_file = config.log_file
+    log_format = config.log_format
+    log_level = config.log_level
+
+    log = logging.getLogger('shoal')
+    hdlr = logging.FileHandler(log_file)
+    formatter = logging.Formatter(log_format)
+    hdlr.setFormatter(formatter)
+    log.addHandler(hdlr)
+    log.setLevel(log_level)
+
 def main():
+    set_logger()
     app = Application()
 
 if __name__ == '__main__':
