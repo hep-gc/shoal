@@ -12,6 +12,7 @@ import time
 import netifaces
 import uuid
 import config
+import logging
 from os import fork, chdir, setsid, umask
 
 # Time interval to send data
@@ -19,6 +20,8 @@ INTERVAL = config.interval
 
 # Unique ID for this squid.
 ID = str(uuid.uuid1())
+logging.basicConfig(filename=config.log_file)
+log = logging.getLogger('shoal_agent')
 
 def amqp_send(data):
     exchange = config.amqp_exchange
@@ -28,15 +31,17 @@ def amqp_send(data):
     cloud = config.cloud
     routing_key = cloud + '.info'
 
-
-    connection = pika.BlockingConnection(pika.ConnectionParameters(
-                    host, port))
-    channel = connection.channel()
-    channel.exchange_declare(exchange=exchange, type=exchange_type)
-    channel.basic_publish(exchange=exchange,
-                          routing_key=routing_key,
-                          body=data)
-    connection.close()
+    try:
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host, port))
+        channel = connection.channel()
+        channel.exchange_declare(exchange=exchange, type=exchange_type)
+        channel.basic_publish(exchange=exchange,
+                              routing_key=routing_key,
+                              body=data)
+        connection.close()
+    except Exception as e:
+        log.error('Could not connect to AMQP Server. Error: %s' % e)
+        sys.exit(1)
 
 def get_load_data():
     with open('/sys/class/net/eth0/statistics/tx_bytes') as tx:
@@ -68,23 +73,33 @@ def get_ip_addresses():
 def main():
     config.setup()
     while True:
-        try:
-            public, private = get_ip_addresses()
-            data = {
-                    'uuid': ID,
-                    'public_ip': public,
-                    'private_ip': private,
-                    'load': get_load_data(),
-                    'timestamp': time.time(),
-                   }
+        public, private = get_ip_addresses()
+        data = {
+                'uuid': ID,
+                'public_ip': public,
+                'private_ip': private,
+                'load': get_load_data(),
+                'timestamp': time.time(),
+               }
 
-            json_str = json.dumps(data)
-            amqp_send(json_str)
-            time.sleep(INTERVAL)
-        except KeyboardInterrupt:
-            sys.exit()
+        json_str = json.dumps(data)
+        amqp_send(json_str)
+        time.sleep(INTERVAL)
+
+def set_logger():
+    log_file = config.log_file
+    log_format = config.log_format
+    log_level = config.log_level
+
+    log = logging.getLogger('shoal_agent')
+    hdlr = logging.FileHandler(log_file)
+    formatter = logging.Formatter(log_format)
+    hdlr.setFormatter(formatter)
+    log.addHandler(hdlr)
+    log.setLevel(log_level)
 
 if __name__ == '__main__':
+    set_logger()
     try:
         pid = fork()
         if pid > 0:

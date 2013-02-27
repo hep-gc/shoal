@@ -4,8 +4,12 @@ import subprocess
 import operator
 import pygeoip, math
 import web
-import config
+import logging
 from time import time, sleep
+
+import config
+
+log = logging.getLogger('shoal')
 
 """
     Given an IP return all its geographical information (using GeoLiteCity.dat)
@@ -71,31 +75,36 @@ def get_distance_between_nodes(lat1,long1,lat2,long2):
 def deg_to_rad(deg):
     return deg * (math.pi/180)
 
-def check_geolitecity():
+def check_geolitecity_need_update():
     curr = time()
     geolitecity_update = config.geolitecity_update
     geolitecity_path = config.geolitecity_path
 
     if os.path.exists(geolitecity_path):
-        if os.path.getmtime(geolitecity_path) - curr > geolitecity_update:
-            return True
-        else:
+        if curr - os.path.getmtime(geolitecity_path) < geolitecity_update:
+            logging.info('GeoLiteCity is up-to-date')
             return False
+        else:
+            logging.warning('GeoLiteCity database needs updating.')
+            return True
     else:
+        logging.warning('GeoLiteCity database needs updating.')
         return True
 
 def download_geolitecity():
     geolitecity_path = config.geolitecity_path
-    cmd = ['wget',config.geolitecity_url]
+    cmd = ['wget','-O',geolitecity_path,config.geolitecity_url]
 
     ungz = ['gunzip','{0}.gz'.format(geolitecity_path)]
     try:
         dl = subprocess.Popen(cmd)
         dl.wait()
-        sleep(2)
         gz = subprocess.Popen(ungz)
         gz.wait()
 
+        if check_geolitecity():
+            log.error('GeoLiteCity database failed to update.')
+
     except Exception as e:
-        print "Could not download the database. - {0}".format(e)
+        log.error("Could not download the database. - {0}".format(e))
         sys.exit(1)
