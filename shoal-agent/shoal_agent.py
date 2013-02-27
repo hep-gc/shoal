@@ -42,8 +42,6 @@ def amqp_send(data):
     except Exception as e:
         log.error('Could not connect to AMQP Server. Error: %s' % e)
         sys.exit(1)
-    except:
-        pass
 
 def get_load_data():
     with open('/sys/class/net/eth0/statistics/tx_bytes') as tx:

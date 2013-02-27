@@ -72,13 +72,10 @@ class Application(object):
                 for thread in self.threads:
                     if not thread.is_alive():
                         logging.error('{} died.'.format(thread))
-                        sys.exit(1)
+                        self.stop()
 
         except KeyboardInterrupt:
-            self.webpy.stop()
-            self.rabbitmq.stop()
-            # give them time to properly exit.
-            sleep(2)
+            self.stop()
 
     def rabbitmq(self):
         self.rabbitmq = RabbitMQConsumer(self.shoal)
@@ -92,6 +89,17 @@ class Application(object):
         self.update = ShoalUpdate(self.shoal)
         self.update.run()
 
+    def stop(self):
+        try:
+            self.webpy.stop()
+            self.rabbitmq.stop()
+            self.update.stop()
+        except Exception as e:
+            print e
+        finally:
+            # give them time to properly exit.
+            sleep(2)
+            sys.exit()
 
 """
     ShoalUpdate is used for trimming inactive squids every set interval.
@@ -102,9 +110,11 @@ class ShoalUpdate(object):
         self.shoal = shoal
         self.interval = config.squid_cleanse_interval
         self.inactive = config.squid_inactive_time
+        self.running = False
 
     def run(self):
-        while True:
+        self.running = True
+        while self.running:
             sleep(self.interval)
             self.update()
 
@@ -113,6 +123,9 @@ class ShoalUpdate(object):
         for squid in self.shoal.values():
             if curr - squid.last_active > self.inactive:
                 self.shoal.pop(squid.key)
+
+    def stop(self):
+        self.running = False
 
 """
     Webpy webserver used to serve up active squid lists and restul API calls. For now we just use the development webpy server to serve requests.
