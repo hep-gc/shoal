@@ -214,6 +214,7 @@ def set_logger():
     log.setLevel(log_level)
 
 def main():
+    set_logger()
     app = Application()
 
 if __name__ == '__main__':
