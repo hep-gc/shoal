@@ -1,8 +1,8 @@
 import sys
-import time
 import web
 import json
 import logging
+import argparse
 
 import pika
 
@@ -13,8 +13,9 @@ import config
 import geoip
 import urls
 
-logging.basicConfig(filename=config.log_file)
-log = logging.getLogger('shoal')
+logging.basicConfig()
+logging.getLogger('shoal').setLevel(logging.WARNING)
+
 """
     Basic class to store and update information about each squid server.
 """
@@ -45,7 +46,6 @@ class Application(object):
     def __init__(self):
         # setup configuration settings.
         config.setup()
-        set_logger()
         self.shoal = {}
         self.threads = []
 
@@ -71,7 +71,7 @@ class Application(object):
             while True:
                 for thread in self.threads:
                     if not thread.is_alive():
-                        log.error('{} died.'.format(thread))
+                        logging.error('{} died.'.format(thread))
                         sys.exit(1)
 
         except KeyboardInterrupt:
@@ -121,13 +121,18 @@ class WebpyServer(object):
 
     def __init__(self, shoal):
         web.shoal = shoal
-
+        web.config.debug = False
+        self.app = None
+        self.urls = (
+            '/', 'urls.index',
+            '/nearest', 'urls.nearest',
+        )
     def run(self):
         try:
-            self.app = web.application(urls.urls, globals())
+            self.app = web.application(self.urls, globals())
             self.app.run()
         except Exception as e:
-            log.error("Could not start webpy server.\n{}".format(e))
+            logging.error("Could not start webpy server.\n{}".format(e))
 
     def stop(self):
         self.app.stop()
@@ -173,9 +178,9 @@ class RabbitMQConsumer(object):
             self.channel.basic_consume(self.on_message, self.queue)
 
             self.channel.start_consuming()
+
         except Exception as e:
-            log.error('Could not connected to AMQP Server. Error: {}'.format(e))
-            sys.exit(1)
+            logging.error('Could not connected to AMQP Server. Error: {}'.format(e))
 
     def on_message(self, unused_channel, method_frame, properties, body):
         try:
@@ -197,28 +202,16 @@ class RabbitMQConsumer(object):
                 self.shoal[key] = new_squid
 
         except KeyError as e:
-            log.error("Message received was not the proper format (missing:{}), discarding...\nmethod_frame:{}\nproperties:{}\nbody:{}\n".format(e,method_frame,properties,body))
+            logging.error("Message received was not the proper format (missing:{}), discarding...\nmethod_frame:{}\nproperties:{}\nbody:{}\n".format(e,method_frame,properties,body))
+
         finally:
             self.channel.basic_ack(method_frame.delivery_tag)
 
     def stop(self):
         self.channel.stop_consuming()
-        self.connection.close()
 
-def set_logger():
-    log_file = config.log_file
-    log_format = config.log_format
-    log_level = config.log_level
-
-    log = logging.getLogger('shoal')
-    hdlr = logging.FileHandler(log_file)
-    formatter = logging.Formatter(log_format)
-    hdlr.setFormatter(formatter)
-    log.addHandler(hdlr)
-    log.setLevel(log_level)
 
 def main():
-    set_logger()
     app = Application()
 
 if __name__ == '__main__':

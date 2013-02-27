@@ -1,15 +1,13 @@
 import sys
 import os
 import subprocess
-import operator
 import pygeoip, math
 import web
 import logging
+import operator
 from time import time, sleep
 
 import config
-
-log = logging.getLogger('shoal')
 
 """
     Given an IP return all its geographical information (using GeoLiteCity.dat)
@@ -20,11 +18,11 @@ def get_geolocation(ip):
         gi = pygeoip.GeoIP(geolitecity_path)
         return gi.record_by_addr(ip)
     except Exception as e:
-        log.error('There appears to be something wrong with the GeoLiteCity.dat file. Attempting to resolve...\n{}'.format(e))
+        logging.error('There appears to be something wrong with the GeoLiteCity.dat file. Attempting to resolve...\n{}'.format(e))
         try:
             download_geolitecity()
         except:
-            log.error("could not resolve issues. Please remove '{}' and try again".format(geolitecity_path))
+            logging.error("could not resolve issues. Please remove '{}' and try again".format(geolitecity_path))
             sys.exit(1)
 
 
@@ -111,8 +109,8 @@ def download_geolitecity():
         gz.wait()
 
         if check_geolitecity_need_update():
-            log.error('GeoLiteCity database failed to update.')
+            logging.error('GeoLiteCity database failed to update.')
 
     except Exception as e:
-        log.error("Could not download the database. - {0}".format(e))
+        logging.error("Could not download the database. - {0}".format(e))
         sys.exit(1)

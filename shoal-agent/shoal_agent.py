@@ -20,7 +20,7 @@ INTERVAL = config.interval
 
 # Unique ID for this squid.
 ID = str(uuid.uuid1())
-logging.basicConfig(filename=config.log_file)
+logging.basicConfig()
 log = logging.getLogger('shoal_agent')
 
 def amqp_send(data):
@@ -42,6 +42,8 @@ def amqp_send(data):
     except Exception as e:
         log.error('Could not connect to AMQP Server. Error: %s' % e)
         sys.exit(1)
+    except:
+        pass
 
 def get_load_data():
     with open('/sys/class/net/eth0/statistics/tx_bytes') as tx:
@@ -72,6 +74,7 @@ def get_ip_addresses():
 
 def main():
     config.setup()
+    set_logger()
     while True:
         public, private = get_ip_addresses()
         data = {
@@ -88,18 +91,16 @@ def main():
 
 def set_logger():
     log_file = config.log_file
-    log_format = config.log_format
-    log_level = config.log_level
-
+    log_format = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
     log = logging.getLogger('shoal_agent')
     hdlr = logging.FileHandler(log_file)
     formatter = logging.Formatter(log_format)
+
     hdlr.setFormatter(formatter)
     log.addHandler(hdlr)
-    log.setLevel(log_level)
+    log.setLevel(logging.WARNING)
 
 if __name__ == '__main__':
-    set_logger()
     try:
         pid = fork()
         if pid > 0:

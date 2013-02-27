@@ -1,6 +1,5 @@
 import os
 import sys
-import logging
 import ConfigParser
 
 # Shoal Options Module
@@ -18,9 +17,6 @@ amqp_exchange = 'shoal'
 amqp_exchange_type = 'topic'
 webpy_cache = False
 webpy_template_dir = 'templates/'
-log_file = '/var/tmp/shoal.log'
-log_format = '%(asctime)s %(levelname)s %(message)s'
-log_level = logging.WARNING
 
 def setup(path=None):
     """Setup shoal using config file.
@@ -38,9 +34,6 @@ def setup(path=None):
     global amqp_exchange_type
     global webpy_cache
     global webpy_template_dir
-    global log_file
-    global log_format
-    global log_level
 
     # find config file
     if not path:
@@ -141,20 +134,3 @@ def setup(path=None):
     if config_file.has_option("webpy", "webpy_template_dir"):
         webpy_template_dir = config_file.get("webpy",
                                                 "webpy_template_dir")
-
-    if config_file.has_option("logging", "log_file"):
-        log_file = config_file.get("logging",
-                                        "log_file")
-
-    if config_file.has_option("logging", "log_format"):
-        log_format = config_file.get("logging",
-                                        "log_format")
-
-    if config_file.has_option("logging", "log_level"):
-        try:
-            log_level = config_file.getint("logging",
-                                            "log_level")
-        except ValueError:
-            print "Configuration file problem: log_level must be a " \
-                  "integer value."
-            sys.exit(1)
