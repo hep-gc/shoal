@@ -12,7 +12,7 @@ amqp_exchange = 'shoal'
 amqp_exchange_type = 'topic'
 interval = 30
 cloud = 'elephant'
-log_file = '/var/tmp/shoal.log'
+log_file = '/var/tmp/shoal_agent.log'
 log_format = '%(asctime)s %(levelname)s %(message)s'
 log_level = logging.WARNING
 

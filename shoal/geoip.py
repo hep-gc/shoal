@@ -1,4 +1,4 @@
-mport sys
+import sys
 import os
 import subprocess
 import operator
@@ -16,9 +16,17 @@ log = logging.getLogger('shoal')
 """
 def get_geolocation(ip):
     geolitecity_path = config.geolitecity_path
+    try:
+        gi = pygeoip.GeoIP(geolitecity_path)
+        return gi.record_by_addr(ip)
+    except Exception as e:
+        log.error('There appears to be something wrong with the GeoLiteCity.dat file. Attempting to resolve...\n{}'.format(e))
+        try:
+            download_geolitecity()
+        except:
+            log.error("could not resolve issues. Please remove '{}' and try again".format(geolitecity_path))
+            sys.exit(1)
 
-    gi = pygeoip.GeoIP(geolitecity_path)
-    return gi.record_by_addr(ip)
 
 """
     Given an IP return IP of nearest squid.
@@ -93,7 +101,7 @@ def check_geolitecity_need_update():
 
 def download_geolitecity():
     geolitecity_path = config.geolitecity_path
-    cmd = ['wget','-O',geolitecity_path,config.geolitecity_url]
+    cmd = ['wget','-O',geolitecity_path+'.gz',config.geolitecity_url]
 
     ungz = ['gunzip','{0}.gz'.format(geolitecity_path)]
     try:
@@ -102,7 +110,7 @@ def download_geolitecity():
         gz = subprocess.Popen(ungz)
         gz.wait()
 
-        if check_geolitecity():
+        if check_geolitecity_need_update():
             log.error('GeoLiteCity database failed to update.')
 
     except Exception as e:

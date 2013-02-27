@@ -13,7 +13,7 @@ import config
 import geoip
 import urls
 
-logging.basicConfig()
+logging.basicConfig(filename=config.log_file)
 log = logging.getLogger('shoal')
 """
     Basic class to store and update information about each squid server.
@@ -75,11 +75,10 @@ class Application(object):
                         sys.exit(1)
 
         except KeyboardInterrupt:
-            for thread in self.threads:
-                thread.join()
-                print 'killed thread: ', thread
             self.webpy.stop()
             self.rabbitmq.stop()
+            # give them time to properly exit.
+            sleep(2)
 
     def rabbitmq(self):
         self.rabbitmq = RabbitMQConsumer(self.shoal)
@@ -124,8 +123,11 @@ class WebpyServer(object):
         web.shoal = shoal
 
     def run(self):
-        self.app = web.application(urls.urls, globals())
-        self.app.run()
+        try:
+            self.app = web.application(urls.urls, globals())
+            self.app.run()
+        except Exception as e:
+            log.error("Could not start webpy server.\n{}".format(e))
 
     def stop(self):
         self.app.stop()
@@ -157,25 +159,25 @@ class RabbitMQConsumer(object):
     def run(self):
         try:
             self.connection = pika.BlockingConnection(pika.ConnectionParameters(self.url, self.port))
+
+            self.channel = self.connection.channel()
+
+            self.channel.exchange_declare(exchange=self.exchange,
+                                     type=self.exchange_type)
+
+            self.channel.queue_declare(queue=self.queue)
+
+            self.channel.queue_bind(exchange=self.exchange, queue=self.queue,
+                               routing_key=self.routing_key)
+
+            self.channel.basic_consume(self.on_message, self.queue)
+
+            self.channel.start_consuming()
         except Exception as e:
-            log.error('Could not connected to AMQP Server. Error: %s' % e)
+            log.error('Could not connected to AMQP Server. Error: {}'.format(e))
             sys.exit(1)
 
-        self.channel = self.connection.channel()
-
-        self.channel.exchange_declare(exchange=self.exchange,
-                                 type=self.exchange_type)
-
-        self.channel.queue_declare(queue=self.queue)
-
-        self.channel.queue_bind(exchange=self.exchange, queue=self.queue,
-                           routing_key=self.routing_key)
-
-        for method_frame, properties, body in self.channel.consume(self.queue):
-            self.on_message(method_frame, properties, body)
-            self.channel.basic_ack(method_frame.delivery_tag)
-
-    def on_message(self, method_frame, properties, body):
+    def on_message(self, unused_channel, method_frame, properties, body):
         try:
             squid_inactive_time = config.squid_inactive_time
             curr = time()
@@ -196,9 +198,11 @@ class RabbitMQConsumer(object):
 
         except KeyError as e:
             log.error("Message received was not the proper format (missing:{}), discarding...\nmethod_frame:{}\nproperties:{}\nbody:{}\n".format(e,method_frame,properties,body))
+        finally:
+            self.channel.basic_ack(method_frame.delivery_tag)
 
     def stop(self):
-        self.channel.stop()
+        self.channel.stop_consuming()
         self.connection.close()
 
 def set_logger():
