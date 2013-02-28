@@ -46,8 +46,12 @@ def index(**k):
         except:
             page = 1
 
-        lower, upper = get_slices(page,size)
         pages = int(math.ceil(len(sorted_shoal) / float(size)))
+        if page > pages:
+            page = pages
+        if page < 1:
+            page = 1
+        lower, upper = get_slices(page,size)
 
         return render.index(time(), total, sorted_shoal[lower:upper], page, pages, size)
 
