@@ -137,7 +137,7 @@ class WebpyServer(object):
         web.config.debug = False
         self.app = None
         self.urls = (
-            '/', 'urls.index',
+            '/(.*)', 'urls.index',
             '/nearest', 'urls.nearest',
         )
     def run(self):

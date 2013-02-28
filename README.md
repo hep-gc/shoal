@@ -3,8 +3,8 @@ A squid cache publishing and advertising tool designed to work in fast changing 
 
 ## Overview
 
-   * Each squid server will send an AMQP json encoded message to a centralized RabbitMQ server queue.
-   * A webserver will retrieve the messages from the queue and maintain a list of active squids.
+   * Each squid server will send an AMQP json encoded message to a centralized RabbitMQ server exchange.
+   * A webserver will retrieve the messages from the exchange and maintain a list of active squids.
    * A newly booted virtual machine will query the webserver via a RESTful API to retrieve the IP of the nearest squid server.
 
 ### How to Install

@@ -21,21 +21,23 @@ render = web.template.render(TEMPLATES, cache=CACHE, globals=t_globals)
 render._keywords['globals']['render'] = render
 
 def get_slices(page, page_size=100):
-    return (page_size * (page - 1), (page_size * page))
+    return (int(page_size * (page - 1)), int((page_size * page)))
 
-def index(**k):
-    size = config.webpy_page_size
-
+def index(size):
+    web.debug(size)
     params = web.input()
+
+    if size:
+        non_digits = re.compile(r'[^\d]+')
+        size = int(non_digits.sub('', size))
+    else:
+        size = 20
+
     page = params.page if hasattr(params, 'page') else 1
-
-
-
-
-    sorted_shoal = []
 
     sorted_shoal = sorted(web.shoal.values(), key=operator.attrgetter('last_active'))
     sorted_shoal.reverse()
+
     total = len(sorted_shoal)
 
     if page == 'all':
