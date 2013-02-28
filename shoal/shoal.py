@@ -53,27 +53,27 @@ class Application(object):
         if geoip.check_geolitecity_need_update():
             geoip.download_geolitecity()
 
+        rabbitmq_thread = Thread(target=self.rabbitmq, name='RabbitMQ')
+        rabbitmq_thread.daemon = True
+        self.threads.append(rabbitmq_thread)
+
+        webpy_thread = Thread(target=self.webpy, name='Webpy')
+        webpy_thread.daemon = True
+        self.threads.append(webpy_thread)
+
+        update_thread = Thread(target=self.update, name="ShoalUpdate")
+        update_thread.daemon = True
+        self.threads.append(update_thread)
+
+        for thread in self.threads:
+            thread.start()
+
         try:
-            rabbitmq_thread = Thread(target=self.rabbitmq, name='RabbitMQ')
-            rabbitmq_thread.daemon = True
-            self.threads.append(rabbitmq_thread)
-
-            webpy_thread = Thread(target=self.webpy, name='Webpy')
-            webpy_thread.daemon = True
-            self.threads.append(webpy_thread)
-
-            update_thread = Thread(target=self.update, name="ShoalUpdate")
-            update_thread.daemon = True
-            self.threads.append(update_thread)
-
-            for thread in self.threads:
-                thread.start()
             while True:
                 for thread in self.threads:
                     if not thread.is_alive():
                         logging.error('{} died.'.format(thread))
                         self.stop()
-
         except KeyboardInterrupt:
             self.stop()
 
@@ -146,13 +146,14 @@ class WebpyServer(object):
             self.app.run()
         except Exception as e:
             logging.error("Could not start webpy server.\n{}".format(e))
+            sys.exit(1)
 
     def stop(self):
         self.app.stop()
 
 """
-    Basic RabbitMQ blocking consumer. Consumes messages from `QUEUE` takes the json in body, and put it into the dictionary `shoal`
-    Messages received must be a json string with keys:
+    Basic RabbitMQ blocking consumer. Consumes messages from `config.amqp_server_queue` takes the json in body, and put it into the dictionary `shoal`
+    Messages received must be a json string with keys or it will be discarded.
     {
       'uuid': '1231232',
       'public_ip': '142.11.52.1',

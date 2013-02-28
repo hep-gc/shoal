@@ -25,7 +25,6 @@ def get_geolocation(ip):
             logging.error("could not resolve issues. Please remove '{}' and try again".format(geolitecity_path))
             sys.exit(1)
 
-
 """
     Given an IP return IP of nearest squid.
 """
@@ -99,9 +98,10 @@ def check_geolitecity_need_update():
 
 def download_geolitecity():
     geolitecity_path = config.geolitecity_path
-    cmd = ['wget','-O',geolitecity_path+'.gz',config.geolitecity_url]
 
-    ungz = ['gunzip','{0}.gz'.format(geolitecity_path)]
+    cmd = ['wget','-O','{0}.gz'.format(geolitecity_path),config.geolitecity_url]
+    ungz = ['gunzip','-f','{0}.gz'.format(geolitecity_path)]
+
     try:
         dl = subprocess.Popen(cmd)
         dl.wait()

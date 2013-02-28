@@ -4,11 +4,13 @@ import geoip
 import json
 import operator
 import config
+import math
 
 from time import time
 
 t_globals = dict(
   datestr=web.datestr,
+  squid_active_time=config.squid_inactive_time,
 )
 
 CACHE = config.webpy_cache
@@ -18,14 +20,36 @@ TEMPLATES = config.webpy_template_dir
 render = web.template.render(TEMPLATES, cache=CACHE, globals=t_globals)
 render._keywords['globals']['render'] = render
 
+def get_slices(page, page_size=100):
+    return (page_size * (page - 1), (page_size * page))
+
 def index(**k):
-    squid_inactive_time = config.squid_inactive_time
+    size = config.webpy_page_size
+
+    params = web.input()
+    page = params.page if hasattr(params, 'page') else 1
+
+
+
+
     sorted_shoal = []
 
     sorted_shoal = sorted(web.shoal.values(), key=operator.attrgetter('last_active'))
-
     sorted_shoal.reverse()
-    return render.index(sorted_shoal, squid_inactive_time, time())
+    total = len(sorted_shoal)
+
+    if page == 'all':
+        return render.index(time(), total, sorted_shoal, 1, 1, 0)
+    else:
+        try:
+            page = int(page)
+        except:
+            page = 1
+
+        lower, upper = get_slices(page,size)
+        pages = int(math.ceil(len(sorted_shoal) / float(size)))
+
+        return render.index(time(), total, sorted_shoal[lower:upper], page, pages, size)
 
 def nearest(**k):
     if web.ctx.query:
