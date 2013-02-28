@@ -29,7 +29,11 @@ def index(size):
 
     if size:
         non_digits = re.compile(r'[^\d]+')
-        size = int(non_digits.sub('', size))
+        try:
+            size = int(non_digits.sub('', size))
+            web.debug(size)
+        except ValueError:
+            size = 20
     else:
         size = 20
 
