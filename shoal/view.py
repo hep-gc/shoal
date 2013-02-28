@@ -24,14 +24,12 @@ def get_slices(page, page_size=100):
     return (int(page_size * (page - 1)), int((page_size * page)))
 
 def index(size):
-    web.debug(size)
     params = web.input()
 
     if size:
         non_digits = re.compile(r'[^\d]+')
         try:
             size = int(non_digits.sub('', size))
-            web.debug(size)
         except ValueError:
             size = 20
     else:
