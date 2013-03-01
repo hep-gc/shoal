@@ -29,19 +29,21 @@ def index(size):
     sorted_shoal.reverse()
     total = len(sorted_shoal)
 
+    non_digits = re.compile(r'[^\d]+')
     try:
-        non_digits = re.compile(r'[^\d]+')
         size = int(non_digits.sub('', size))
-        page = int(page)
-        pages = int(math.ceil(len(sorted_shoal) / float(size)))
     except ValueError:
         size = 20
+    page = int(page)
+    try:
         pages = int(math.ceil(len(sorted_shoal) / float(size)))
     except ZeroDivisionError:
         return render.index(time(), total, sorted_shoal, 1, 1, 0)
 
-    if page > pages or page < 1:
+    if page < 1:
         page = 1
+    if page > pages:
+        page = pages
 
     lower, upper = get_slices(page,size)
     return render.index(time(), total, sorted_shoal[lower:upper], page, pages, size)
