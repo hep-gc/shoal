@@ -95,7 +95,7 @@ class Application(object):
             self.rabbitmq.stop()
             self.update.stop()
         except Exception as e:
-            print e
+            logging.error(e)
         finally:
             # give them time to properly exit.
             sleep(2)
@@ -128,7 +128,7 @@ class ShoalUpdate(object):
         self.running = False
 
 """
-    Webpy webserver used to serve up active squid lists and restul API calls. For now we just use the development webpy server to serve requests.
+    Webpy webserver used to serve up active squid lists and API calls. For now we just use the development webpy server to serve requests.
 """
 class WebpyServer(object):
 

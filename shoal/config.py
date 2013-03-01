@@ -17,7 +17,6 @@ amqp_exchange = 'shoal'
 amqp_exchange_type = 'topic'
 webpy_cache = False
 webpy_template_dir = 'templates/'
-webpy_page_size = 50
 
 def setup(path=None):
     """Setup shoal using config file.
@@ -35,7 +34,6 @@ def setup(path=None):
     global amqp_exchange_type
     global webpy_cache
     global webpy_template_dir
-    global webpy_page_size
 
     # find config file
     if not path:
@@ -136,12 +134,3 @@ def setup(path=None):
     if config_file.has_option("webpy", "webpy_template_dir"):
         webpy_template_dir = config_file.get("webpy",
                                                 "webpy_template_dir")
-
-    if config_file.has_option("webpy", "webpy_page_size"):
-        try:
-            webpy_page_size = config_file.getint("webpy",
-                                                 "webpy_page_size")
-        except ValueError:
-            print "Configuration file problem: webpy_page_size must be an " \
-                  "integer value."
-            sys.exit(1)

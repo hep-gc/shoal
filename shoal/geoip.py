@@ -18,18 +18,17 @@ def get_geolocation(ip):
         gi = pygeoip.GeoIP(geolitecity_path)
         return gi.record_by_addr(ip)
     except Exception as e:
-        logging.error('There appears to be something wrong with the GeoLiteCity.dat file. Attempting to resolve...\n{}'.format(e))
-        try:
-            download_geolitecity()
-        except:
-            logging.error("could not resolve issues. Please remove '{}' and try again".format(geolitecity_path))
-            sys.exit(1)
+        logging.error(e)
+        return None
 
 """
     Given an IP return IP of nearest squid.
 """
 def get_nearest_squid(ip):
     request_data = get_geolocation(ip)
+    if not request_data:
+        return None
+
     r_lat = request_data['latitude']
     r_long = request_data['longitude']
 
