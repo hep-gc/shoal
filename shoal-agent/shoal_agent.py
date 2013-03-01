@@ -75,18 +75,17 @@ def main():
     set_logger()
     while True:
         public, private = get_ip_addresses()
-        ID = str(uuid.uuid1())
         data = {
                 'uuid': ID,
                 'public_ip': public,
                 'private_ip': private,
-                'load': 'ITS OVER 9000!!!!!!1111', #get_load_data(),
+                'load': get_load_data(),
                 'timestamp': time.time(),
                }
 
         json_str = json.dumps(data)
         amqp_send(json_str)
-        #time.sleep(INTERVAL)
+        time.sleep(INTERVAL)
 
 def set_logger():
     log_file = config.log_file
