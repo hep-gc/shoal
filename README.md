@@ -5,24 +5,26 @@ A squid cache publishing and advertising tool designed to work in fast changing 
 
    * Each squid server will send an AMQP json encoded message to a centralized RabbitMQ server exchange.
    * A webserver will retrieve the messages from the exchange and maintain a list of active squids.
-   * A newly booted virtual machine will query the webserver via a RESTful API to retrieve the IP of the nearest squid server.
+   * A newly booted virtual machine will query the webserver and retrieve a json encoded string that contains the IP of the nearest squid server.
 
-### How to Install
-    
-More information coming soon...
+##Installation
+ 
+###Easy Way (NYI)
+1. soon....
 
-##Basic configurations
-Change the shoal.conf file with your own settings in `/etc/shoal.conf`. Detail descriptions can be found in the sample configuration file `shoal.conf`.
+###Hard Way
+1. Move shoal subfolder to any working directory.
+2. Adjust configuration file included, and move it to `/etc/`.
+3. Install any missing packages using pip or easy_install:
 
-###Webpy
-- Whether webpy should use its cache.
- - `webpy_cache = False`
-- Where templates can be found (relative to shoal.py)
- - `webpy_template_dir = templates/`
+        pika 0.9.1+
+        web.py 0.3+
+        pygeoip 0.2.5+
 
-### How to run
+4. `python shoal.py` to start the service.
+5. Visit to `http://localhost:8080` to see the list of active squids.
 
-More information coming soon...
+*Note: Requires you have a working RabbitMQ AMQP Server, and python 2.6+*
 
 ## LICENSE
 This program is free software; you can redistribute it and/or modify it under the terms of either:
@@ -36,4 +38,3 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the Apache v2 License with this software, in the file named "LICENSE".
 
 You should also have received a copy of the GNU General Public License along with this program in the file named "COPYING". If not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA or visit their web page on the internet at http://www.gnu.org/copyleft/gpl.html.
-
