@@ -4,6 +4,7 @@
 1. Copy shoal-agent folder to `/usr/local/`
 2. Copy the init script in the `bin/` directory to `/etc/init.d/`
 3. Create/Move `shoal_agent.conf` to `/etc/shoal_agent.conf` and adjust settings.
+4. If system supports it, `chkconfig --add shoal_agent` to start shoal agent on boot.
 
 *Note: Requires python 2.6+.*
 

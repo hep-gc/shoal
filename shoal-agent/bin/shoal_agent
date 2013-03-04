@@ -1,5 +1,9 @@
 #!/bin/bash
-# Semi Universal start-stop script
+# Basic support for IRIX style chkconfig
+###
+# chkconfig: 235 98 55
+# description: Manages shoal agent with chkconfig.
+###
 
 SHOAL_PATH=${SHOAL_PATH-'/usr/local/shoal-agent'}
 LOG=/var/log/shoal_agent.log
