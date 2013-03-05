@@ -1,3 +1,7 @@
+"""
+  Very simple client script used to get nearest squid server using the RESTful API.
+"""
+
 import urllib2
 import sys
 import json
