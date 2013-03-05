@@ -14,14 +14,14 @@ $def with (now, total, shoal, page, pages, size)
         <tr>
           <th>#</th>
           <th>Public IP</th>
-          <th>Private IP</th>
+          <th class="hidden-phone">Private IP</th>
           <th>Bytes Out</th>
           <th>City</th>
           <th>Region</th>
-          <th>Country</th>
-          <th>Latitude</th>
-          <th>Longitude</th>
-          <th>Last Received</th>
+          <th class="hidden-phone">Country</th>
+          <th class="hidden-phone">Latitude</th>
+          <th class="hidden-phone">Longitude</th>
+          <th class="hidden-phone">Last Received</th>
           <th>Alive</th>
         </tr>
       </thead>
@@ -43,14 +43,14 @@ $def with (now, total, shoal, page, pages, size)
             <tr class='$state'>
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
                 <td>$squid.public_ip</td>
-                <td>$squid.private_ip</td>
+                <td class="hidden-phone">$squid.private_ip</td>
                 <td>$squid.load kB/s</td>
                 <td>$squid.geo_data['city']</td>
                 <td>$squid.geo_data['region_name']</td>
-                <td>$squid.geo_data['country_name']</td>
-                <td>$squid.geo_data['latitude']</td>
-                <td>$squid.geo_data['longitude']</td>
-                <td>$(last_msg)s</td>
+                <td class="hidden-phone">$squid.geo_data['country_name']</td>
+                <td class="hidden-phone">$squid.geo_data['latitude']</td>
+                <td class="hidden-phone">$squid.geo_data['longitude']</td>
+                <td class="hidden-phone">$(last_msg)s</td>
                 <td>$(hour)h$(minute)m$(second)s</td>
             </tr>
       </tbody>
