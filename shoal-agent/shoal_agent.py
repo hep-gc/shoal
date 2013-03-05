@@ -13,7 +13,6 @@ import netifaces
 import uuid
 import config
 import logging
-from os import fork, chdir, setsid, umask
 
 # Time interval to send data
 INTERVAL = config.interval
@@ -62,10 +61,10 @@ def get_ip_addresses():
     for interface in netifaces.interfaces():
         try:
             for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
-                if 'lo' in interface:
-                    private = link['addr']
-                else:
+                if 'eth0' in interface:
                     public = link['addr']
+                else:
+                    private = link['addr']
         except:
             continue
     return public, private
@@ -99,19 +98,4 @@ def set_logger():
     log.setLevel(logging.WARNING)
 
 if __name__ == '__main__':
-    try:
-        pid = fork()
-        if pid > 0:
-            exit(0)
-    except OSError, e:
-        exit(1)
-    chdir("/")
-    setsid()
-    umask(0)
-    try:
-        pid = fork()
-        if pid > 0:
-            exit(0)
-    except OSError, e:
-        exit(1)
     main()
