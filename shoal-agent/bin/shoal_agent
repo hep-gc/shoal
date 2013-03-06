@@ -5,10 +5,11 @@
 # description: Manages shoal agent with chkconfig.
 ###
 
+SERVICE=shoal_agent
 SHOAL_PATH=${SHOAL_PATH-'/usr/local/shoal-agent'}
-LOG=/var/log/shoal_agent.log
-PIDFILE=${PIDFILE-'/var/run/shoal_agent.pid'}
-PROG=$SHOAL_PATH/shoal_agent.py
+LOG=/var/log/${SERVICE}.log
+PIDFILE=/var/run/$SERVICE.pid
+PROG=$SHOAL_PATH/$SERVICE.py
 COMMAND=$1
 shift
 
@@ -36,58 +37,73 @@ for i in "$PIDFILE" "$LOG"; do
 done
 
 start () {
+    if [ -f $PIDFILE ]; then
+        PID=`cat $PIDFILE`
+        ps $PID >/dev/null
+        IS_NOT_RUNNING=$?
+        if [ $IS_NOT_RUNNING ]; then
+            echo $"$SERVICE didn't shut down cleanly last time."
+            rm -f $PIDFILE
+        else
+            PID=`cat $PIDFILE`
+            echo $"$SERVICE is already running with PID ${PID}."
+            return 1
+        fi
+    fi
     echo "Starting $PROG"
     $PROG >> $LOG 2>&1 &
+    echo $! > $PIDFILE
 }
 
 # stop [signum]
 stop () {
-    echo "Stopping $PROG"
-    pkill $1 -f "$PROG"
-}
-
-status () {
-    if pgrep -f "$PROG" >/dev/null; then
-        echo "$PROG" running
-        return 0
-    else
-        echo "$PROG" not running
-        return 1
+    if [ -f $PIDFILE ]; then
+        echo -n $"Stopping $SERVICE:"
+        PID=`cat $PIDFILE`
+        /bin/kill $PID
+        while ps -p $PID >/dev/null; do sleep 1; done
+        if [ $? -eq 0 ]; then
+            rm -f $PIDFILE >/dev/null 2>&1
+        fi
     fi
 }
 
-forcerestart () {
-    stop
-    try=1
-    sleep 1
-    while status; do
-        try=$((try + 1))
-        if [[ $try -gt 3 ]]; then
-            stop -9
+status () {
+        if [ -f $PIDFILE ]; then
+            PID=`cat $PIDFILE`
+            ps $PID >/dev/null
+            IS_RUNNING=$?
+            if [ $IS_RUNNING ]; then
+                PID=`cat $PIDFILE`
+                echo $"$SERVICE is running with PID ${PID}."
+            else
+                echo $"$SERVICE has exited unexpectedly."
+            fi
         else
-            stop
+            echo "$SERVICE isn't running."
         fi
-        echo "Waiting for $PROG to die.."
-        sleep 5
-    done
-    start
+}
+
+forcekill () {
+    if [ -f $PIDFILE ]; then
+        echo -n $"Killing $SERVICE:"
+        /bin/kill -9 `cat $PIDFILE`
+        if [ $? -eq 0 ]; then
+            rm -f $PIDFILE >/dev/null 2>&1
+        fi
+    fi
 }
 
 case $COMMAND in
-    start)  status || start
+    start) start
         ;;
     force-restart)
-        forcerestart
+        forcekill
+        start
         ;;
     restart)
-        if status; then
-            newer=$(find $PROG -newer $PIDFILE | wc -l)
-            if [[ $newer -gt 0 ]]; then
-                forcerestart
-            fi
-        else
-            start
-        fi
+        stop
+        start
         ;;
     stop) stop
         ;;
