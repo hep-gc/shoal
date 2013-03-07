@@ -40,8 +40,8 @@ start () {
     if [ -f $PIDFILE ]; then
         PID=`cat $PIDFILE`
         ps $PID >/dev/null
-        IS_RUNNING=$?
-        if [ $IS_RUNNING ]; then
+
+        if [ $? -eq 0 ]; then
             PID=`cat $PIDFILE`
             echo $"$SERVICE is already running with PID ${PID}."
             return 1
@@ -72,9 +72,8 @@ status () {
         if [ -f $PIDFILE ]; then
             PID=`cat $PIDFILE`
             ps $PID >/dev/null
-            IS_RUNNING=$?
 
-            if [ $IS_RUNNING ]; then
+            if [ $? -eq 0 ]; then
                 PID=`cat $PIDFILE`
                 echo $"$SERVICE is running with PID ${PID}."
             else
