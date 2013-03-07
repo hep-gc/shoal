@@ -25,7 +25,7 @@ def get_geolocation(ip):
 """
     Given an IP return IP of nearest squid.
 """
-def get_nearest_squid(ip):
+def get_nearest_squids(ip):
     request_data = get_geolocation(ip)
     if not request_data:
         return None
@@ -50,11 +50,9 @@ def get_nearest_squid(ip):
             nearest_squid.append(squid)
 
     # if squid nodes in same place, return nearest squid with smallest load.
-    if len(nearest_squid) > 1:
+    if len(nearest_squid) > 0:
         squid = sorted(nearest_squid, key=operator.attrgetter('load'))
-        return squid[0]
-    elif len(nearest_squid) == 1:
-        return nearest_squid[0]
+        return squid[:5]
     else:
         return None
 

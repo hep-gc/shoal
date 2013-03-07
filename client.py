@@ -19,5 +19,7 @@ except urllib2.URLError as e:
 
 data = json.loads(f.read())
 
-print 'Public IP:', data['public_ip']
-print 'Private IP:', data['private_ip']
+for i in data:
+    print '{0} Squid {1} {0}'.format('='*25, i)
+    print 'Public IP:', data[i]['public_ip']
+    print 'Private IP:', data[i]['private_ip']

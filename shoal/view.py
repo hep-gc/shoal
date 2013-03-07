@@ -57,14 +57,19 @@ def nearest(**k):
     else:
         ip = web.ctx['ip']
 
-    squid = geoip.get_nearest_squid(ip)
+    squids = geoip.get_nearest_squids(ip)
+    web.debug(squids)
     web.header('Content-Type', 'application/json')
-    if squid:
-        squid_json = {'public_ip':squid.public_ip, 'private_ip':squid.private_ip,}
+
+    if squids:
+        squid_json = {}
+        for i,squid in enumerate(squids):
+            squid_json[i] = {'public_ip':squid.public_ip, 'private_ip':squid.private_ip,}
         return json.dumps(squid_json)
     else:
         squid_json = {'public_ip':None, 'private_ip':None,}
         return json.dumps(squid_json)
+
 def external_ip(**k):
     ip = web.ctx['ip']
     return json.dumps({'external_ip':ip,})
