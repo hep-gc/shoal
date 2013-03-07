@@ -199,8 +199,6 @@ class RabbitMQConsumer(object):
 
     def on_message(self, unused_channel, method_frame, properties, body):
         try:
-            print method_frame
-            print properties
             print body
             squid_inactive_time = config.squid_inactive_time
             curr = time()
@@ -211,14 +209,17 @@ class RabbitMQConsumer(object):
             public_ip = data['public_ip']
             private_ip = data['private_ip']
             load = data['load']
-            geo_data = geoip.get_geolocation(external_ip)
+            geo_data = geoip.get_geolocation(public_ip or external_ip)
             last_active = data['timestamp']
 
-            if key in self.shoal:
-                self.shoal[key].update(public_ip, private_ip, load, geo_data)
-            elif curr - last_active < squid_inactive_time:
-                new_squid = SquidNode(key, public_ip, private_ip, load, geo_data, last_active)
-                self.shoal[key] = new_squid
+            if not geo_data:
+                logging.error("Unable to generate geo location data, discarding message")
+            else:
+                if key in self.shoal:
+                    self.shoal[key].update(public_ip, private_ip, load, geo_data)
+                elif curr - last_active < squid_inactive_time:
+                    new_squid = SquidNode(key, public_ip, private_ip, load, geo_data, last_active)
+                    self.shoal[key] = new_squid
 
         except KeyError as e:
             logging.error("Message received was not the proper format (missing:{}), discarding...\nmethod_frame:{}\nproperties:{}\nbody:{}\n".format(e,method_frame,properties,body))
