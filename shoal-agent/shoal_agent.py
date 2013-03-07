@@ -19,16 +19,12 @@ import urllib2
 # Time interval to send data
 INTERVAL = config.interval
 
-# make a UUID based on the, host ID and current time
-ID = str(uuid.uuid1())
-hostname = socket.gethostname()
 logging.basicConfig()
 log = logging.getLogger('shoal_agent')
 private_address = ('10.','172.','192.')
 
 def get_external_ip():
     url = config.external_ip_service
-    print url
     try:
         f = urllib2.urlopen(url)
     except urllib2.URLError as e:
@@ -86,21 +82,25 @@ def get_ip_addresses():
     return public, private
 
 def main():
+    # make a UUID based on the, host ID and current time
+    id = str(uuid.uuid1())
+
     config.setup()
-    external_ip = get_external_ip()
     set_logger()
+
+    external_ip = get_external_ip()
+    public, private = get_ip_addresses()
+    hostname = socket.gethostname()
+    data = {
+            'uuid': id,
+            'hostname': hostname,
+            'public_ip': public,
+            'private_ip': private,
+            'external_ip':external_ip,
+           }
     while True:
-        public, private = get_ip_addresses()
-        data = {
-                'uuid': ID,
-                'hostname': hostname,
-                'public_ip': public,
-                'private_ip': private,
-                'load': get_load_data(),
-                'timestamp': time.time(),
-                'external_ip':external_ip,
-               }
-        print data
+        data['timestamp'] = time.time()
+        data['load'] = get_load_data()
         json_str = json.dumps(data)
         amqp_send(json_str)
         time.sleep(INTERVAL)

@@ -205,7 +205,7 @@ class RabbitMQConsumer(object):
             data = json.loads(body)
 
             key = data['uuid']
-            external_ip = ['external_ip']
+            external_ip = data['external_ip']
             public_ip = data['public_ip']
             private_ip = data['private_ip']
             load = data['load']
