@@ -109,7 +109,9 @@ def main():
         # this could also occur if there was no internet connectivity when shoal_agent was started.
         # we need a public_ip or external_ip to generate the geolocation data, this will make sure atleast one is set.
         if not (public_ip or external_ip):
-            data['external_ip'] = get_external_ip()
+            external_ip = get_external_ip()
+            data['external_ip'] = external_ip
+
 
         data['timestamp'] = time.time()
         data['load'] = get_load_data()
