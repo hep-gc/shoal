@@ -138,6 +138,7 @@ class WebpyServer(object):
         self.app = None
         self.urls = (
             '/nearest', 'urls.nearest',
+            '/external', 'urls.external_ip',
             '/(.*)', 'urls.index',
         )
     def run(self):
@@ -198,15 +199,19 @@ class RabbitMQConsumer(object):
 
     def on_message(self, unused_channel, method_frame, properties, body):
         try:
+            print method_frame
+            print properties
+            print body
             squid_inactive_time = config.squid_inactive_time
             curr = time()
             data = json.loads(body)
 
             key = data['uuid']
+            external_ip = ['external_ip']
             public_ip = data['public_ip']
             private_ip = data['private_ip']
             load = data['load']
-            geo_data = geoip.get_geolocation(public_ip)
+            geo_data = geoip.get_geolocation(external_ip)
             last_active = data['timestamp']
 
             if key in self.shoal:

@@ -10,6 +10,7 @@ amqp_server_url = 'localhost'
 amqp_server_port = 5672
 amqp_exchange = 'shoal'
 amqp_exchange_type = 'topic'
+external_ip_service = 'http://localhost:8080/external'
 interval = 30
 cloud = 'elephant'
 log_file = '/var/tmp/shoal_agent.log'
@@ -28,6 +29,7 @@ def setup(path=None):
     global log_file
     global log_format
     global log_level
+    global external_ip_service
 
     # find config file
     if not path:
@@ -92,3 +94,6 @@ def setup(path=None):
     if config_file.has_option("logging", "log_file"):
         log_file = config_file.get("logging",
                                         "log_file")
+    if config_file.has_option("general", "external_ip_service"):
+        external_ip_service = config_file.get("general",
+                                                "external_ip_service")

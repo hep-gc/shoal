@@ -11,16 +11,31 @@ import pika
 import time
 import netifaces
 import uuid
+import socket
 import config
 import logging
+import urllib2
 
 # Time interval to send data
 INTERVAL = config.interval
 
-# Unique ID for this squid.
+# make a UUID based on the, host ID and current time
 ID = str(uuid.uuid1())
+hostname = socket.gethostname()
 logging.basicConfig()
 log = logging.getLogger('shoal_agent')
+private_address = ('10.','172.','192.')
+
+def get_external_ip():
+    url = config.external_ip_service
+    print url
+    try:
+        f = urllib2.urlopen(url)
+    except urllib2.URLError as e:
+        logging.error("Unable to open '%s', is the shoal service running?" % url)
+        sys.exit(1)
+    data = json.loads(f.read())
+    return data['external_ip']
 
 def amqp_send(data):
     exchange = config.amqp_exchange
@@ -58,30 +73,34 @@ def get_load_data():
     return tx_rate
 
 def get_ip_addresses():
+    public = private = ''
     for interface in netifaces.interfaces():
         try:
             for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
-                if 'eth0' in interface:
-                    public = link['addr']
-                else:
+                if link['addr'].startswith(private_address):
                     private = link['addr']
-        except:
+                elif not link['addr'].startswith('127.'):
+                    public = link['addr']
+        except Exception as e:
             continue
     return public, private
 
 def main():
     config.setup()
+    external_ip = get_external_ip()
     set_logger()
     while True:
         public, private = get_ip_addresses()
         data = {
                 'uuid': ID,
+                'hostname': hostname,
                 'public_ip': public,
                 'private_ip': private,
                 'load': get_load_data(),
                 'timestamp': time.time(),
+                'external_ip':external_ip,
                }
-
+        print data
         json_str = json.dumps(data)
         amqp_send(json_str)
         time.sleep(INTERVAL)

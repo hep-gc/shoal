@@ -9,3 +9,7 @@ class index:
 class nearest:
     def GET(self):
         return view.nearest()
+
+class external_ip:
+    def GET(self):
+        return view.external_ip()
