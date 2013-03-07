@@ -20,13 +20,15 @@ logging.getLogger('shoal').setLevel(logging.WARNING)
     Basic class to store and update information about each squid server.
 """
 class SquidNode(object):
-    def __init__(self, key, public_ip, private_ip, load, geo_data, last_active=time()):
+    def __init__(self, key, hostname, public_ip, private_ip, external_ip, load, geo_data, last_active=time()):
         self.key = key
         self.created = time()
         self.last_active = last_active
+        self.hostname = hostname
 
         self.public_ip = public_ip
         self.private_ip = private_ip
+        self.external_ip = external_ip
         self.load = load
         self.geo_data = geo_data
 
@@ -199,18 +201,24 @@ class RabbitMQConsumer(object):
 
     def on_message(self, unused_channel, method_frame, properties, body):
         try:
-            print body
+            external_ip = public_ip = private_ip = None
             squid_inactive_time = config.squid_inactive_time
             curr = time()
             data = json.loads(body)
 
             key = data['uuid']
-            external_ip = data['external_ip']
-            public_ip = data['public_ip']
-            private_ip = data['private_ip']
-            load = data['load']
-            geo_data = geoip.get_geolocation(public_ip or external_ip)
+            hostname = data['hostname']
             last_active = data['timestamp']
+            load = data['load']
+
+            if 'external_ip' in data:
+                external_ip = data['external_ip']
+            if 'public_ip' in data:
+                public_ip = data['public_ip']
+            if 'private_ip' in data:
+                private_ip = data['private_ip']
+
+            geo_data = geoip.get_geolocation(public_ip or external_ip)
 
             if not geo_data:
                 logging.error("Unable to generate geo location data, discarding message")
@@ -218,7 +226,7 @@ class RabbitMQConsumer(object):
                 if key in self.shoal:
                     self.shoal[key].update(public_ip, private_ip, load, geo_data)
                 elif curr - last_active < squid_inactive_time:
-                    new_squid = SquidNode(key, public_ip, private_ip, load, geo_data, last_active)
+                    new_squid = SquidNode(key, hostname, public_ip, private_ip, external_ip, load, geo_data, last_active)
                     self.shoal[key] = new_squid
 
         except KeyError as e:

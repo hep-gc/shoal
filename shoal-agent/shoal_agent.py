@@ -29,7 +29,7 @@ def get_external_ip():
         f = urllib2.urlopen(url)
     except urllib2.URLError as e:
         logging.error("Unable to open '%s', is the shoal service running?" % url)
-        sys.exit(1)
+        return None
     data = json.loads(f.read())
     return data['external_ip']
 
@@ -51,7 +51,6 @@ def amqp_send(data):
         connection.close()
     except Exception as e:
         log.error('Could not connect to AMQP Server. Error: %s' % e)
-        sys.exit(1)
 
 def get_load_data():
     with open('/sys/class/net/eth0/statistics/tx_bytes') as tx:
@@ -69,7 +68,7 @@ def get_load_data():
     return tx_rate
 
 def get_ip_addresses():
-    public = private = ''
+    public = private = None
     for interface in netifaces.interfaces():
         try:
             for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
@@ -82,27 +81,42 @@ def get_ip_addresses():
     return public, private
 
 def main():
-    # make a UUID based on the, host ID and current time
-    id = str(uuid.uuid1())
-
     config.setup()
     set_logger()
 
-    external_ip = get_external_ip()
-    public, private = get_ip_addresses()
+    # make a UUID based on the, host ID and current time
+    id = str(uuid.uuid1())
     hostname = socket.gethostname()
+
     data = {
             'uuid': id,
             'hostname': hostname,
-            'public_ip': public,
-            'private_ip': private,
-            'external_ip':external_ip,
            }
+
+    public_ip, private_ip = get_ip_addresses()
+    external_ip = get_external_ip()
+
+    if private_ip:
+        data['private_ip'] = private_ip
+
+    if public_ip:
+        data['public_ip'] = public_ip
+    else:
+        data['external_ip'] = external_ip
+
     while True:
+        # if shoal was down when service started, external ip will be none
+        # this could also occur if there was no internet connectivity when shoal_agent was started.
+        # we need a public_ip or external_ip to generate the geolocation data, this will make sure atleast one is set.
+        if not (public_ip or external_ip):
+            data['external_ip'] = get_external_ip()
+
         data['timestamp'] = time.time()
         data['load'] = get_load_data()
-        json_str = json.dumps(data)
-        amqp_send(json_str)
+
+        if 'public_ip' in data or 'external_ip' in data:
+            amqp_send(json.dumps(data))
+
         time.sleep(INTERVAL)
 
 def set_logger():
