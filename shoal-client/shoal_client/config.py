@@ -10,18 +10,18 @@ shoal_server_url = 'http://localhost:8080/nearest'
 
 def setup(path=None):
     """Setup shoal using config file.
-       setup will look for a configuration file specified in /etc/shoal_client.conf
+       setup will look for a configuration file specified in /etc/shoal/shoal_client.conf
     """
     global shoal_server_url
 
     # find config file
     if not path:
-        if os.path.exists("/etc/shoal_client.conf"):
-            path = "/etc/shoal_client.conf"
+        if os.path.exists("/etc/shoal/shoal_client.conf"):
+            path = "/etc/shoal/shoal_client.conf"
         else:
             print >> sys.stderr, "Configuration file problem: There doesn't " \
                   "seem to be a configuration file. " \
-                  "You can specify one in /etc/shoal_client.conf"
+                  "You can specify one in /etc/shoal/shoal_client.conf"
             sys.exit(1)
 
     # Read config file

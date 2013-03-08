@@ -14,7 +14,7 @@ t_globals = dict(
 )
 
 CACHE = config.webpy_cache
-TEMPLATES = config.webpy_template_dir
+TEMPLATES = 'templates/'
 
 render = web.template.render(TEMPLATES, cache=CACHE, globals=t_globals)
 render._keywords['globals']['render'] = render

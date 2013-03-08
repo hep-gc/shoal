@@ -9,9 +9,15 @@ A squid cache publishing and advertising tool designed to work in fast changing 
 
 ## Shoal-Server
 
+- Service used for keeping track of squid servers, and providing a handy GUI webpage.
+
 ## Shoal-Agent
 
+- Service used on squid servers. Sends an AMQP message to the shoal-server at a fixed interval set in the configuration.
+
 ## Shoal-Client
+
+- Service used on worker nodes. Will retrieve a list of nearby squids which it can use.
 
 ##License
 

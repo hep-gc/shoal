@@ -16,11 +16,10 @@ amqp_server_queue = 'squiddata'
 amqp_exchange = 'shoal'
 amqp_exchange_type = 'topic'
 webpy_cache = False
-webpy_template_dir = 'templates/'
 
 def setup(path=None):
     """Setup shoal using config file.
-       setup will look for a configuration file specified in /etc/shoal.conf
+       setup will look for a configuration file specified in /etc/shoal/shoal_server.conf
     """
     global geolitecity_path
     global geolitecity_url
@@ -33,16 +32,15 @@ def setup(path=None):
     global amqp_exchange
     global amqp_exchange_type
     global webpy_cache
-    global webpy_template_dir
 
     # find config file
     if not path:
-        if os.path.exists("/etc/shoal.conf"):
-            path = "/etc/shoal.conf"
+        if os.path.exists("/etc/shoal/shoal_server.conf"):
+            path = "/etc/shoal/shoal_server.conf"
         else:
             print >> sys.stderr, "Configuration file problem: There doesn't " \
                   "seem to be a configuration file. " \
-                  "You can specify one in /etc/shoal.conf"
+                  "You can specify one in /etc/shoal/shoal_server.conf"
             sys.exit(1)
 
     # Read config file
@@ -130,7 +128,3 @@ def setup(path=None):
             print "Configuration file problem: webpy_cache must be a " \
                   "boolean value."
             sys.exit(1)
-
-    if config_file.has_option("webpy", "webpy_template_dir"):
-        webpy_template_dir = config_file.get("webpy",
-                                                "webpy_template_dir")

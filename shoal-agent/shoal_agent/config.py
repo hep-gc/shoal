@@ -18,7 +18,7 @@ log_file = '/var/tmp/shoal_agent.log'
 
 def setup(path=None):
     """Setup shoal using config file.
-       setup will look for a configuration file specified in /etc/shoal_agent.conf
+       setup will look for a configuration file specified in /etc/shoal/shoal_agent.conf
     """
     global amqp_server_url
     global amqp_server_port
@@ -33,12 +33,12 @@ def setup(path=None):
 
     # find config file
     if not path:
-        if os.path.exists("/etc/shoal_agent.conf"):
-            path = "/etc/shoal_agent.conf"
+        if os.path.exists("/etc/shoal/shoal_agent.conf"):
+            path = "/etc/shoal/shoal_agent.conf"
         else:
             print >> sys.stderr, "Configuration file problem: There doesn't " \
                   "seem to be a configuration file. " \
-                  "You can specify one in /etc/shoal_agent.conf"
+                  "You can specify one in /etc/shoal/shoal_agent.conf"
             sys.exit(1)
 
     # Read config file

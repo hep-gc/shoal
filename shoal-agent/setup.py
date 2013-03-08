@@ -26,7 +26,7 @@ if okay_files:
 
 
 setup(name='shoal-agent',
-      version=version.version,
+      version=version,
       license='GPL3' or 'Apache 2',
       install_requires=[
           'netifaces>=0.8',
