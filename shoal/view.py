@@ -58,7 +58,6 @@ def nearest(**k):
         ip = web.ctx['ip']
 
     squids = geoip.get_nearest_squids(ip)
-    web.debug(squids)
     web.header('Content-Type', 'application/json')
 
     if squids:

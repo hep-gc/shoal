@@ -28,7 +28,7 @@ def get_external_ip():
     try:
         f = urllib2.urlopen(url)
     except urllib2.URLError as e:
-        logging.error("Unable to open '%s', is the shoal service running?" % url)
+        logging.warning("Unable to open '%s', is the shoal service running?" % url)
         return None
     data = json.loads(f.read())
     return data['external_ip']
@@ -96,13 +96,13 @@ def main():
     public_ip, private_ip = get_ip_addresses()
     external_ip = get_external_ip()
 
-    if private_ip:
-        data['private_ip'] = private_ip
-
     if public_ip:
         data['public_ip'] = public_ip
     else:
         data['external_ip'] = external_ip
+
+    if private_ip:
+        data['private_ip'] = private_ip
 
     while True:
         # if shoal was down when service started, external ip will be none
