@@ -66,8 +66,7 @@ def nearest(**k):
             squid_json[i] = {'public_ip':squid.public_ip, 'private_ip':squid.private_ip,}
         return json.dumps(squid_json)
     else:
-        squid_json = {'public_ip':None, 'private_ip':None,}
-        return json.dumps(squid_json)
+        return ''
 
 def external_ip(**k):
     ip = web.ctx['ip']

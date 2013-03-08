@@ -7,26 +7,14 @@ A squid cache publishing and advertising tool designed to work in fast changing 
    * A webserver will retrieve the messages from the exchange and maintain a list of active squids.
    * A newly booted virtual machine will query the webserver and retrieve a json encoded string that contains the IP of the nearest squid server.
 
-##Installation
- 
-###Easy Way (NYI)
-1. soon....
+## Shoal-Server
 
-###Hard Way
-1. Move shoal subfolder to any working directory.
-2. Adjust configuration file included, and move it to `/etc/`.
-3. Install any missing packages using pip or easy_install:
+## Shoal-Agent
 
-        pika 0.9.1+
-        web.py 0.3+
-        pygeoip 0.2.5+
+## Shoal-Client
 
-4. `python shoal.py` to start the service.
-5. Visit to `http://localhost:8080` to see the list of active squids.
+##License
 
-*Note: Requires you have a working RabbitMQ AMQP Server, and python 2.6+*
-
-## LICENSE
 This program is free software; you can redistribute it and/or modify it under the terms of either:
 
 a) the GNU General Public License as published by the Free Software Foundation; either version 3, or (at your option) any later version, or
