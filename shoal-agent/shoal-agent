@@ -12,9 +12,10 @@ import time
 import netifaces
 import uuid
 import socket
-import config
 import logging
 import urllib2
+
+from shoal_agent import config as config
 
 # Time interval to send data
 INTERVAL = config.interval

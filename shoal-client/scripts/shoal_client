@@ -7,12 +7,12 @@
 
 # set non-default path to shoal-agent executable
 # eg. "/opt/bin/shoal-agent"
-EXECUTABLEPATH="shoal-agent"
+EXECUTABLEPATH="shoal-client"
 
 # Non-default python.
 PYTHON=""
 
-SERVICE=shoal_agent
+SERVICE=shoal_client
 LOG=/var/log/${SERVICE}.log
 PIDFILE=/var/run/$SERVICE.pid
 COMMAND=$1

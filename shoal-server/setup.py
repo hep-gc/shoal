@@ -8,7 +8,7 @@ except:
     try:
         from distutils.core import setup
     except:
-        print "Couldn't use either setuputils or distutils. Install one of those. :)"
+        print "Couldn't use either setuputils or distutils. Install one of those."
         sys.exit(1)
 
 from setuptools import setup
@@ -18,7 +18,9 @@ config_files_dir = "/etc/shoal/"
 shoal_server_dir = "/var/shoal/"
 static_files_dir = "static/"
 template_files_dir = "templates/"
+initd_dir = "/etc/init.d/"
 config_file = "shoal_server.conf"
+initd_script = "scripts/shoal_server"
 
 # Recursively include all files in src, and create them in dst if they don't exist
 def include_files(src, dst):
@@ -37,7 +39,10 @@ data_files = []
 
 # check for preexisting config files
 if not isfile(join(config_files_dir, config_file)):
-    data_files = [(config_files_dir, [config_file])]
+    data_files += [(config_files_dir, [config_file])]
+# check for preexisiting initd script
+if not isfile(join(initd_dir, initd_script)):
+    data_files += [(initd_dir, [initd_script])]
 # add all files in static/
 data_files += include_files(static_files_dir, shoal_server_dir)
 # add all files in templates/
@@ -55,7 +60,7 @@ setup(name='shoal-server',
       author='Mike Chester',
       author_email='mchester@uvic.ca',
       url='http://github.com/hep-gc/shoal',
-      packages = ['shoal_server'],
-      scripts = ['shoal-server'],
-      data_files = data_files,
+      packages=['shoal_server'],
+      scripts=['shoal-server'],
+      data_files=data_files,
 )
