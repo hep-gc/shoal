@@ -1,4 +1,6 @@
+#!/usr/local/bin/python2.7
 import sys
+import os
 import web
 import json
 import logging
@@ -9,9 +11,10 @@ import pika
 from time import time, sleep
 from threading import Thread
 
-import config
-import geoip
-import urls
+from shoal_server import config as config
+from shoal_server import geoip as geoip
+from shoal_server import urls as urls
+
 
 logging.basicConfig()
 logging.getLogger('shoal').setLevel(logging.WARNING)
@@ -48,6 +51,9 @@ class Application(object):
     def __init__(self):
         # setup configuration settings.
         config.setup()
+        # change working directory so webpy static files load correctly.
+        os.chdir(config.shoal_dir)
+
         self.shoal = {}
         self.threads = []
 
@@ -139,9 +145,9 @@ class WebpyServer(object):
         web.config.debug = False
         self.app = None
         self.urls = (
-            '/nearest', 'urls.nearest',
-            '/external', 'urls.external_ip',
-            '/(.*)', 'urls.index',
+            '/nearest', 'shoal_server.urls.nearest',
+            '/external', 'shoal_server.urls.external_ip',
+            '/(.*)', 'shoal_server.urls.index',
         )
     def run(self):
         try:
@@ -238,9 +244,7 @@ class RabbitMQConsumer(object):
     def stop(self):
         self.channel.stop_consuming()
 
-
 def main():
-    app = Application()
+    Application()
 
-if __name__ == '__main__':
-    main()
+main()

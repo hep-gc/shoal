@@ -5,6 +5,7 @@ import ConfigParser
 # Shoal Options Module
 
 # set default values
+shoal_dir = '/var/shoal/'
 geolitecity_path = os.path.abspath('GeoLiteCity.dat')
 geolitecity_url = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
 geolitecity_update = 2592000
@@ -21,6 +22,7 @@ def setup(path=None):
     """Setup shoal using config file.
        setup will look for a configuration file specified in /etc/shoal/shoal_server.conf
     """
+    global shoal_dir
     global geolitecity_path
     global geolitecity_url
     global geolitecity_update
@@ -60,6 +62,10 @@ def setup(path=None):
         print "Configuration file problem: There is something wrong with " \
               "your config file."
         raise
+
+    if config_file.has_option("general", "shoal_dir"):
+        shoal_dir = config_file.get("general",
+                                       "shoal_dir")
 
     if config_file.has_option("general", "geolitecity_path"):
         geolitecity_path = config_file.get("general",

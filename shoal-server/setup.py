@@ -1,4 +1,5 @@
 import os
+from os.path import join, isfile
 import os.path
 import sys
 try:
@@ -14,16 +15,33 @@ from setuptools import setup
 from shoal_server.__version__ import version
 
 config_files_dir = "/etc/shoal/"
-config_files = ["shoal_server.conf"]
+shoal_server_dir = "/var/shoal/"
+static_files_dir = "static/"
+template_files_dir = "templates/"
+config_file = "shoal_server.conf"
+
+# Recursively include all files in src, and create them in dst if they don't exist
+def include_files(src, dst):
+    temp = []
+    for subdir, dirs, files in os.walk(src):
+        f = []
+        path = join(dst, subdir)
+        for file in files:
+            if not isfile(join(path, file)):
+                f.append(join(subdir, file))
+        if f:
+            temp.append((path, f))
+    return temp
+
+data_files = []
 
 # check for preexisting config files
-data_files = okay_files = []
-for config_file in config_files:
-    if not os.path.isfile(config_files_dir + os.path.basename(config_file)):
-        okay_files.append(config_file)
-if okay_files:
-    data_files = [(config_files_dir, okay_files)]
-
+if not isfile(join(config_files_dir, config_file)):
+    data_files = [(config_files_dir, [config_file])]
+# add all files in static/
+data_files += include_files(static_files_dir, shoal_server_dir)
+# add all files in templates/
+data_files += include_files(template_files_dir, shoal_server_dir)
 
 setup(name='shoal-server',
       version=version,
@@ -31,12 +49,13 @@ setup(name='shoal-server',
       install_requires=[
           'pygeoip>=0.2.5',
           'pika>=0.9.9',
-          'webpy>=0.3',
+          'web.py>=0.3',
       ],
       description='A squid cache publishing and advertising tool designed to work in fast changing environments',
       author='Mike Chester',
       author_email='mchester@uvic.ca',
-      url='http://github.com/hepgc/shoal',
-      packages['shoal-server'],
+      url='http://github.com/hep-gc/shoal',
+      packages = ['shoal_server'],
+      scripts = ['shoal-server'],
       data_files = data_files,
 )
