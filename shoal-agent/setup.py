@@ -34,7 +34,7 @@ if not isfile(join(config_files_dir, config_file)):
 
 setup(name='shoal-agent',
       version=version,
-      license='GPL3' or 'Apache 2',
+      license="'GPL3' or 'Apache 2'",
       install_requires=[
           'netifaces>=0.8',
           'pika>=0.9.9',

@@ -56,7 +56,7 @@ data_files += include_files(template_files_dir, shoal_server_dir)
 
 setup(name='shoal-server',
       version=version,
-      license='GPL3' or 'Apache 2',
+      license="'GPL3' or 'Apache 2'",
       install_requires=[
           'pygeoip>=0.2.5',
           'pika>=0.9.9',

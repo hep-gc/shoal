@@ -34,7 +34,7 @@ if not isfile(join(config_files_dir, config_file)):
 
 setup(name='shoal-client',
       version=version,
-      license='GPL3' or 'Apache 2',
+      license="'GPL3' or 'Apache 2'",
       install_requires=[],
       description='A squid cache publishing and advertising tool designed to work in fast changing environments',
       author='Mike Chester',
