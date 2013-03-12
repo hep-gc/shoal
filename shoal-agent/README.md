@@ -2,6 +2,20 @@
 
 ##How to install
 
+###Easy Way
+_Recommended to use a system wide install (sudo), but works with virtualenv with tweaks_
+
+1. Use `pip` or `easy_install`
+  - `easy_install shoal-agent`
+
+2. Location of files depending if **sudo** was used or not 
+  - **Configuration Files:** `/etc/shoal/`
+  - Configuration Files: `~/.shoal/`
+
+3. Start shoal agent `service shoal_agent start` or `shoal-agent`
+
+**NOTE:** _May need to tweak init.d script (`/etc/init.d/shoal_agent`), or make sure executable `shoal-agent` is in your PATH._
+
 ###Hard Way
 1. Copy shoal-agent folder to `/usr/local/`
 2. Copy the init script in the `scripts/` directory to `/etc/init.d/`
@@ -22,4 +36,5 @@ With the basic `shoal_agent` init script you can do the following:
 - Status of shoal agent
  - `service shoal_agent status` 
 - Force restart shoal agent
- - `service shoal_agent force-restart` 
+ - `service shoal_agent force-restart`
+
