@@ -2,11 +2,11 @@
 # Basic support for IRIX style chkconfig
 ###
 # chkconfig: 235 98 55
-# description: Manages shoal agent with chkconfig.
+# description: Manages shoal client with chkconfig.
 ###
 
 # set non-default path to shoal-agent executable
-# eg. "/opt/bin/shoal-agent"
+# eg. "/opt/bin/shoal-client"
 EXECUTABLEPATH="shoal-client"
 
 # Non-default python.

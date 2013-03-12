@@ -1,5 +1,5 @@
 import os
-from os.path import isfile, join
+from os.path import isfile, join, expanduser
 import sys
 try:
     from setuptools import setup
@@ -13,19 +13,24 @@ except:
 from setuptools import setup
 from shoal_agent.__version__ import version
 
-config_files_dir = "/etc/shoal/"
-initd_dir = "/etc/init.d/"
-initd_script = "scripts/shoal_agent"
-config_file = "shoal_agent.conf"
-
 data_files = []
+
+if not os.geteuid() == 0:
+    config_files_dir = expanduser("~/.shoal/")
+else:
+    config_files_dir = "/etc/shoal/"
+    # if root install the init.d scripts.
+    # check for preexisiting initd script
+    initd_dir = "/etc/init.d/"
+    initd_script = "scripts/shoal_agent"
+    if not isfile(join(initd_dir, initd_script)):
+        data_files += [(initd_dir, [initd_script])]
+
+config_file = "shoal_agent.conf"
 
 # check for preexisting config files
 if not isfile(join(config_files_dir, config_file)):
     data_files += [(config_files_dir, [config_file])]
-# check for preexisiting initd script
-if not isfile(join(initd_dir, initd_script)):
-    data_files += [(initd_dir, [initd_script])]
 
 setup(name='shoal-agent',
       version=version,

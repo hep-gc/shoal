@@ -13,9 +13,17 @@ except:
 from setuptools import setup
 from shoal_client.__version__ import version
 
-config_files_dir = "/etc/shoal/"
-#initd_dir = "/etc/init.d/"
-#initd_script = "scripts/shoal_client"
+if not os.geteuid() == 0:
+    config_files_dir = os.path.expanduser("~/.shoal/")
+else:
+    config_files_dir = "/etc/shoal/"
+    #initd_dir = "/etc/init.d/"
+    #initd_script = "scripts/shoal_client"
+
+    # check for preexisiting initd script
+    #if not isfile(join(initd_dir, initd_script)):
+    #    data_files += [(initd_dir, [initd_script])]
+
 config_file = "shoal_client.conf"
 
 data_files = []
@@ -23,9 +31,6 @@ data_files = []
 # check for preexisting config files
 if not isfile(join(config_files_dir, config_file)):
     data_files += [(config_files_dir, [config_file])]
-# check for preexisiting initd script
-#if not isfile(join(initd_dir, initd_script)):
-#    data_files += [(initd_dir, [initd_script])]
 
 setup(name='shoal-client',
       version=version,

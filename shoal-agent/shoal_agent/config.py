@@ -1,4 +1,4 @@
-import os
+from os.path import exists, join, expanduser
 import sys
 import ConfigParser
 import logging
@@ -19,6 +19,7 @@ log_file = '/var/tmp/shoal_agent.log'
 def setup(path=None):
     """Setup shoal using config file.
        setup will look for a configuration file specified in /etc/shoal/shoal_agent.conf
+       or ~/.shoal/shoal_agent.conf
     """
     global amqp_server_url
     global amqp_server_port
@@ -31,14 +32,18 @@ def setup(path=None):
     global log_level
     global external_ip_service
 
+    homedir = expanduser('~')
+
     # find config file
     if not path:
-        if os.path.exists("/etc/shoal/shoal_agent.conf"):
+        if exists("/etc/shoal/shoal_agent.conf"):
             path = "/etc/shoal/shoal_agent.conf"
+        elif exists(join(homedir, ".shoal/shoal_agent.conf")):
+            path = join(homedir, ".shoal/shoal_agent.conf")
         else:
             print >> sys.stderr, "Configuration file problem: There doesn't " \
                   "seem to be a configuration file. " \
-                  "You can specify one in /etc/shoal/shoal_agent.conf"
+                  "You can specify one in /etc/shoal/shoal_agent.conf or ~/.shoal/shoal_agent.conf"
             sys.exit(1)
 
     # Read config file

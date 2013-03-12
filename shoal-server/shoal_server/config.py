@@ -1,4 +1,4 @@
-import os
+from os.path import join, expanduser, exists
 import sys
 import ConfigParser
 
@@ -35,10 +35,14 @@ def setup(path=None):
     global amqp_exchange_type
     global webpy_cache
 
+    homedir = expanduser('~')
+
     # find config file
     if not path:
-        if os.path.exists("/etc/shoal/shoal_server.conf"):
+        if exists("/etc/shoal/shoal_server.conf"):
             path = "/etc/shoal/shoal_server.conf"
+        elif exists(join(homedir, '.shoal/shoal_server.conf')):
+            path = join(homedir, '.shoal/shoal_server.conf')
         else:
             print >> sys.stderr, "Configuration file problem: There doesn't " \
                   "seem to be a configuration file. " \

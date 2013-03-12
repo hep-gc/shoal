@@ -1,5 +1,5 @@
 import os
-from os.path import join, isfile
+from os.path import join, isfile, expanduser
 import os.path
 import sys
 try:
@@ -14,13 +14,24 @@ except:
 from setuptools import setup
 from shoal_server.__version__ import version
 
-config_files_dir = "/etc/shoal/"
-shoal_server_dir = "/var/shoal/"
+data_files = []
+
+if not os.geteuid() == 0:
+    config_files_dir = expanduser('~/.shoal/')
+    shoal_server_dir = expanduser('~/shoal_server')
+else:
+    config_files_dir = "/etc/shoal/"
+    shoal_server_dir = "/var/shoal/"
+    initd_dir = "/etc/init.d/"
+    initd_script = "scripts/shoal_server"
+
+    # check for preexisiting initd script
+    if not isfile(join(initd_dir, initd_script)):
+        data_files += [(initd_dir, [initd_script])]
+
 static_files_dir = "static/"
 template_files_dir = "templates/"
-initd_dir = "/etc/init.d/"
 config_file = "shoal_server.conf"
-initd_script = "scripts/shoal_server"
 
 # Recursively include all files in src, and create them in dst if they don't exist
 def include_files(src, dst):
@@ -35,14 +46,9 @@ def include_files(src, dst):
             temp.append((path, f))
     return temp
 
-data_files = []
-
 # check for preexisting config files
 if not isfile(join(config_files_dir, config_file)):
     data_files += [(config_files_dir, [config_file])]
-# check for preexisiting initd script
-if not isfile(join(initd_dir, initd_script)):
-    data_files += [(initd_dir, [initd_script])]
 # add all files in static/
 data_files += include_files(static_files_dir, shoal_server_dir)
 # add all files in templates/

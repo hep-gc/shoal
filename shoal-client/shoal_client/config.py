@@ -1,4 +1,4 @@
-import os
+from os.path import exists, join, expanduser
 import sys
 import ConfigParser
 import logging
@@ -11,18 +11,24 @@ shoal_server_url = 'http://localhost:8080/nearest'
 def setup(path=None):
     """Setup shoal using config file.
        setup will look for a configuration file specified in /etc/shoal/shoal_client.conf
+       or ~/.shoal/shoal_client.conf
     """
     global shoal_server_url
 
+    homedir = expanduser('~')
+
     # find config file
     if not path:
-        if os.path.exists("/etc/shoal/shoal_client.conf"):
+        if exists("/etc/shoal/shoal_client.conf"):
             path = "/etc/shoal/shoal_client.conf"
+        elif exists(join(homedir, ".shoal/shoal_client.conf")):
+            path = join(homedir, ".shoal/shoal_client.conf")
         else:
             print >> sys.stderr, "Configuration file problem: There doesn't " \
                   "seem to be a configuration file. " \
-                  "You can specify one in /etc/shoal/shoal_client.conf"
+                  "You can specify one in /etc/shoal/shoal_client.conf or ~/.shoal/shoal_client.conf"
             sys.exit(1)
+
 
     # Read config file
     config_file = ConfigParser.ConfigParser()
@@ -43,5 +49,5 @@ def setup(path=None):
         raise
 
     if config_file.has_option("general", "shoal_server_url"):
-        amqp_server_url = config_file.get("general",
+        shoal_server_url = config_file.get("general",
                                                 "shoal_server_url")
