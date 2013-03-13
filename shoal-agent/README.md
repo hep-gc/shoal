@@ -5,8 +5,8 @@
 ###Easy Way
 _Recommended to use a system wide install (sudo), but works with virtualenv with tweaks_
 
-1. Use `pip` or `easy_install`
-  - `easy_install shoal-agent`
+1. Use `pip`
+  - `pip shoal-agent`
 
 2. Location of files depending if **sudo** was used or not 
   - **Configuration Files:** `/etc/shoal/`

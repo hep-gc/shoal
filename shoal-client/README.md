@@ -4,7 +4,7 @@
 
 ###Easy Way
 
-1. `pip` or `easy_install`
+1. `pip`
    - `pip install shoal-client`
 
 2. Location of files depending if **sudo** was used or not 
