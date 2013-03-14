@@ -1,4 +1,4 @@
-# Shoal-Client v0.1 README
+# Shoal-Client v0.2 README
 
 ##Installation
 

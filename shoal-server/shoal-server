@@ -224,7 +224,10 @@ class RabbitMQConsumer(object):
             if 'private_ip' in data:
                 private_ip = data['private_ip']
 
-            geo_data = geoip.get_geolocation(public_ip or external_ip)
+            try:
+                geo_data = geoip.get_geolocation(public_ip.split(':')[0])
+            except:
+                geo_data = geoip.get_geolocation(external_ip)
 
             if not geo_data:
                 logging.error("Unable to generate geo location data, discarding message")

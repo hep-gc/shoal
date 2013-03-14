@@ -1,4 +1,4 @@
-# Shoal-Server v0.1 README
+# Shoal-Server v0.2 README
 
 ##Installation
  
