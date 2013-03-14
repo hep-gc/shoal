@@ -13,6 +13,8 @@ from urllib2 import urlopen
 
 config.setup()
 url = config.shoal_server_url
+cvmfs_config = config.cvmfs_config
+default_conf = config.default_config_format
 
 try:
     f = urlopen(url)
@@ -21,9 +23,20 @@ except urllib2.URLError as e:
     logging.error("Unable to open url. %s" % e)
     sys.exit(1)
 
+closest_http_proxy = ''
+cvmfs_http_proxy = "\nCVMFS_HTTP_PROXY="
+default_http_proxy = config.default_squid_proxy
+
 if data:
     data = json.loads(data)
     for i in data:
-        print '{0} Squid {1} {0}'.format('='*25, i)
-        print 'Public IP:', data[i]['public_ip']
-        print 'Private IP:', data[i]['private_ip']
+        closest_http_proxy += ('http://{};').format(data[i]['public_ip'])
+
+if closest_http_proxy:
+    cvmfs_http_proxy += "\"" + closest_http_proxy + "\""
+else:
+    cvmfs_http_proxy += default_http_proxy
+
+default_conf += cvmfs_http_proxy
+with open(cvmfs_config, "w") as f:
+    f.write(default_conf)
