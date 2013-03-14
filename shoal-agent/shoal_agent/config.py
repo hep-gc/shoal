@@ -13,6 +13,7 @@ amqp_exchange_type = 'topic'
 external_ip_service = 'http://localhost:8080/external'
 interval = 30
 cloud = 'elephant'
+squid_port = 3128
 log_file = '/var/tmp/shoal_agent.log'
 
 
@@ -25,12 +26,11 @@ def setup(path=None):
     global amqp_server_port
     global amqp_exchange
     global amqp_exchange_type
+    global external_ip_service
     global interval
     global cloud
+    global squid_port
     global log_file
-    global log_format
-    global log_level
-    global external_ip_service
 
     homedir = expanduser('~')
 
@@ -99,6 +99,15 @@ def setup(path=None):
     if config_file.has_option("logging", "log_file"):
         log_file = config_file.get("logging",
                                         "log_file")
+
+    if config_file.has_option("general", "squid_port"):
+        try:
+            squid_port = config_file.getint("general", "squid_port")
+        except ValueError:
+            print "Configuration file problem: amqp_port must be an " \
+                  "integer value."
+            sys.exit(1)
+
     if config_file.has_option("general", "external_ip_service"):
         external_ip_service = config_file.get("general",
                                                 "external_ip_service")
