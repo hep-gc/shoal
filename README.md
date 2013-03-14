@@ -26,8 +26,14 @@ few seconds with python's pip tool.
 
 ## Installing 
 
-...
+All the components can be installed independently. Refer to the individual component READMEs for install 
+instructions:
 
+- [shoal-server/README.md](shoal-server/README.md)
+- [shoal-agent/README.md](shoal-agent/README.md)
+- [shoal-client/README.md](shoal-client/README.md)
+
+For people familiar with it, everything is available from PyPI.
 
 ##License
 
