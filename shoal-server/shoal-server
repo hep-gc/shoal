@@ -146,6 +146,7 @@ class WebpyServer(object):
         self.app = None
         self.urls = (
             '/nearest', 'shoal_server.urls.nearest',
+            '/wpad', 'shoal_server.urls.wpad',
             '/external', 'shoal_server.urls.external_ip',
             '/(.*)', 'shoal_server.urls.index',
         )
