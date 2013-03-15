@@ -23,7 +23,7 @@ default_conf = config.default_config_format
 data = None
 
 if not os.path.exists(cvmfs_config):
-    logging.error("'{}' does not exist, is cvmfs installed?".format(cvmfs_config))
+    logging.error("'{0}' does not exist, is cvmfs installed?".format(cvmfs_config))
     sys.exit(1)
 
 try:
@@ -34,7 +34,7 @@ except urllib2.URLError as e:
 
 if data:
     for i in data:
-        closest_http_proxy += ('http://{};').format(data[i]['public_ip'])
+        closest_http_proxy += ('http://{0};').format(data[i]['public_ip'])
     closest_http_proxy += "DIRECT"
 
     cvmfs_http_proxy += "\"" + closest_http_proxy + "\""

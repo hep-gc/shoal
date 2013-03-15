@@ -80,7 +80,7 @@ class Application(object):
             while True:
                 for thread in self.threads:
                     if not thread.is_alive():
-                        logging.error('{} died.'.format(thread))
+                        logging.error('{0} died.'.format(thread))
                         self.stop()
         except KeyboardInterrupt:
             self.stop()
@@ -155,7 +155,7 @@ class WebpyServer(object):
             self.app = web.application(self.urls, globals())
             self.app.run()
         except Exception as e:
-            logging.error("Could not start webpy server.\n{}".format(e))
+            logging.error("Could not start webpy server.\n{0}".format(e))
             sys.exit(1)
 
     def stop(self):
@@ -204,7 +204,7 @@ class RabbitMQConsumer(object):
             self.channel.start_consuming()
 
         except Exception as e:
-            logging.error('Could not connected to AMQP Server. Error: {}'.format(e))
+            logging.error('Could not connected to AMQP Server. Error: {0}'.format(e))
 
     def on_message(self, unused_channel, method_frame, properties, body):
         try:
@@ -240,7 +240,7 @@ class RabbitMQConsumer(object):
                     self.shoal[key] = new_squid
 
         except KeyError as e:
-            logging.error("Message received was not the proper format (missing:{}), discarding...\nmethod_frame:{}\nproperties:{}\nbody:{}\n".format(e,method_frame,properties,body))
+            logging.error("Message received was not the proper format (missing:{0}), discarding...\nmethod_frame:{1}\nproperties:{2}\nbody:{3}\n".format(e,method_frame,properties,body))
 
         finally:
             self.channel.basic_ack(method_frame.delivery_tag)
