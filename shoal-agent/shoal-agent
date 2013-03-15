@@ -23,16 +23,7 @@ INTERVAL = config.interval
 logging.basicConfig()
 log = logging.getLogger('shoal_agent')
 private_address = ('10.','172.','192.')
-
-def get_external_ip():
-    url = config.external_ip_service
-    try:
-        f = urllib2.urlopen(url)
-    except urllib2.URLError as e:
-        logging.warning("Unable to open '%s', is the shoal service running?" % url)
-        return None
-    data = json.loads(f.read())
-    return data['external_ip']
+external_ip = config.external_ip
 
 def amqp_send(data):
     exchange = config.amqp_exchange
@@ -45,28 +36,33 @@ def amqp_send(data):
     try:
         connection = pika.BlockingConnection(pika.ConnectionParameters(host, port))
         channel = connection.channel()
-        channel.exchange_declare(exchange=exchange, type=exchange_type)
+        channel.exchange_declare(exchange=exchange, exchange_type=exchange_type)
         channel.basic_publish(exchange=exchange,
                               routing_key=routing_key,
                               body=data)
         connection.close()
     except Exception as e:
-        log.error('Could not connect to AMQP Server. Error: %s' % e)
+        log.error("Could not connect to AMQP Server. Is it running at url: {0}\nPlease check configuration settings.\nError: {1}".format(host,e))
+        sys.exit(1)
 
-def get_load_data():
-    with open('/sys/class/net/eth0/statistics/tx_bytes') as tx:
-        tx1 = int(tx.read())
-        tx.close()
+def get_load_data(path):
+    try:
+        with open(path) as tx:
+            tx1 = int(tx.read())
+            tx.close()
 
-    time.sleep(1)
+        time.sleep(1)
 
-    with open('/sys/class/net/eth0/statistics/tx_bytes') as tx:
-        tx2 = int(tx.read())
-        tx.close()
+        with open(path) as tx:
+            tx2 = int(tx.read())
+            tx.close()
 
-    tx_rate = (tx2 - tx1) / 1024
-
-    return tx_rate
+        tx_rate = (tx2 - tx1) / 1024
+        return tx_rate
+    
+    except Exception as e:
+        logging.error("Unable to generate load data, does this file exist: '{0}'.\nPlease check settings in configuration file.\n{1}".format(path,e))
+        sys.exit(1)
 
 def get_ip_addresses():
     public = private = None
@@ -95,32 +91,43 @@ def main():
            }
 
     public_ip, private_ip = get_ip_addresses()
-    external_ip = get_external_ip()
+    external_ip = config.external_ip
+    tx_bytes_path = config.tx_bytes_path
 
     if public_ip:
         data['public_ip'] = ('{0}:{1}').format(public_ip, config.squid_port)
-    else:
+    elif external_ip:
         data['external_ip'] = external_ip
+    else:
+        logging.error("Shoal-Agent was unable to find a public IP or external IP for this squid. Please set an external IP in shoal-agent config file.")
+        sys.exit(1)
 
     if private_ip:
         data['private_ip'] = ('{0}:{1}').format(private_ip, config.squid_port)
 
+    if not (private_ip or public_ip):
+        logging.error("Shoal_Agent was unable to find a public or private IP for this squid. Please contact the developers.")
+        sys.exit(1)
+
     while True:
-        # if shoal was down when service started, external ip will be none
-        # this could also occur if there was no internet connectivity when shoal_agent was started.
-        # we need a public_ip or external_ip to generate the geolocation data, this will make sure atleast one is set.
-        if not (public_ip or external_ip):
-            external_ip = get_external_ip()
-            data['external_ip'] = external_ip
+        try:
+            # if shoal was down when service started, external ip will be none
+            # this could also occur if there was no internet connectivity when shoal_agent was started.
+            # we need a public_ip or external_ip to generate the geolocation data, this will make sure atleast one is set.
+            if not (public_ip or external_ip):
+                external_ip = get_external_ip()
+                data['external_ip'] = external_ip
 
 
-        data['timestamp'] = time.time()
-        data['load'] = get_load_data()
+            data['timestamp'] = time.time()
+            data['load'] = get_load_data(tx_bytes_path)
 
-        if 'public_ip' in data or 'external_ip' in data:
-            amqp_send(json.dumps(data))
+            if 'public_ip' in data or 'external_ip' in data:
+                amqp_send(json.dumps(data))
 
-        time.sleep(INTERVAL)
+            time.sleep(INTERVAL)
+        except KeyboardInterrupt:
+            sys.exit(0)
 
 def set_logger():
     log_file = config.log_file

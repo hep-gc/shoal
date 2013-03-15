@@ -10,7 +10,8 @@ amqp_server_url = 'localhost'
 amqp_server_port = 5672
 amqp_exchange = 'shoal'
 amqp_exchange_type = 'topic'
-external_ip_service = 'http://localhost:8080/external'
+external_ip = None
+tx_bytes_path = None
 interval = 30
 cloud = 'elephant'
 squid_port = 3128
@@ -26,7 +27,8 @@ def setup(path=None):
     global amqp_server_port
     global amqp_exchange
     global amqp_exchange_type
-    global external_ip_service
+    global external_ip
+    global tx_bytes_path
     global interval
     global cloud
     global squid_port
@@ -108,6 +110,14 @@ def setup(path=None):
                   "integer value."
             sys.exit(1)
 
-    if config_file.has_option("general", "external_ip_service"):
-        external_ip_service = config_file.get("general",
-                                                "external_ip_service")
+    if config_file.has_option("general", "external_ip"):
+        external_ip = config_file.get("general",
+                                                "external_ip")
+
+    if config_file.has_option("general", "tx_bytes_path"):
+        tx_bytes_path = config_file.get("general",
+                                                "tx_bytes_path")
+    else:
+        print "Configuration file problem: tx_bytes_path must be set. " \
+              "Please check configuration file: ", path
+        sys.exit(1)
