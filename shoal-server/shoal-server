@@ -4,7 +4,6 @@ import os
 import web
 import json
 import logging
-import argparse
 
 import pika
 
@@ -52,7 +51,11 @@ class Application(object):
         # setup configuration settings.
         config.setup()
         # change working directory so webpy static files load correctly.
-        os.chdir(config.shoal_dir)
+        try:
+            os.chdir(config.shoal_dir)
+        except OSError as e:
+            logging.error("{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server config file to the location of the shoal-server static files. (Perhaps its ~/shoal_server/?)".format(config.shoal_dir))
+            sys.exit(1)
 
         self.shoal = {}
         self.threads = []
@@ -192,7 +195,7 @@ class RabbitMQConsumer(object):
             self.channel = self.connection.channel()
 
             self.channel.exchange_declare(exchange=self.exchange,
-                                     type=self.exchange_type)
+                                     exchange_type=self.exchange_type)
 
             self.channel.queue_declare(queue=self.queue)
 
