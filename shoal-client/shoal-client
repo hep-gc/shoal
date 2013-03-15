@@ -27,8 +27,8 @@ closest_http_proxy = ''
 cvmfs_http_proxy = "\nCVMFS_HTTP_PROXY="
 default_http_proxy = config.default_squid_proxy
 
+data = json.loads(data)
 if data:
-    data = json.loads(data)
     for i in data:
         closest_http_proxy += ('http://{};').format(data[i]['public_ip'])
 
