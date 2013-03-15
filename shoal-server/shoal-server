@@ -85,6 +85,7 @@ class Application(object):
                     if not thread.is_alive():
                         logging.error('{0} died.'.format(thread))
                         self.stop()
+                        sleep(0.001)
         except KeyboardInterrupt:
             self.stop()
 
@@ -148,8 +149,8 @@ class WebpyServer(object):
         web.config.debug = False
         self.app = None
         self.urls = (
-            '/nearest', 'shoal_server.urls.nearest',
-            '/wpad', 'shoal_server.urls.wpad',
+            '/nearest/(.*)', 'shoal_server.urls.nearest',
+            '/wpad.dat', 'shoal_server.urls.wpad',
             '/external', 'shoal_server.urls.external_ip',
             '/(.*)', 'shoal_server.urls.index',
         )

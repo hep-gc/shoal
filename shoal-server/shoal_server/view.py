@@ -5,6 +5,7 @@ import json
 import operator
 import config
 import math
+import wpad
 
 from time import time
 
@@ -48,7 +49,13 @@ def index(size):
     lower, upper = get_slices(page,size)
     return render.index(time(), total, sorted_shoal[lower:upper], page, pages, size)
 
-def nearest(**k):
+def nearest(count):
+    try:
+        count = int(count)
+    except Exception:
+        count = 5
+
+    web.header('Content-Type', 'application/json')
     if web.ctx.query:
         try:
             ip = re.findall(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', web.ctx.query)[0]
@@ -57,13 +64,12 @@ def nearest(**k):
     else:
         ip = web.ctx['ip']
 
-    squids = geoip.get_nearest_squids(ip)
-    web.header('Content-Type', 'application/json')
+    squids = geoip.get_nearest_squids(ip,count)
 
     if squids:
         squid_json = {}
         for i,squid in enumerate(squids):
-            squid_json[i] = {'public_ip':squid.public_ip, 'private_ip':squid.private_ip,}
+            squid_json[i] = squid
         return json.dumps(squid_json)
     else:
         return json.dumps(None)
@@ -71,3 +77,7 @@ def nearest(**k):
 def external_ip(**k):
     ip = web.ctx['ip']
     return json.dumps({'external_ip':ip,})
+
+def wpad_generator(**k):
+    web.header('Content-Type', 'application/x-ns-proxy-autoconfig')
+    return render.wpad(wpad.generate_wpad(web.ctx['ip']))

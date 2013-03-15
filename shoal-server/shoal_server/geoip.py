@@ -25,7 +25,7 @@ def get_geolocation(ip):
 """
     Given an IP return IP of nearest squid.
 """
-def get_nearest_squids(ip):
+def get_nearest_squids(ip, count=5):
     request_data = get_geolocation(ip)
     if not request_data:
         return None
@@ -34,7 +34,7 @@ def get_nearest_squids(ip):
     r_long = request_data['longitude']
 
     smallest_distance = float("inf")
-    nearest_squid = []
+    nearest_squids = {}
 
     for squid in web.shoal.values():
         s_lat = float(squid.geo_data['latitude'])
@@ -42,20 +42,11 @@ def get_nearest_squids(ip):
 
         distance = haversine(r_lat,r_long,s_lat,s_long)
 
-        if distance == smallest_distance:
-            nearest_squid.append(squid)
-        elif distance < smallest_distance:
-            nearest_squid = []
-            smallest_distance = distance
-            nearest_squid.append(squid)
+        nearest_squids[squid.key] = {'distance':distance, 'public_ip':squid.public_ip, 'private_ip':squid.private_ip,}
 
-    # if squid nodes in same place, return nearest squid with smallest load.
-    if len(nearest_squid) > 0:
-        squid = sorted(nearest_squid, key=operator.attrgetter('load'))
-        return squid[:5]
-    else:
-        return None
+    squids = sorted(nearest_squids.values(), key=nearest_squids.get('distance'))
 
+    return squids[:count]
 """
     Calculate distance between two points using Haversine Formula.
 """
