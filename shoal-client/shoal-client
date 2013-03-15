@@ -5,38 +5,42 @@
 
 import urllib2
 import sys
+import os
 import json
 import logging
+import time
 from shoal_client import config as config
 
 from urllib2 import urlopen
 
+INTERVAL = config.interval
+
 config.setup()
 url = config.shoal_server_url
+closest_http_proxy = ''
 cvmfs_config = config.cvmfs_config
+cvmfs_http_proxy = "\nCVMFS_HTTP_PROXY="
+default_http_proxy = config.default_squid_proxy
 default_conf = config.default_config_format
+data = None
+
+if not os.path.exists(cvmfs_config):
+    logging.error("'{}' does not exist, is cvmfs installed?".format(cvmfs_config))
+    sys.exit(1)
 
 try:
     f = urlopen(url)
-    data = f.read()
+    data = json.loads(f.read())
 except urllib2.URLError as e:
     logging.error("Unable to open url. %s" % e)
-    sys.exit(1)
 
-closest_http_proxy = ''
-cvmfs_http_proxy = "\nCVMFS_HTTP_PROXY="
-default_http_proxy = config.default_squid_proxy
-
-data = json.loads(data)
 if data:
     for i in data:
         closest_http_proxy += ('http://{};').format(data[i]['public_ip'])
 
-if closest_http_proxy:
     cvmfs_http_proxy += "\"" + closest_http_proxy + "\""
-else:
-    cvmfs_http_proxy += default_http_proxy
 
-default_conf += cvmfs_http_proxy
-with open(cvmfs_config, "w") as f:
-    f.write(default_conf)
+    default_conf += cvmfs_http_proxy
+    
+    with open(cvmfs_config, "w") as f:
+        f.write(default_conf)
