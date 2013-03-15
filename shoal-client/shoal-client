@@ -13,8 +13,6 @@ from shoal_client import config as config
 
 from urllib2 import urlopen
 
-INTERVAL = config.interval
-
 config.setup()
 url = config.shoal_server_url
 closest_http_proxy = ''
