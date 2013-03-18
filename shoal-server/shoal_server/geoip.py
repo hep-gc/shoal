@@ -25,7 +25,7 @@ def get_geolocation(ip):
 """
     Given an IP return IP of nearest squid.
 """
-def get_nearest_squids(ip, count=5):
+def get_nearest_squids(ip, count=10):
     request_data = get_geolocation(ip)
     if not request_data:
         return None
@@ -42,7 +42,7 @@ def get_nearest_squids(ip, count=5):
 
         distance = haversine(r_lat,r_long,s_lat,s_long)
 
-        nearest_squids[squid.key] = {'distance':distance, 'public_ip':squid.public_ip, 'private_ip':squid.private_ip,}
+        nearest_squids[squid.key] = {'distance':distance, 'public_ip':squid.public_ip, 'private_ip':squid.private_ip, 'hostname':squid.hostname,}
 
     squids = sorted(nearest_squids.values(), key=nearest_squids.get('distance'))
 

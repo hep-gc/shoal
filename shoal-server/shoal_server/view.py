@@ -30,10 +30,9 @@ def index(size):
     sorted_shoal.reverse()
     total = len(sorted_shoal)
 
-    non_digits = re.compile(r'[^\d]+')
     try:
-        size = int(non_digits.sub('', size))
-    except ValueError:
+        size = int(size)
+    except (ValueError, TypeError):
         size = 20
     page = int(page)
     try:
@@ -52,10 +51,9 @@ def index(size):
 def nearest(count):
     try:
         count = int(count)
-    except Exception:
+    except (ValueError, TypeError):
         count = 5
 
-    web.header('Content-Type', 'application/json')
     if web.ctx.query:
         try:
             ip = re.findall(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', web.ctx.query)[0]
@@ -66,12 +64,17 @@ def nearest(count):
 
     squids = geoip.get_nearest_squids(ip,count)
 
+    web.header('Content-Type', 'application/json')
+
     if squids:
         squid_json = {}
         for i,squid in enumerate(squids):
             squid_json[i] = squid
-        return json.dumps(squid_json)
+        squid_json = json.dumps(squid_json)
+        web.header('Content-Length', len(squid_json))
+        return squid_json
     else:
+        web.header('Content-Length', 4)
         return json.dumps(None)
 
 def external_ip(**k):
@@ -79,5 +82,7 @@ def external_ip(**k):
     return json.dumps({'external_ip':ip,})
 
 def wpad_generator(**k):
+    data = render.wpad(wpad.generate_wpad(web.ctx['ip']))
     web.header('Content-Type', 'application/x-ns-proxy-autoconfig')
-    return render.wpad(wpad.generate_wpad(web.ctx['ip']))
+    web.header('Content-Length', len(data['__body__']))
+    return data

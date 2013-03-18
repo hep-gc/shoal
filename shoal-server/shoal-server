@@ -149,10 +149,10 @@ class WebpyServer(object):
         web.config.debug = False
         self.app = None
         self.urls = (
-            '/nearest/(.*)', 'shoal_server.urls.nearest',
+            '/nearest/?(\d+)?/?', 'shoal_server.urls.nearest',
             '/wpad.dat', 'shoal_server.urls.wpad',
             '/external', 'shoal_server.urls.external_ip',
-            '/(.*)', 'shoal_server.urls.index',
+            '/(\d+)?/?', 'shoal_server.urls.index',
         )
     def run(self):
         try:

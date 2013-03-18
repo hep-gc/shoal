@@ -1,0 +1,11 @@
+$def with (proxy_str)
+$if proxy_str:
+    function FindProxyForURL(url, host)
+    {
+        return "$proxy_str DIRECT";
+    }
+$else:
+    function FindProxyForURL(url, host)
+    {
+        return "DIRECT";
+    }
