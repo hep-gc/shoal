@@ -59,7 +59,7 @@ setup(name='shoal-server',
       license="'GPL3' or 'Apache 2'",
       install_requires=[
           'pygeoip>=0.2.5',
-          'pika>=0.9.9',
+          'pika>=0.9.11',
           'web.py>=0.3',
       ],
       description='A squid cache publishing and advertising tool designed to work in fast changing environments',

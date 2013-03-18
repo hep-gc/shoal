@@ -15,8 +15,10 @@ from shoal_server import geoip as geoip
 from shoal_server import urls as urls
 
 
-logging.basicConfig()
-logging.getLogger('shoal').setLevel(logging.WARNING)
+LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
+                      '-35s %(lineno) -5d: %(message)s')
+logging.getLogger('shoal')
+logging.basicConfig(level=logging.ERROR, format=LOG_FORMAT)
 
 """
     Basic class to store and update information about each squid server.
@@ -85,12 +87,13 @@ class Application(object):
                     if not thread.is_alive():
                         logging.error('{0} died.'.format(thread))
                         self.stop()
-                        sleep(0.001)
+                sleep(1)
         except KeyboardInterrupt:
             self.stop()
 
     def rabbitmq(self):
-        self.rabbitmq = RabbitMQConsumer(self.shoal)
+        url = config.amqp_server_url
+        self.rabbitmq = RabbitMQConsumer(url, self.shoal)
         self.rabbitmq.run()
 
     def webpy(self):
@@ -102,9 +105,12 @@ class Application(object):
         self.update.run()
 
     def stop(self):
+        print "Shutting down Shoal-Server... Please wait."
         try:
             self.webpy.stop()
+            print "Web Server stopped."
             self.rabbitmq.stop()
+            print "RabbitMQ consumer stopped."
             self.update.stop()
         except Exception as e:
             logging.error(e)
@@ -178,39 +184,129 @@ class WebpyServer(object):
 """
 class RabbitMQConsumer(object):
 
-    def __init__(self, shoal):
-        self.url = config.amqp_server_url
-        self.queue = config.amqp_server_queue
-        self.port = config.amqp_server_port
-        self.exchange = config.amqp_exchange
-        self.exchange_type = config.amqp_exchange_type
-        self.routing_key = '#'
+    QUEUE = config.amqp_server_queue
+    EXCHANGE = config.amqp_exchange
+    EXCHANGE_TYPE = config.amqp_exchange_type
+    ROUTING_KEY = '#'
+
+    def __init__(self, amqp_url, shoal):
+        """Create a new instance of the consumer class, passing in the AMQP
+        URL used to connect to RabbitMQ.
+
+        :param str amqp_url: The AMQP url to connect with
+
+        """
         self.shoal = shoal
-        self.connection = None
-        self.channel = None
+        self._connection = None
+        self._channel = None
+        self._closing = False
+        self._consumer_tag = None
+        self._url = amqp_url
+
+    def connect(self):
+        return pika.SelectConnection(pika.URLParameters(self._url),
+                                     self.on_connection_open,
+                                     stop_ioloop_on_close=False)
+
+    def close_connection(self):
+        self._connection.close()
+
+    def add_on_connection_close_callback(self):
+        self._connection.add_on_close_callback(self.on_connection_closed)
+
+    def on_connection_closed(self, connection, reply_code, reply_text):
+        self._channel = None
+        if self._closing:
+            self._connection.ioloop.stop()
+        else:
+            logging.warning('Connection closed, reopening in 5 seconds: (%s) %s',
+                           reply_code, reply_text)
+            self._connection.add_timeout(5, self.reconnect)
+
+    def on_connection_open(self, unused_connection):
+        self.add_on_connection_close_callback()
+        self.open_channel()
+
+    def reconnect(self):
+        # This is the old connection IOLoop instance, stop its ioloop
+        self._connection.ioloop.stop()
+
+        if not self._closing:
+
+            # Create a new connection
+            self._connection = self.connect()
+
+            # There is now a new connection, needs a new ioloop to run
+            self._connection.ioloop.start()
+
+    def add_on_channel_close_callback(self):
+        self._channel.add_on_close_callback(self.on_channel_closed)
+
+    def on_channel_closed(self, channel, reply_code, reply_text):
+        logging.warning('Channel was closed: (%s) %s', reply_code, reply_text)
+        self._connection.close()
+
+    def on_channel_open(self, channel):
+        self._channel = channel
+        self.add_on_channel_close_callback()
+        self.setup_exchange(self.EXCHANGE)
+
+    def setup_exchange(self, exchange_name):
+        self._channel.exchange_declare(self.on_exchange_declareok,
+                                       exchange_name,
+                                       self.EXCHANGE_TYPE)
+
+    def on_exchange_declareok(self, unused_frame):
+        self.setup_queue(self.QUEUE)
+
+    def setup_queue(self, queue_name):
+        self._channel.queue_declare(self.on_queue_declareok, queue_name)
+
+    def on_queue_declareok(self, method_frame):
+        self._channel.queue_bind(self.on_bindok, self.QUEUE,
+                                 self.EXCHANGE, self.ROUTING_KEY)
+
+    def add_on_cancel_callback(self):
+        self._channel.add_on_cancel_callback(self.on_consumer_cancelled)
+
+    def on_consumer_cancelled(self, method_frame):
+        if self._channel:
+            self._channel.close()
+
+    def acknowledge_message(self, delivery_tag):
+        self._channel.basic_ack(delivery_tag)
+
+    def on_cancelok(self, unused_frame):
+        self.close_channel()
+
+    def stop_consuming(self):
+        if self._channel:
+            self._channel.basic_cancel(self.on_cancelok, self._consumer_tag)
+
+    def start_consuming(self):
+        self.add_on_cancel_callback()
+        self._consumer_tag = self._channel.basic_consume(self.on_message,
+                                                         self.QUEUE)
+
+    def on_bindok(self, unused_frame):
+        self.start_consuming()
+
+    def close_channel(self):
+        self._channel.close()
+
+    def open_channel(self):
+        self._connection.channel(on_open_callback=self.on_channel_open)
 
     def run(self):
-        try:
-            self.connection = pika.BlockingConnection(pika.ConnectionParameters(self.url, self.port))
+        self._connection = self.connect()
+        self._connection.ioloop.start()
 
-            self.channel = self.connection.channel()
+    def stop(self):
+        self._closing = True
+        self.stop_consuming()
+        self._connection.ioloop.start()
 
-            self.channel.exchange_declare(exchange=self.exchange,
-                                     exchange_type=self.exchange_type)
-
-            self.channel.queue_declare(queue=self.queue)
-
-            self.channel.queue_bind(exchange=self.exchange, queue=self.queue,
-                               routing_key=self.routing_key)
-
-            self.channel.basic_consume(self.on_message, self.queue)
-
-            self.channel.start_consuming()
-
-        except Exception as e:
-            logging.error('Could not connected to AMQP Server. Error: {0}'.format(e))
-
-    def on_message(self, unused_channel, method_frame, properties, body):
+    def on_message(self, unused_channel, basic_deliver, properties, body):
         try:
             external_ip = public_ip = private_ip = None
             squid_inactive_time = config.squid_inactive_time
@@ -247,10 +343,7 @@ class RabbitMQConsumer(object):
             logging.error("Message received was not the proper format (missing:{0}), discarding...\nmethod_frame:{1}\nproperties:{2}\nbody:{3}\n".format(e,method_frame,properties,body))
 
         finally:
-            self.channel.basic_ack(method_frame.delivery_tag)
-
-    def stop(self):
-        self.channel.stop_consuming()
+            self.acknowledge_message(basic_deliver.delivery_tag)
 
 def main():
     Application()
