@@ -6,7 +6,7 @@
 import urllib2
 import sys
 import os
-import json
+import simplejson as json
 import logging
 import time
 from shoal_client import config as config
@@ -23,23 +23,24 @@ default_conf = config.default_config_format
 data = None
 
 if not os.path.exists(cvmfs_config):
-    logging.error("'{0}' does not exist, is cvmfs installed?".format(cvmfs_config))
+    logging.error("'%s' does not exist, is cvmfs installed?" %cvmfs_config)
     sys.exit(1)
 
 try:
     f = urlopen(url)
     data = json.loads(f.read())
-except urllib2.URLError as e:
+except urllib2.URLError, e:
     logging.error("Unable to open url. %s" % e)
 
 if data:
     for i in data:
-        closest_http_proxy += ('http://{0};').format(data[i]['public_ip'])
+        closest_http_proxy += 'http://%s;' % data[i]['public_ip']
     closest_http_proxy += "DIRECT"
 
     cvmfs_http_proxy += "\"" + closest_http_proxy + "\""
 
     default_conf += cvmfs_http_proxy
     
-    with open(cvmfs_config, "w") as f:
-        f.write(default_conf)
+    f = open(cvmfs_config, "w")
+    f.write(default_conf)
+    f.close()
