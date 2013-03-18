@@ -7,15 +7,15 @@ A squid cache publishing and advertising tool designed to work in fast changing 
 The purpose of shoal is to allow you to build a continually updated list of squid caches. Each squid runs 
 shoal-agent which uses AMQP messages to publish the existence and load of the squid to the central shoal-server. 
 Shoal-server keeps a list of squids in memory and removes any squid which has not sent it a message recently. 
-The IPs of all squid severs are geo-referenced. Clients contact the squid server using a REST interface to 
-retrieve a ordered list of the nearest squids. The diagram below should give you some idea how this works:
+The IPs of all squid servers are geo-referenced. Clients contact the squid server using a REST interface to 
+retrieve an ordered list of the nearest squids. The diagram below should give you some idea how this works:
 
  ![shoal diagram](https://raw.github.com/hep-gc/shoal/gh-pages/shoal_diagram.png)
 
 ## Components
 
 **shoal-server** maintains the list of running squids. It uses RabbitMQ to handle incomming AMQP messages from 
-squid servers. It provides a REST interface for programatically retrieving a json formatted ordered list of squids
+squid servers. It provides a REST interface for programatically retrieving a json formatted ordered list of squids.
 It also provides a web interface for viewing the list.
 
 **shoal-agent** runs on squid servers and publishes the load and IP of the squid server to the shoal-server using 
