@@ -10,6 +10,7 @@ from math import radians, cos, sin, asin, sqrt
 
 import config
 
+logger = logging.getLogger('shoal_server.geoip')
 """
     Given an IP return all its geographical information (using GeoLiteCity.dat)
 """
@@ -19,7 +20,7 @@ def get_geolocation(ip):
         gi = pygeoip.GeoIP(geolitecity_path)
         return gi.record_by_addr(ip)
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
         return None
 
 """
@@ -69,13 +70,13 @@ def check_geolitecity_need_update():
 
     if os.path.exists(geolitecity_path):
         if curr - os.path.getmtime(geolitecity_path) < geolitecity_update:
-            logging.info('GeoLiteCity is up-to-date')
+            logger.info('GeoLiteCity is up-to-date')
             return False
         else:
-            logging.warning('GeoLiteCity database needs updating.')
+            logger.warning('GeoLiteCity database needs updating.')
             return True
     else:
-        logging.warning('GeoLiteCity database needs updating.')
+        logger.warning('GeoLiteCity database needs updating.')
         return True
 
 def download_geolitecity():
@@ -91,8 +92,8 @@ def download_geolitecity():
         gz.wait()
 
         if check_geolitecity_need_update():
-            logging.error('GeoLiteCity database failed to update.')
+            logger.error('GeoLiteCity database failed to update.')
 
     except Exception as e:
-        logging.error("Could not download the database. - {0}".format(e))
+        logger.error("Could not download the database. - {0}".format(e))
         sys.exit(1)

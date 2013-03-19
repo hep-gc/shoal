@@ -1,13 +1,11 @@
 from os.path import exists, join, expanduser
 import sys
 import ConfigParser
-import logging
 
 # Shoal Options Module
 
 # set default values
-amqp_server_url = 'localhost'
-amqp_server_port = 5672
+amqp_server_url = 'amqp://guest:guest@localhost:5672/%2F'
 amqp_exchange = 'shoal'
 amqp_exchange_type = 'topic'
 external_ip = None
@@ -15,7 +13,7 @@ tx_bytes_path = None
 interval = 30
 cloud = 'elephant'
 squid_port = 3128
-log_file = '/var/tmp/shoal_agent.log'
+log_file = '/var/log/shoal_agent.log'
 
 
 def setup(path=None):
@@ -24,7 +22,6 @@ def setup(path=None):
        or ~/.shoal/shoal_agent.conf
     """
     global amqp_server_url
-    global amqp_server_port
     global amqp_exchange
     global amqp_exchange_type
     global external_ip
@@ -69,14 +66,6 @@ def setup(path=None):
     if config_file.has_option("rabbitmq", "amqp_server_url"):
         amqp_server_url = config_file.get("rabbitmq",
                                                 "amqp_server_url")
-
-    if config_file.has_option("rabbitmq", "amqp_server_port"):
-        try:
-            amqp_server_port = config_file.getint("rabbitmq", "amqp_server_port")
-        except ValueError:
-            print "Configuration file problem: amqp_port must be an " \
-                  "integer value."
-            sys.exit(1)
 
     if config_file.has_option("rabbitmq", "amqp_exchange"):
         amqp_exchange = config_file.get("rabbitmq",

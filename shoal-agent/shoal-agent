@@ -20,8 +20,9 @@ from shoal_agent import config as config
 # Time interval to send data
 INTERVAL = config.interval
 
-logging.basicConfig()
-log = logging.getLogger('shoal_agent')
+LOG_FORMAT = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
+logger = logging.getLogger('shoal-agent')
+
 private_address = ('10.','172.','192.')
 external_ip = config.external_ip
 
@@ -29,39 +30,36 @@ def amqp_send(data):
     exchange = config.amqp_exchange
     exchange_type = config.amqp_exchange_type
     host = config.amqp_server_url
-    port = config.amqp_server_port
     cloud = config.cloud
     routing_key = cloud + '.info'
 
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host, port))
+        connection = pika.BlockingConnection(pika.URLParameters(host))
         channel = connection.channel()
-        channel.exchange_declare(exchange=exchange, exchange_type=exchange_type)
         channel.basic_publish(exchange=exchange,
                               routing_key=routing_key,
-                              body=data)
+                              body=data,
+                              properties=pika.BasicProperties(content_type='application/json', delivery_mode=1))
         connection.close()
     except Exception as e:
-        log.error("Could not connect to AMQP Server. Is it running at url: {0}\nPlease check configuration settings.\nError: {1}".format(host,e))
+        logger.error("Could not connect to AMQP Server. Is it running at url: {0}\nPlease check configuration settings.\nError: {1}".format(host,e))
         sys.exit(1)
 
 def get_load_data(path):
     try:
         with open(path) as tx:
             tx1 = int(tx.read())
-            tx.close()
 
         time.sleep(1)
 
         with open(path) as tx:
             tx2 = int(tx.read())
-            tx.close()
 
         tx_rate = (tx2 - tx1) / 1024
         return tx_rate
     
     except Exception as e:
-        logging.error("Unable to generate load data, does this file exist: '{0}'.\nPlease check settings in configuration file.\n{1}".format(path,e))
+        logger.error("Unable to generate load data, does this file exist: '{0}'.\nPlease check settings in configuration file.\n{1}".format(path,e))
         sys.exit(1)
 
 def get_ip_addresses():
@@ -79,8 +77,11 @@ def get_ip_addresses():
 
 def main():
     config.setup()
-    set_logger()
-
+    try:
+        logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, filename=config.log_file)
+    except IOError as e:
+        print "Could not set logger. Please check config file.", e
+        sys.exit(1)
     # make a UUID based on the, host ID and current time
     id = str(uuid.uuid1())
     hostname = socket.gethostname()
@@ -99,14 +100,14 @@ def main():
     elif external_ip:
         data['external_ip'] = external_ip
     else:
-        logging.error("Shoal-Agent was unable to find a public IP or external IP for this squid. Please set an external IP in shoal-agent config file.")
+        logger.error("Shoal-Agent was unable to find a public IP or external IP for this squid. Please set an external IP in shoal-agent config file.")
         sys.exit(1)
 
     if private_ip:
         data['private_ip'] = ('{0}:{1}').format(private_ip, config.squid_port)
 
     if not (private_ip or public_ip):
-        logging.error("Shoal_Agent was unable to find a public or private IP for this squid. Please contact the developers.")
+        logger.error("Shoal_Agent was unable to find a public or private IP for this squid. Please contact the developers.")
         sys.exit(1)
 
     while True:
@@ -128,17 +129,6 @@ def main():
             time.sleep(INTERVAL)
         except KeyboardInterrupt:
             sys.exit(0)
-
-def set_logger():
-    log_file = config.log_file
-    log_format = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
-    log = logging.getLogger('shoal_agent')
-    hdlr = logging.FileHandler(log_file)
-    formatter = logging.Formatter(log_format)
-
-    hdlr.setFormatter(formatter)
-    log.addHandler(hdlr)
-    log.setLevel(logging.WARNING)
 
 if __name__ == '__main__':
     main()
