@@ -14,11 +14,9 @@ from shoal_server import config as config
 from shoal_server import geoip as geoip
 from shoal_server import urls as urls
 
-
-LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
-                      '-35s %(lineno) -5d: %(message)s')
-logging.getLogger('shoal')
-logging.basicConfig(level=logging.ERROR, format=LOG_FORMAT)
+LOG_FORMAT = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
+logging.basicConfig(level=logging.ERROR, format=LOG_FORMAT, filename=config.log_file)
+logger = logging.getLogger('shoal-server')
 
 """
     Basic class to store and update information about each squid server.
@@ -56,7 +54,7 @@ class Application(object):
         try:
             os.chdir(config.shoal_dir)
         except OSError as e:
-            logging.error("{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server config file to the location of the shoal-server static files. (Perhaps its ~/shoal_server/?)".format(config.shoal_dir))
+            logger.error("{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server config file to the location of the shoal-server static files. (Perhaps its ~/shoal_server/?)".format(config.shoal_dir))
             sys.exit(1)
 
         self.shoal = {}
@@ -85,7 +83,7 @@ class Application(object):
             while True:
                 for thread in self.threads:
                     if not thread.is_alive():
-                        logging.error('{0} died.'.format(thread))
+                        logger.error('{0} died.'.format(thread))
                         self.stop()
                 sleep(1)
         except KeyboardInterrupt:
@@ -113,7 +111,7 @@ class Application(object):
             print "RabbitMQ consumer stopped."
             self.update.stop()
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
         finally:
             # give them time to properly exit.
             sleep(2)
@@ -165,7 +163,7 @@ class WebpyServer(object):
             self.app = web.application(self.urls, globals())
             self.app.run()
         except Exception as e:
-            logging.error("Could not start webpy server.\n{0}".format(e))
+            logger.error("Could not start webpy server.\n{0}".format(e))
             sys.exit(1)
 
     def stop(self):
@@ -219,7 +217,7 @@ class RabbitMQConsumer(object):
         if self._closing:
             self._connection.ioloop.stop()
         else:
-            logging.warning('Connection closed, reopening in 5 seconds: (%s) %s',
+            logger.warning('Connection closed, reopening in 5 seconds: (%s) %s',
                            reply_code, reply_text)
             self._connection.add_timeout(5, self.reconnect)
 
@@ -243,7 +241,7 @@ class RabbitMQConsumer(object):
         self._channel.add_on_close_callback(self.on_channel_closed)
 
     def on_channel_closed(self, channel, reply_code, reply_text):
-        logging.warning('Channel was closed: (%s) %s', reply_code, reply_text)
+        logger.warning('Channel was closed: (%s) %s', reply_code, reply_text)
         self._connection.close()
 
     def on_channel_open(self, channel):
@@ -331,7 +329,7 @@ class RabbitMQConsumer(object):
                 geo_data = geoip.get_geolocation(external_ip)
 
             if not geo_data:
-                logging.error("Unable to generate geo location data, discarding message")
+                logger.error("Unable to generate geo location data, discarding message")
             else:
                 if key in self.shoal:
                     self.shoal[key].update(public_ip, private_ip, load, geo_data)
@@ -340,7 +338,7 @@ class RabbitMQConsumer(object):
                     self.shoal[key] = new_squid
 
         except KeyError as e:
-            logging.error("Message received was not the proper format (missing:{0}), discarding...\nmethod_frame:{1}\nproperties:{2}\nbody:{3}\n".format(e,method_frame,properties,body))
+            logger.error("Message received was not the proper format (missing:{0}), discarding...\nmethod_frame:{1}\nproperties:{2}\nbody:{3}\n".format(e,method_frame,properties,body))
 
         finally:
             self.acknowledge_message(basic_deliver.delivery_tag)

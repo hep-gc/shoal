@@ -16,6 +16,7 @@ amqp_server_queue = 'squiddata'
 amqp_exchange = 'shoal'
 amqp_exchange_type = 'topic'
 webpy_cache = False
+log_file = '/var/log/shoal_server.log'
 
 def setup(path=None):
     """Setup shoal using config file.
@@ -32,6 +33,7 @@ def setup(path=None):
     global amqp_exchange
     global amqp_exchange_type
     global webpy_cache
+    global log_file
 
     homedir = expanduser('~')
 
@@ -130,3 +132,7 @@ def setup(path=None):
             print "Configuration file problem: webpy_cache must be a " \
                   "boolean value."
             sys.exit(1)
+
+    if config_file.has_option("logging", "log_file"):
+        log_file = config_file.get("logging",
+                                        "log_file")
