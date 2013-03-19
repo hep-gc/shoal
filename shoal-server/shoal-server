@@ -207,8 +207,8 @@ class RabbitMQConsumer(object):
 
     def connect(self):
         return pika.SelectConnection(pika.URLParameters(self._url),
-                                     self.on_connection_open,
-                                     stop_ioloop_on_close=False)
+                                         self.on_connection_open,
+                                         stop_ioloop_on_close=False)
 
     def close_connection(self):
         self._connection.close()
@@ -300,7 +300,11 @@ class RabbitMQConsumer(object):
         self._connection.channel(on_open_callback=self.on_channel_open)
 
     def run(self):
-        self._connection = self.connect()
+        try:
+            self._connection = self.connect()
+        except Exception as e:
+            logger.error("Unable to connect ot RabbitMQ Server. {}".format(e))
+            sys.exit(1)
         self._connection.ioloop.start()
 
     def stop(self):
