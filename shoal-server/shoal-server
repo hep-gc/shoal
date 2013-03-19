@@ -15,7 +15,6 @@ from shoal_server import geoip as geoip
 from shoal_server import urls as urls
 
 LOG_FORMAT = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
-logging.basicConfig(level=logging.ERROR, format=LOG_FORMAT, filename=config.log_file)
 logger = logging.getLogger('shoal-server')
 
 """
@@ -50,11 +49,16 @@ class Application(object):
     def __init__(self):
         # setup configuration settings.
         config.setup()
+        try:
+            logging.basicConfig(level=logging.ERROR, format=LOG_FORMAT, filename=config.log_file)
+        except IOError as e:
+            print "Could not set logger.", e
+            sys.exit(1)
         # change working directory so webpy static files load correctly.
         try:
             os.chdir(config.shoal_dir)
         except OSError as e:
-            logger.error("{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server config file to the location of the shoal-server static files. (Perhaps its ~/shoal_server/?)".format(config.shoal_dir))
+            print "{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server config file to the location of the shoal-server static files.".format(config.shoal_dir)
             sys.exit(1)
 
         self.shoal = {}

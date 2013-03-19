@@ -21,7 +21,6 @@ from shoal_agent import config as config
 INTERVAL = config.interval
 
 LOG_FORMAT = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
-logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, filename=config.log_file)
 logger = logging.getLogger('shoal-agent')
 
 private_address = ('10.','172.','192.')
@@ -78,7 +77,11 @@ def get_ip_addresses():
 
 def main():
     config.setup()
-
+    try:
+        logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, filename=config.log_file)
+    except IOError as e:
+        print "Could not set logger. Please check config file.", e
+        sys.exit(1)
     # make a UUID based on the, host ID and current time
     id = str(uuid.uuid1())
     hostname = socket.gethostname()
