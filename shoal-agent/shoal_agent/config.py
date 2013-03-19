@@ -1,7 +1,6 @@
 from os.path import exists, join, expanduser
 import sys
 import ConfigParser
-import logging
 
 # Shoal Options Module
 
@@ -15,7 +14,7 @@ tx_bytes_path = None
 interval = 30
 cloud = 'elephant'
 squid_port = 3128
-log_file = '/var/tmp/shoal_agent.log'
+log_file = '/var/log/shoal_agent.log'
 
 
 def setup(path=None):
