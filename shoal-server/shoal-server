@@ -3,6 +3,7 @@ import sys
 import os
 import web
 import json
+import urllib
 import logging
 
 import pika
@@ -94,8 +95,9 @@ class Application(object):
             self.stop()
 
     def rabbitmq(self):
-        url = config.amqp_server_url
-        self.rabbitmq = RabbitMQConsumer(url, self.shoal)
+        url, vh = config.amqp_server_url, config.amqp_virtual_host
+        host = "{0}/{1}".format(url, urllib.quote_plus(vh))
+        self.rabbitmq = RabbitMQConsumer(host, self.shoal)
         self.rabbitmq.run()
 
     def webpy(self):

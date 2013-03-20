@@ -5,7 +5,8 @@ import ConfigParser
 # Shoal Options Module
 
 # set default values
-amqp_server_url = 'amqp://guest:guest@localhost:5672/%2F'
+amqp_server_url = 'amqp://guest:guest@localhost:5672'
+amqp_virtual_host = '/'
 amqp_exchange = 'shoal'
 amqp_exchange_type = 'topic'
 external_ip = None
@@ -22,6 +23,7 @@ def setup(path=None):
        or ~/.shoal/shoal_agent.conf
     """
     global amqp_server_url
+    global amqp_virtual_host
     global amqp_exchange
     global amqp_exchange_type
     global external_ip
@@ -66,6 +68,10 @@ def setup(path=None):
     if config_file.has_option("rabbitmq", "amqp_server_url"):
         amqp_server_url = config_file.get("rabbitmq",
                                                 "amqp_server_url")
+
+    if config_file.has_option("rabbitmq", "amqp_virtual_host"):
+        amqp_virtual_host = config_file.get("rabbitmq",
+                                                "amqp_virtual_host")
 
     if config_file.has_option("rabbitmq", "amqp_exchange"):
         amqp_exchange = config_file.get("rabbitmq",

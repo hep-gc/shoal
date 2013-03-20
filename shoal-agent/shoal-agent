@@ -13,6 +13,7 @@ import netifaces
 import uuid
 import socket
 import logging
+import urllib
 import urllib2
 
 from shoal_agent import config as config
@@ -29,7 +30,8 @@ external_ip = config.external_ip
 def amqp_send(data):
     exchange = config.amqp_exchange
     exchange_type = config.amqp_exchange_type
-    host = config.amqp_server_url
+    url, vh = config.amqp_server_url, config.amqp_virtual_host
+    host = "{0}/{1}".format(url, urllib.quote_plus(vh))
     cloud = config.cloud
     routing_key = cloud + '.info'
 
