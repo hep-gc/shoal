@@ -10,7 +10,7 @@ from math import radians, cos, sin, asin, sqrt
 
 import config
 
-logger = logging.getLogger('shoal_server.geoip')
+logger = logging.getLogger('shoal_server')
 """
     Given an IP return all its geographical information (using GeoLiteCity.dat)
 """
