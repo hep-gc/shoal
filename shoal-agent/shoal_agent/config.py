@@ -12,7 +12,7 @@ amqp_exchange_type = 'topic'
 external_ip = None
 tx_bytes_path = None
 interval = 30
-cloud = 'elephant'
+cloud = ''
 squid_port = 3128
 log_file = '/var/log/shoal_agent.log'
 
