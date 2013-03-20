@@ -8,9 +8,11 @@ import math
 import wpad
 
 from time import time
+from __version__ import version
 
 t_globals = dict(
   datestr=web.datestr,
+  version=version,
   squid_active_time=config.squid_inactive_time,
 )
 
