@@ -1,7 +1,7 @@
 # Shoal-Client v0.3.0 README
 
 ##Installation
-
+_Requires python 2.4+_
 ###Easy Way
 
 1. `pip`

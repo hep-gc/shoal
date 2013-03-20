@@ -1,4 +1,4 @@
-# Shoal v0.1 README
+# Shoal README
 
 A squid cache publishing and advertising tool designed to work in fast changing environments. 
 

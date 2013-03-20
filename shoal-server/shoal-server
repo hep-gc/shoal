@@ -305,7 +305,7 @@ class RabbitMQConsumer(object):
         try:
             self._connection = self.connect()
         except Exception as e:
-            logger.error("Unable to connect ot RabbitMQ Server. {}".format(e))
+            logger.error("Unable to connect ot RabbitMQ Server. {0}".format(e))
             sys.exit(1)
         self._connection.ioloop.start()
 

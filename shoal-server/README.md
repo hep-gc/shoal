@@ -1,4 +1,4 @@
-# Shoal-Server v0.4 README
+# Shoal-Server v0.4.1 README
 
 ##Services
 **shoal-server** provides two services that can be utilized by clients.
@@ -21,6 +21,7 @@ Clients can use the **shoal-server** REST API to retrieve a list of nearest squi
  
 ###Easy Way
 
+_Note: Requires you have a working RabbitMQ AMQP Server, and python 2.6+_
 _Recommended to use a system wide install (sudo), but works with virtualenv with tweaks_
 
 1. Use `pip`
@@ -51,6 +52,4 @@ _Recommended to use a system wide install (sudo), but works with virtualenv with
 
 4. `python shoal_server.py` to start the server
 5. Visit to `http://localhost:8080`
-
-*Note: Requires you have a working RabbitMQ AMQP Server, and python 2.6+*
 
