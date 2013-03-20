@@ -1,4 +1,4 @@
-# Shoal-Server v0.3 README
+# Shoal-Server v0.4 README
 
 ##Services
 **shoal-server** provides two services that can be utilized by clients.
@@ -45,7 +45,7 @@ _Recommended to use a system wide install (sudo), but works with virtualenv with
 2. Move shoal-server subfolder to any working directory
 3. Adjust configuration file included, and move it to `/etc/` or `~/.shoal/`
 4. Install missing packages:
-  - pika 0.9.1+
+  - pika 0.9.11+
   - web.py 0.3+
   - pygeoip 0.2.5+
 

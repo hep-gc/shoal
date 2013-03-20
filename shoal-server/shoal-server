@@ -109,7 +109,7 @@ class Application(object):
         self.update.run()
 
     def stop(self):
-        print "Shutting down Shoal-Server... Please wait."
+        print "\nShutting down Shoal-Server... Please wait."
         try:
             self.webpy.stop()
             print "Web Server stopped."

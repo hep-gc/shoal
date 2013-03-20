@@ -1,4 +1,4 @@
-#Shoal Agent v0.2 README
+#Shoal Agent v0.4.0 README
 
 ##How to install
 
@@ -6,7 +6,7 @@
 _Recommended to use a system wide install (sudo), but works with virtualenv with tweaks_
 
 1. Use `pip`
-  - `pip shoal-agent`
+  - `pip install shoal-agent`
 
 2. Location of files depending if **sudo** was used or not 
   - **Configuration Files:** `/etc/shoal/`
@@ -21,7 +21,7 @@ _Recommended to use a system wide install (sudo), but works with virtualenv with
 2. Copy the init script in the `scripts/` directory to `/etc/init.d/`
 3. Create/Move `shoal_agent.conf` to `/etc/shoal_agent.conf` and adjust settings.
 4. If system supports it, `chkconfig --add shoal_agent` to start shoal agent on boot.
-5. Install `netifaces` module (v.0.8+) using `easy_install` or `pip`.
+5. Install `netifaces` module (v.0.8+) and `pika` module (0.9.11+) using `easy_install` or `pip`.
 
 *Note: Requires python 2.6+.*
 
