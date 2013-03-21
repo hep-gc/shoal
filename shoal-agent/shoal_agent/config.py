@@ -114,5 +114,5 @@ def setup(path=None):
                                                 "tx_bytes_path")
     else:
         print "Configuration file problem: tx_bytes_path must be set. " \
-              "Please check configuration file: ", path
+              "Please check configuration file:", path
         sys.exit(1)

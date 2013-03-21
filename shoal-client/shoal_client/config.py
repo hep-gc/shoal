@@ -67,5 +67,6 @@ def setup(path=None):
         default_squid_proxy = config_file.get("general",
                                                 "default_squid_proxy")
     else:
-        print "Configuration file problem: default_squid_proxy must be set."
+        print "Configuration file problem: default_squid_proxy must be set. " \
+              "Please check configuration file:", path
         sys.exit(1)
