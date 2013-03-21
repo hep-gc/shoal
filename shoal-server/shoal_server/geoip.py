@@ -10,14 +10,17 @@ from math import radians, cos, sin, asin, sqrt
 
 import config
 
+GEOLITE_DB = config.geolitecity_path
+GEOLITE_URL = config.geolitecity_url
+GEOLITE_UPDATE = config.geolitecity_update
+
 logger = logging.getLogger('shoal_server')
 """
     Given an IP return all its geographical information (using GeoLiteCity.dat)
 """
 def get_geolocation(ip):
-    geolitecity_path = config.geolitecity_path
     try:
-        gi = pygeoip.GeoIP(geolitecity_path)
+        gi = pygeoip.GeoIP(GEOLITE_DB)
         return gi.record_by_addr(ip)
     except Exception as e:
         logger.error(e)
@@ -34,8 +37,7 @@ def get_nearest_squids(ip, count=10):
     r_lat = request_data['latitude']
     r_long = request_data['longitude']
 
-    smallest_distance = float("inf")
-    nearest_squids = {}
+    nearest_squids = []
 
     for squid in web.shoal.values():
         s_lat = float(squid.geo_data['latitude'])
@@ -43,11 +45,17 @@ def get_nearest_squids(ip, count=10):
 
         distance = haversine(r_lat,r_long,s_lat,s_long)
 
-        nearest_squids[squid.key] = {'distance':distance, 'public_ip':squid.public_ip, 'private_ip':squid.private_ip, 'hostname':squid.hostname,}
+        nearest_squids.append({
+                                'distance':distance,
+                                'load':squid.load,
+                                'public_ip':squid.public_ip,
+                                'private_ip':squid.private_ip,
+                                'hostname':squid.hostname,
+                              })
 
-    squids = sorted(nearest_squids.values(), key=nearest_squids.get('distance'))
-
+    squids = sorted(nearest_squids, key=lambda k: (k['distance'], k['load']))
     return squids[:count]
+
 """
     Calculate distance between two points using Haversine Formula.
 """
@@ -65,11 +73,9 @@ def haversine(lat1,lon1,lat2,lon2):
 
 def check_geolitecity_need_update():
     curr = time()
-    geolitecity_update = config.geolitecity_update
-    geolitecity_path = config.geolitecity_path
 
-    if os.path.exists(geolitecity_path):
-        if curr - os.path.getmtime(geolitecity_path) < geolitecity_update:
+    if os.path.exists(GEOLITE_DB):
+        if curr - os.path.getmtime(GEOLITE_DB) < GEOLITE_UPDATE:
             logger.info('GeoLiteCity is up-to-date')
             return False
         else:
@@ -80,10 +86,8 @@ def check_geolitecity_need_update():
         return True
 
 def download_geolitecity():
-    geolitecity_path = config.geolitecity_path
-
-    cmd = ['wget','-O','{0}.gz'.format(geolitecity_path),config.geolitecity_url]
-    ungz = ['gunzip','-f','{0}.gz'.format(geolitecity_path)]
+    cmd = ['wget','-O','{0}.gz'.format(GEOLITE_DB),GEOLITE_URL]
+    ungz = ['gunzip','-f','{0}.gz'.format(GEOLITE_DB)]
 
     try:
         dl = subprocess.Popen(cmd)
