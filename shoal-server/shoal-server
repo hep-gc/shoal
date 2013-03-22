@@ -85,7 +85,6 @@ class Application(object):
 
         for thread in self.threads:
             thread.start()
-
         try:
             while True:
                 for thread in self.threads:
@@ -120,10 +119,11 @@ class Application(object):
             self.update.stop()
         except Exception as e:
             logger.error(e)
+            sys.exit(1)
         finally:
-            # give them time to properly exit.
             sleep(2)
-            sys.exit()
+        # give them time to properly exit.
+        sys.exit()
 
 """
     ShoalUpdate is used for trimming inactive squids every set interval.
@@ -359,6 +359,9 @@ class RabbitMQConsumer(object):
         self.acknowledge_message(basic_deliver.delivery_tag)
 
 def main():
-    Application()
+    try:
+        app = Application()
+    except KeyboardInterrupt:
+        sys.exit()
 
 main()
