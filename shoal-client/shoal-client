@@ -21,26 +21,25 @@ default_http_proxy = config.default_squid_proxy
 default_conf = config.default_config_format
 
 data = None
+dump = False
 closest_http_proxy = ''
 cvmfs_http_proxy = "\nCVMFS_HTTP_PROXY="
 
 def get_args():
 
     global server
+    global dump
 
     p = OptionParser()
-    p.add_option("-d", "--dump", action="callback", callback=dump_config)
+    p.add_option("-d", "--dump", action="store_true", dest="dump")
     p.add_option("-s", "--server", action="store", type="string", dest="server")
 
     (options, args) = p.parse_args()
 
     if options.server:
         server = options.server
-
-def dump_config(option, opt, value, parser):
-    print "=====Dumping Config File====="
-    config.setup(dump=True)
-    sys.exit()
+    if options.dump:
+        dump = True
 
 get_args()
 
@@ -59,14 +58,20 @@ if data:
         try:
             closest_http_proxy += 'http://%s:%s;' % (data[i]['hostname'], data[i]['squid_port'])
         except KeyError, e:
-            logging.error(e)
+            logging.error("The data returned from '%s' was missing the key: %s. Please ensure the url is running the latest Shoal-Server." % (server, e))
             sys.exit(1)
     closest_http_proxy += "DIRECT"
 
     cvmfs_http_proxy += "\"" + closest_http_proxy + "\""
 
     default_conf += cvmfs_http_proxy
-    
-    f = open(cvmfs_config, "w")
-    f.write(default_conf)
-    f.close()
+
+    if dump:
+        print "\nThe following would be written to cvmfs config file located at '%s' (defined in shoal_client.conf):\n%s\n" % (cvmfs_config, default_conf)
+    else:
+        f = open(cvmfs_config, "w")
+        f.write(default_conf)
+        f.close()
+elif dump:
+    print "There was no data returned from the url '%s'\n"\
+          "cvmfs config file located at '%s' (defined in shoal_client.conf) will be untouched" % (server, cvmfs_config)
