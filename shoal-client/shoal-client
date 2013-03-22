@@ -60,9 +60,8 @@ if data:
         except KeyError, e:
             logging.error("The data returned from '%s' was missing the key: %s. Please ensure the url is running the latest Shoal-Server." % (server, e))
             sys.exit(1)
-    closest_http_proxy += "DIRECT"
 
-    cvmfs_http_proxy += "\"" + closest_http_proxy + "\""
+    cvmfs_http_proxy += "\"" + closest_http_proxy + default_http_proxy + "\""
 
     default_conf += cvmfs_http_proxy
 
