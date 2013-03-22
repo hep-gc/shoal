@@ -2,34 +2,56 @@
 """
   Very simple client script used to get nearest squid server using the RESTful API.
 """
-
 import urllib2
 import sys
 import os
 import simplejson as json
 import logging
 import time
+
 from shoal_client import config as config
 
+from optparse import OptionParser
 from urllib2 import urlopen
 
 config.setup()
-url = config.shoal_server_url
-closest_http_proxy = ''
+server = config.shoal_server_url
 cvmfs_config = config.cvmfs_config
-cvmfs_http_proxy = "\nCVMFS_HTTP_PROXY="
 default_http_proxy = config.default_squid_proxy
 default_conf = config.default_config_format
+
 data = None
+closest_http_proxy = ''
+cvmfs_http_proxy = "\nCVMFS_HTTP_PROXY="
+
+def get_args():
+
+    global server
+
+    p = OptionParser()
+    p.add_option("-d", "--dump", action="callback", callback=dump_config)
+    p.add_option("-s", "--server", action="store", type="string", dest="server")
+
+    (options, args) = p.parse_args()
+
+    if options.server:
+        server = options.server
+
+def dump_config(option, opt, value, parser):
+    print "=====Dumping Config File====="
+    config.setup(dump=True)
+    sys.exit()
+
+get_args()
 
 if not os.path.exists(cvmfs_config):
-    logging.error("'%s' does not exist, is cvmfs installed?" %cvmfs_config)
+    logging.error("'%s' does not exist, is cvmfs installed? Please check config file." % cvmfs_config)
     sys.exit(1)
 
 try:
-    f = urlopen(url)
+    f = urlopen(server)
     data = json.loads(f.read())
-except urllib2.URLError, e:
+except (urllib2.URLError,ValueError), e:
     logging.error("Unable to open url. %s" % e)
 
 if data:

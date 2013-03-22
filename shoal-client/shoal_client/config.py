@@ -9,11 +9,10 @@ import logging
 shoal_server_url = 'http://localhost:8080/nearest'
 cvmfs_config = '/etc/cvmfs/default.local'
 default_squid_proxy = "\"http://chrysaor.westgrid.ca:3128;http://cernvm-webfs.atlas-canada.ca:3128;DIRECT\""
-default_config_format = \
-"VMFS_REPOSITORIES=atlas.cern.ch,atlas-condb.cern.ch,grid.cern.ch \n\
-CVMFS_QUOTA_LIMIT=3500"
+default_config_format = "VMFS_REPOSITORIES=atlas.cern.ch,atlas-condb.cern.ch,grid.cern.ch\n" \
+                        "CVMFS_QUOTA_LIMIT=3500"
 
-def setup(path=None):
+def setup(path=None,dump=False):
     """Setup shoal using config file.
        setup will look for a configuration file specified in /etc/shoal/shoal_client.conf
        or ~/.shoal/shoal_client.conf
@@ -36,7 +35,6 @@ def setup(path=None):
                   "You can specify one in /etc/shoal/shoal_client.conf or ~/.shoal/shoal_client.conf"
             sys.exit(1)
 
-
     # Read config file
     config_file = ConfigParser.ConfigParser()
     try:
@@ -58,14 +56,21 @@ def setup(path=None):
     if config_file.has_option("general", "shoal_server_url"):
         shoal_server_url = config_file.get("general",
                                                 "shoal_server_url")
+        if dump:
+            print "shoal_server_url =", shoal_server_url
 
     if config_file.has_option("general", "cvmfs_config"):
         cvmfs_config = config_file.get("general",
                                                 "cvmfs_config")
+        if dump:
+            print "cvmfs_config =", cvmfs_config
 
     if config_file.has_option("general", "default_squid_proxy"):
         default_squid_proxy = config_file.get("general",
                                                 "default_squid_proxy")
+        if dump:
+            print "default_squid_proxy =", default_squid_proxy
+
     else:
         print "Configuration file problem: default_squid_proxy must be set. " \
               "Please check configuration file:", path
