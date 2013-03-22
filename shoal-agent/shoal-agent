@@ -86,11 +86,10 @@ def main():
         sys.exit(1)
     # make a UUID based on the, host ID and current time
     id = str(uuid.uuid1())
-    hostname = socket.gethostname()
 
     data = {
             'uuid': id,
-            'hostname': hostname,
+            'hostname': socket.gethostname(),
            }
 
     public_ip, private_ip = get_ip_addresses()
@@ -99,6 +98,10 @@ def main():
 
     if public_ip:
         data['public_ip'] = ('{0}:{1}').format(public_ip, config.squid_port)
+        try:
+            data['hostname'] = socket.gethostbyaddr(public_ip)[0]
+        except IndexError:
+            pass
     elif external_ip:
         data['external_ip'] = external_ip
     else:

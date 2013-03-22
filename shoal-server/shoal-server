@@ -179,14 +179,6 @@ class WebpyServer(object):
 
 """
     Basic RabbitMQ blocking consumer. Consumes messages from `config.amqp_server_queue` takes the json in body, and put it into the dictionary `shoal`
-    Messages received must be a json string with keys or it will be discarded.
-    {
-      'uuid': '1231232',
-      'public_ip': '142.11.52.1',
-      'private_ip: '192.168.0.1',
-      'load': '12324432',
-      'timestamp':'2121231313',
-    }
 """
 class RabbitMQConsumer(object):
 
