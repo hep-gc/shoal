@@ -6,7 +6,7 @@ def generate_wpad(ip):
         proxy_str = ''
         for squid in squids:
             try:
-                proxy_str += "PROXY http://" + squid['hostname'] + ';'
+                proxy_str += "PROXY http://{0}:{1};".format(squid['hostname'],squid['squid_port'])
             except TypeError as e:
                 continue
         return proxy_str
