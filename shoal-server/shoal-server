@@ -122,7 +122,6 @@ class Application(object):
             sys.exit(1)
         finally:
             sleep(2)
-        # give them time to properly exit.
         sys.exit()
 
 """
