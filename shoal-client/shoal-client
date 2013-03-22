@@ -56,7 +56,11 @@ except (urllib2.URLError,ValueError), e:
 
 if data:
     for i in data:
-        closest_http_proxy += 'http://%s;' % data[i]['public_ip']
+        try:
+            closest_http_proxy += 'http://%s:%s;' % (data[i]['hostname'], data[i]['squid_port'])
+        except KeyError, e:
+            logging.error(e)
+            sys.exit(1)
     closest_http_proxy += "DIRECT"
 
     cvmfs_http_proxy += "\"" + closest_http_proxy + "\""

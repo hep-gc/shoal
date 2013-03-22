@@ -51,6 +51,7 @@ def get_nearest_squids(ip, count=10):
                                 'public_ip':squid.public_ip,
                                 'private_ip':squid.private_ip,
                                 'hostname':squid.hostname,
+                                'squid_port':squid.squid_port,
                               })
 
     squids = sorted(nearest_squids, key=lambda k: (k['distance'], k['load']))

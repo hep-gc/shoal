@@ -23,11 +23,12 @@ logger = logging.getLogger('shoal-server')
 """
 class SquidNode(object):
 
-    def __init__(self, key, hostname, public_ip, private_ip, external_ip, load, geo_data, last_active=time()):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, last_active=time()):
         self.key = key
         self.created = time()
         self.last_active = last_active
         self.hostname = hostname
+        self.squid_port = squid_port
         self.public_ip = public_ip
         self.private_ip = private_ip
         self.external_ip = external_ip
@@ -324,8 +325,9 @@ class RabbitMQConsumer(object):
             hostname = data['hostname']
             time_sent = data['timestamp']
             load = data['load']
+            squid_port = data['squid_port']
         except KeyError as e:
-            logger.error("Message received was not the proper format (missing:{0}), discarding...\nmethod_frame:{1}\nproperties:{2}\nbody:{3}\n".format(e,method_frame,properties,body))
+            logger.error("Message received was not the proper format (missing:{0}), discarding...".format(e))
             self.acknowledge_message(basic_deliver.delivery_tag)
             return
         try:
@@ -351,7 +353,7 @@ class RabbitMQConsumer(object):
             if not geo_data:
                 logger.error("Unable to generate geo location data, discarding message")
             else:
-                new_squid = SquidNode(key, hostname, public_ip, private_ip, external_ip, load, geo_data, time_sent)
+                new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, time_sent)
                 self.shoal[key] = new_squid
 
         self.acknowledge_message(basic_deliver.delivery_tag)
