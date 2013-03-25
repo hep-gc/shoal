@@ -54,7 +54,7 @@ def get_nearest_squids(ip, count=10):
                                 'squid_port':squid.squid_port,
                               })
 
-    squids = sorted(nearest_squids, key=lambda k: (k['distance'], k['load']))
+    squids = sorted(nearest_squids, key=lambda k: (-k['distance'], k['load']))
     return squids[:count]
 
 """
