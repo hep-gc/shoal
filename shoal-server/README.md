@@ -1,4 +1,4 @@
-# Shoal-Server v0.4.2 README
+# Shoal-Server v0.5.X README
 
 ##Services
 **shoal-server** provides two services that can be utilized by clients.

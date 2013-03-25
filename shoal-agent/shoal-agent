@@ -110,7 +110,7 @@ def main():
         sys.exit(1)
 
     if private_ip:
-        data['private_ip'] = ('{0}:{1}').format(private_ip, config.squid_port)
+        data['private_ip'] = private_ip
 
     if not (private_ip or public_ip):
         logger.error("Shoal_Agent was unable to find a public or private IP for this squid. Please contact the developers.")

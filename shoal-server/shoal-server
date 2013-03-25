@@ -345,9 +345,8 @@ class RabbitMQConsumer(object):
         if key in self.shoal:
             self.shoal[key].update(load)
         elif (curr - time_sent < self.INACTIVE) and (public_ip or private_ip):
-            try:
-                geo_data = geoip.get_geolocation(public_ip.split(':')[0])
-            except IndexError:
+            geo_data = geoip.get_geolocation(public_ip)
+            if not geo_data:
                 geo_data = geoip.get_geolocation(external_ip)
             if not geo_data:
                 logger.error("Unable to generate geo location data, discarding message")

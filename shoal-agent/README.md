@@ -1,4 +1,4 @@
-#Shoal Agent v0.4.0 README
+#Shoal Agent v0.5.X README
 
 ##How to install
 
