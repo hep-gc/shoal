@@ -26,7 +26,7 @@ else:
     initd_script = "scripts/shoal_server"
 
     # check for preexisiting initd script
-    if not isfile(join(initd_dir, initd_script)):
+    if not isfile(initd_dir + "shoal_server"):
         data_files += [(initd_dir, [initd_script])]
 
 static_files_dir = "static/"

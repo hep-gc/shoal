@@ -23,7 +23,7 @@ else:
     # check for preexisiting initd script
     initd_dir = "/etc/init.d/"
     initd_script = "scripts/shoal_agent"
-    if not isfile(join(initd_dir, initd_script)):
+    if not isfile(initd_dir + "shoal_agent"):
         data_files += [(initd_dir, [initd_script])]
 
 config_file = "shoal_agent.conf"
