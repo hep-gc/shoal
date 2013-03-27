@@ -46,6 +46,13 @@ class Application(object):
 
 
     def __init__(self, shoal):
+
+        try:
+            logging.basicConfig(level=logging.ERROR, format=LOG_FORMAT, filename=LOG_FILE)
+        except IOError as e:
+            print "Could not set logger.", e
+            sys.exit(1)
+
         # check if geolitecity database needs updating
         if geoip.check_geolitecity_need_update():
             geoip.download_geolitecity()
@@ -57,9 +64,9 @@ class Application(object):
         rabbitmq_thread.daemon = True
         self.threads.append(rabbitmq_thread)
 
-        #webpy_thread = Thread(target=self.webpy, name='Webpy')
-        #webpy_thread.daemon = True
-        #self.threads.append(webpy_thread)
+       # webpy_thread = Thread(target=self.webpy, name='Webpy')
+       # webpy_thread.daemon = True
+       # self.threads.append(webpy_thread)
 
         update_thread = Thread(target=self.update, name="ShoalUpdate")
         update_thread.daemon = True
@@ -338,25 +345,20 @@ class RabbitMQConsumer(object):
 
         self.acknowledge_message(basic_deliver.delivery_tag)
 
+config.setup()
 DIRECTORY = config.shoal_dir
+LOG_FILE = config.log_file
+
 try:
     os.chdir(DIRECTORY)
 except OSError as e:
     print "{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server config file to the location of the shoal-server static files.".format(self.DIRECTORY)
     sys.exit(1)
-    
+
+shoal_server = Application(shoal)
+shoal_server_thread = Thread(target=shoal_server.run(), name='ShoalServer')
+shoal_server_thread.daemon = True
+shoal_server_thread.start()
+
 web_ser = WebpyServer(shoal)
 application = web_ser.run()
-if __name__ == '__main__':
-    shoal_server = Application(shoal)
-    shoal_server.run()
-    LOG_FILE = config.log_file
-    # change working directory so webpy static files load correctly.
-    # setup configuration settings.
-    config.setup()
-    
-    try:
-        logging.basicConfig(level=logging.ERROR, format=LOG_FORMAT, filename=LOG_FILE)
-    except IOError as e:
-        print "Could not set logger.", e
-        sys.exit(1)
