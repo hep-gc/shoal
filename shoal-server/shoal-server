@@ -17,7 +17,7 @@ from shoal_server import urls as urls
 
 LOG_FORMAT = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
 logger = logging.getLogger('shoal-server')
-
+shoal = {} 
 """
     Basic class to store and update information about each squid server.
 """
@@ -44,45 +44,28 @@ class SquidNode(object):
 """
 class Application(object):
 
-    LOG_FILE = config.log_file
-    DIRECTORY = config.shoal_dir
 
-    def __init__(self):
-        # setup configuration settings.
-        config.setup()
-
-        try:
-            logging.basicConfig(level=logging.ERROR, format=LOG_FORMAT, filename=self.LOG_FILE)
-        except IOError as e:
-            print "Could not set logger.", e
-            sys.exit(1)
-
-        # change working directory so webpy static files load correctly.
-        try:
-            os.chdir(self.DIRECTORY)
-        except OSError as e:
-            print "{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server config file to the location of the shoal-server static files.".format(self.DIRECTORY)
-            sys.exit(1)
-
+    def __init__(self, shoal):
         # check if geolitecity database needs updating
         if geoip.check_geolitecity_need_update():
             geoip.download_geolitecity()
 
-        self.shoal = {}
+        self.shoal = shoal
         self.threads = []
 
         rabbitmq_thread = Thread(target=self.rabbitmq, name='RabbitMQ')
         rabbitmq_thread.daemon = True
         self.threads.append(rabbitmq_thread)
 
-        webpy_thread = Thread(target=self.webpy, name='Webpy')
-        webpy_thread.daemon = True
-        self.threads.append(webpy_thread)
+        #webpy_thread = Thread(target=self.webpy, name='Webpy')
+        #webpy_thread.daemon = True
+        #self.threads.append(webpy_thread)
 
         update_thread = Thread(target=self.update, name="ShoalUpdate")
         update_thread.daemon = True
         self.threads.append(update_thread)
 
+    def run(self):
         for thread in self.threads:
             thread.start()
         try:
@@ -168,8 +151,7 @@ class WebpyServer(object):
         )
     def run(self):
         try:
-            self.app = web.application(self.urls, globals())
-            self.app.run()
+            return web.application(self.urls, globals()).wsgifunc()
         except Exception as e:
             logger.error("Could not start webpy server.\n{0}".format(e))
             sys.exit(1)
@@ -356,10 +338,25 @@ class RabbitMQConsumer(object):
 
         self.acknowledge_message(basic_deliver.delivery_tag)
 
-def main():
+DIRECTORY = config.shoal_dir
+try:
+    os.chdir(DIRECTORY)
+except OSError as e:
+    print "{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server config file to the location of the shoal-server static files.".format(self.DIRECTORY)
+    sys.exit(1)
+    
+web_ser = WebpyServer(shoal)
+application = web_ser.run()
+if __name__ == '__main__':
+    shoal_server = Application(shoal)
+    shoal_server.run()
+    LOG_FILE = config.log_file
+    # change working directory so webpy static files load correctly.
+    # setup configuration settings.
+    config.setup()
+    
     try:
-        app = Application()
-    except KeyboardInterrupt:
-        sys.exit()
-
-main()
+        logging.basicConfig(level=logging.ERROR, format=LOG_FORMAT, filename=LOG_FILE)
+    except IOError as e:
+        print "Could not set logger.", e
+        sys.exit(1)
