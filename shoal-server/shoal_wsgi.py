@@ -17,23 +17,22 @@ threads = []
 shoal_list = {}
 
 def main():
+    try:
+        logging.basicConfig(level=logging.ERROR, format=LOG_FORMAT, filename=LOG_FILE)
+    except IOError as e:
+        print "Could not set logger.", e
+        sys.exit(1)
+
+    # change working directory so webpy static files load correctly.
+    try:
+        os.chdir(DIRECTORY)
+    except OSError as e:
+        print "{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server config file to the location of the shoal-server static files.".format(DIRECTORY)
+        sys.exit(1)
     shoal_app = shoal.Application(shoal_list)
     shoal_thread = Thread(target=shoal_app.run(), name='ShoalServer')
     shoal_thread.daemon = True
     shoal_thread.start()
-
-try:
-    logging.basicConfig(level=logging.ERROR, format=LOG_FORMAT, filename=LOG_FILE)
-except IOError as e:
-    print "Could not set logger.", e
-    sys.exit(1)
-
-# change working directory so webpy static files load correctly.
-try:
-    os.chdir(DIRECTORY)
-except OSError as e:
-    print "{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server config file to the location of the shoal-server static files.".format(DIRECTORY)
-    sys.exit(1)
 
 main()
 webpy_app = shoal.WebpyServer(shoal_list)

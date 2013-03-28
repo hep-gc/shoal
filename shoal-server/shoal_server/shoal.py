@@ -5,9 +5,7 @@ import web
 import json
 import urllib
 import logging
-
 import pika
-
 from time import time, sleep
 from threading import Thread
 
@@ -15,9 +13,6 @@ from shoal_server import config as config
 from shoal_server import geoip as geoip
 from shoal_server import urls as urls
 
-LOG_FORMAT = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
-logger = logging.getLogger('shoal-server')
-shoal = {} 
 """
     Basic class to store and update information about each squid server.
 """
@@ -44,15 +39,7 @@ class SquidNode(object):
 """
 class Application(object):
 
-
     def __init__(self, shoal):
-
-        try:
-            logging.basicConfig(level=logging.ERROR, format=LOG_FORMAT, filename=LOG_FILE)
-        except IOError as e:
-            print "Could not set logger.", e
-            sys.exit(1)
-
         # check if geolitecity database needs updating
         if geoip.check_geolitecity_need_update():
             geoip.download_geolitecity()
@@ -64,10 +51,6 @@ class Application(object):
         rabbitmq_thread.daemon = True
         self.threads.append(rabbitmq_thread)
 
-       # webpy_thread = Thread(target=self.webpy, name='Webpy')
-       # webpy_thread.daemon = True
-       # self.threads.append(webpy_thread)
-
         update_thread = Thread(target=self.update, name="ShoalUpdate")
         update_thread.daemon = True
         self.threads.append(update_thread)
@@ -75,15 +58,6 @@ class Application(object):
     def run(self):
         for thread in self.threads:
             thread.start()
-        try:
-            while True:
-                for thread in self.threads:
-                    if not thread.is_alive():
-                        logger.error('{0} died.'.format(thread))
-                        self.stop()
-                sleep(1)
-        except KeyboardInterrupt:
-            self.stop()
 
     def rabbitmq(self):
         url, vh = config.amqp_server_url, config.amqp_virtual_host
@@ -108,7 +82,7 @@ class Application(object):
             print "RabbitMQ consumer stopped."
             self.update.stop()
         except Exception as e:
-            logger.error(e)
+            logging.error(e)
             sys.exit(1)
         finally:
             sleep(2)
@@ -158,10 +132,14 @@ class WebpyServer(object):
         )
     def run(self):
         try:
-            return web.application(self.urls, globals()).wsgifunc()
+            self.app = web.application(self.urls, globals())
+            self.app.run()
         except Exception as e:
-            logger.error("Could not start webpy server.\n{0}".format(e))
+            logging.error("Could not start webpy server.\n{0}".format(e))
             sys.exit(1)
+
+    def wsgi(self):
+        return web.application(self.urls, globals()).wsgifunc()
 
     def stop(self):
         self.app.stop()
@@ -178,12 +156,6 @@ class RabbitMQConsumer(object):
     INACTIVE = config.squid_inactive_time
 
     def __init__(self, amqp_url, shoal):
-        """Create a new instance of the consumer class, passing in the AMQP
-        URL used to connect to RabbitMQ.
-
-        :param str amqp_url: The AMQP url to connect with
-
-        """
         self.shoal = shoal
         self._connection = None
         self._channel = None
@@ -207,7 +179,7 @@ class RabbitMQConsumer(object):
         if self._closing:
             self._connection.ioloop.stop()
         else:
-            logger.warning('Connection closed, reopening in 5 seconds: (%s) %s',
+            logging.warning('Connection closed, reopening in 5 seconds: (%s) %s',
                            reply_code, reply_text)
             self._connection.add_timeout(5, self.reconnect)
 
@@ -231,7 +203,7 @@ class RabbitMQConsumer(object):
         self._channel.add_on_close_callback(self.on_channel_closed)
 
     def on_channel_closed(self, channel, reply_code, reply_text):
-        logger.warning('Channel was closed: (%s) %s', reply_code, reply_text)
+        logging.warning('Channel was closed: (%s) %s', reply_code, reply_text)
         self._connection.close()
 
     def on_channel_open(self, channel):
@@ -289,7 +261,7 @@ class RabbitMQConsumer(object):
         try:
             self._connection = self.connect()
         except Exception as e:
-            logger.error("Unable to connect ot RabbitMQ Server. {0}".format(e))
+            logging.error("Unable to connect ot RabbitMQ Server. {0}".format(e))
             sys.exit(1)
         self._connection.ioloop.start()
 
@@ -305,7 +277,7 @@ class RabbitMQConsumer(object):
         try:
             data = json.loads(body)
         except ValueError as e:
-            logger.error("Message body could not be decoded. Message: {1}".format(body))
+            logging.error("Message body could not be decoded. Message: {1}".format(body))
             self.acknowledge_message(basic_deliver.delivery_tag)
             return
         try:
@@ -315,7 +287,7 @@ class RabbitMQConsumer(object):
             load = data['load']
             squid_port = data['squid_port']
         except KeyError as e:
-            logger.error("Message received was not the proper format (missing:{0}), discarding...".format(e))
+            logging.error("Message received was not the proper format (missing:{0}), discarding...".format(e))
             self.acknowledge_message(basic_deliver.delivery_tag)
             return
         try:
@@ -338,27 +310,9 @@ class RabbitMQConsumer(object):
             if not geo_data:
                 geo_data = geoip.get_geolocation(external_ip)
             if not geo_data:
-                logger.error("Unable to generate geo location data, discarding message")
+                logging.error("Unable to generate geo location data, discarding message")
             else:
                 new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, time_sent)
                 self.shoal[key] = new_squid
 
         self.acknowledge_message(basic_deliver.delivery_tag)
-
-config.setup()
-DIRECTORY = config.shoal_dir
-LOG_FILE = config.log_file
-
-try:
-    os.chdir(DIRECTORY)
-except OSError as e:
-    print "{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server config file to the location of the shoal-server static files.".format(self.DIRECTORY)
-    sys.exit(1)
-
-shoal_server = Application(shoal)
-shoal_server_thread = Thread(target=shoal_server.run(), name='ShoalServer')
-shoal_server_thread.daemon = True
-shoal_server_thread.start()
-
-web_ser = WebpyServer(shoal)
-application = web_ser.run()
