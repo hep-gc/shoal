@@ -67,6 +67,6 @@ setup(name='shoal-server',
       author_email='mchester@uvic.ca',
       url='http://github.com/hep-gc/shoal',
       packages=['shoal_server'],
-      scripts=['shoal-server'],
+      scripts=['shoal_dev.py','shoal_wsgi.py'],
       data_files=data_files,
 )
