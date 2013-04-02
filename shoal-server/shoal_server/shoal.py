@@ -35,7 +35,7 @@ class SquidNode(object):
         self.load = load
 
 """
-    Main application that will delegate threads.
+    Main application that will delegate RabbitMQ and ShoalUpdate threads.
 """
 class Application(object):
 
@@ -65,10 +65,6 @@ class Application(object):
         self.rabbitmq = RabbitMQConsumer(host, self.shoal)
         self.rabbitmq.run()
 
-    def webpy(self):
-        self.webpy = WebpyServer(self.shoal)
-        self.webpy.run()
-
     def update(self):
         self.update = ShoalUpdate(self.shoal)
         self.update.run()
@@ -76,10 +72,7 @@ class Application(object):
     def stop(self):
         print "\nShutting down Shoal-Server... Please wait."
         try:
-            self.webpy.stop()
-            print "Web Server stopped."
             self.rabbitmq.stop()
-            print "RabbitMQ consumer stopped."
             self.update.stop()
         except Exception as e:
             logging.error(e)
@@ -116,7 +109,7 @@ class ShoalUpdate(object):
         self.running = False
 
 """
-    Webpy webserver used to serve up active squid lists and API calls. For now we just use the development webpy server to serve requests.
+    Webpy webserver used to serve up active squid lists and API calls. Can run as either the development server or under mod_wsgi.
 """
 class WebpyServer(object):
 
@@ -145,7 +138,7 @@ class WebpyServer(object):
         self.app.stop()
 
 """
-    Basic RabbitMQ blocking consumer. Consumes messages from `config.amqp_server_queue` takes the json in body, and put it into the dictionary `shoal`
+    Basic RabbitMQ async consumer. Consumes messages from `config.amqp_server_queue` takes the json in message body, and tracks it in the dictionary `shoal`
 """
 class RabbitMQConsumer(object):
 
@@ -190,12 +183,9 @@ class RabbitMQConsumer(object):
     def reconnect(self):
         # This is the old connection IOLoop instance, stop its ioloop
         self._connection.ioloop.stop()
-
         if not self._closing:
-
             # Create a new connection
             self._connection = self.connect()
-
             # There is now a new connection, needs a new ioloop to run
             self._connection.ioloop.start()
 
@@ -302,7 +292,6 @@ class RabbitMQConsumer(object):
             private_ip = data['private_ip']
         except KeyError:
             pass
-
         if key in self.shoal:
             self.shoal[key].update(load)
         elif (curr - time_sent < self.INACTIVE) and (public_ip or private_ip):
