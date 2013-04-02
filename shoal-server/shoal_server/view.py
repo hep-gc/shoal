@@ -6,7 +6,6 @@ import operator
 import config
 import math
 import wpad
-import os
 
 from time import time
 from __version__ import version
@@ -15,7 +14,6 @@ t_globals = dict(
   datestr=web.datestr,
   version=version,
   squid_active_time=config.squid_inactive_time,
-  pid=os.getpid(),
 )
 
 CACHE = config.webpy_cache
