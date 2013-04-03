@@ -6,6 +6,7 @@ import json
 import urllib
 import logging
 import pika
+import socket
 from time import time, sleep
 from threading import Thread
 
@@ -142,7 +143,7 @@ class WebpyServer(object):
 """
 class RabbitMQConsumer(object):
 
-    QUEUE = config.amqp_server_queue
+    QUEUE = socket.gethostname()
     EXCHANGE = config.amqp_exchange
     EXCHANGE_TYPE = config.amqp_exchange_type
     ROUTING_KEY = '#'
