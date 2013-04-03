@@ -7,7 +7,7 @@ import logging
 import operator
 import gzip
 from time import time, sleep
-from math import radians, cos, sin, asin, sqrt, ceil
+from math import radians, cos, sin, asin, sqrt
 from urllib import urlretrieve
 
 import config
@@ -72,7 +72,7 @@ def haversine(lat1,lon1,lat2,lon2):
     a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
     c = 2 * asin(sqrt(a))
 
-    return ceil(r * c * 100)/100
+    return round((r * c),2)
 
 def check_geolitecity_need_update():
     curr = time()
