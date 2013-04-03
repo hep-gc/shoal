@@ -5,12 +5,14 @@ import pygeoip
 import web
 import logging
 import operator
+import gzip
 from time import time, sleep
 from math import radians, cos, sin, asin, sqrt
+from urllib import urlretrieve
 
 import config
 
-GEOLITE_DB = config.geolitecity_path
+GEOLITE_DB = os.path.join(config.geolitecity_path,"GeoLiteCity.dat")
 GEOLITE_URL = config.geolitecity_url
 GEOLITE_UPDATE = config.geolitecity_update
 
@@ -87,18 +89,20 @@ def check_geolitecity_need_update():
         return True
 
 def download_geolitecity():
-    cmd = ['wget','-O','{0}.gz'.format(GEOLITE_DB),GEOLITE_URL]
-    ungz = ['gunzip','-f','{0}.gz'.format(GEOLITE_DB)]
-
     try:
-        dl = subprocess.Popen(cmd)
-        dl.wait()
-        gz = subprocess.Popen(ungz)
-        gz.wait()
-
-        if check_geolitecity_need_update():
-            logger.error('GeoLiteCity database failed to update.')
-
+        urlretrieve(GEOLITE_URL,GEOLITE_DB + '.gz')
     except Exception as e:
         logger.error("Could not download the database. - {0}".format(e))
         sys.exit(1)
+    try:
+        content = gzip.open(GEOLITE_DB + '.gz').read()
+    except Exception as e:
+        logger.error("GeoLiteCity.dat file was not properly downloaded. Check contents of {} for possible errors.".format(GEOLITE_DB + '.gz'))
+        sys.exit(1)
+
+    with open(GEOLITE_DB,'w') as f:
+        f.write(content)
+
+    if check_geolitecity_need_update():
+        logger.error('GeoLiteCity database failed to update.')
+

@@ -2,12 +2,13 @@ import logging
 import sys
 import os
 
-from shoal_server import shoal as shoal
 from shoal_server import config as config
+config.setup()
+
+from shoal_server import shoal as shoal
 from threading import Thread
 from time import sleep
 
-config.setup()
 
 DIRECTORY = config.shoal_dir
 LOG_FILE = config.log_file

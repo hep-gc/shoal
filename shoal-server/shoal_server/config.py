@@ -6,7 +6,7 @@ import ConfigParser
 
 # set default values
 shoal_dir = '/var/shoal/'
-geolitecity_path = join(shoal_dir,'GeoLiteCity.dat')
+geolitecity_path = shoal_dir
 geolitecity_url = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
 geolitecity_update = 2592000
 squid_cleanse_interval = 15
@@ -73,7 +73,7 @@ def setup(path=None):
         shoal_dir = config_file.get("general",
                                        "shoal_dir")
         if not config_file.has_option("general", "geolitecity_path"):
-            geolitecity_path = join(shoal_dir,"GeoLiteCity.dat")
+            geolitecity_path = shoal_dir
 
     if config_file.has_option("general", "geolitecity_path"):
         geolitecity_path = config_file.get("general",
