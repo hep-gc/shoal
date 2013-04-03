@@ -7,7 +7,7 @@ import logging
 import operator
 import gzip
 from time import time, sleep
-from math import radians, cos, sin, asin, sqrt
+from math import radians, cos, sin, asin, sqrt, ceil
 from urllib import urlretrieve
 
 import config
@@ -56,7 +56,7 @@ def get_nearest_squids(ip, count=10):
                                 'squid_port':squid.squid_port,
                               })
 
-    squids = sorted(nearest_squids, key=lambda k: (-k['distance'], k['load']))
+    squids = sorted(nearest_squids, key=lambda k: (k['distance'], k['load']))
     return squids[:count]
 
 """
@@ -72,7 +72,7 @@ def haversine(lat1,lon1,lat2,lon2):
     a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
     c = 2 * asin(sqrt(a))
 
-    return r * c
+    return ceil(r * c * 100)/100
 
 def check_geolitecity_need_update():
     curr = time()
