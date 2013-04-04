@@ -7,6 +7,7 @@ import urllib
 import logging
 import pika
 import socket
+import uuid
 from time import time, sleep
 from threading import Thread
 
@@ -143,7 +144,7 @@ class WebpyServer(object):
 """
 class RabbitMQConsumer(object):
 
-    QUEUE = socket.gethostname()
+    QUEUE = socket.gethostname() + "-" + uuid.uuid1().hex
     EXCHANGE = config.amqp_exchange
     EXCHANGE_TYPE = config.amqp_exchange_type
     ROUTING_KEY = '#'
@@ -211,7 +212,7 @@ class RabbitMQConsumer(object):
         self.setup_queue(self.QUEUE)
 
     def setup_queue(self, queue_name):
-        self._channel.queue_declare(self.on_queue_declareok, queue_name)
+        self._channel.queue_declare(self.on_queue_declareok, queue_name, auto_delete=True)
 
     def on_queue_declareok(self, method_frame):
         self._channel.queue_bind(self.on_bindok, self.QUEUE,
