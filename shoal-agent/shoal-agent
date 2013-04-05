@@ -45,7 +45,6 @@ def amqp_send(data):
                               body=data,
                               properties=pika.BasicProperties(content_type='application/json', delivery_mode=1))
         connection.close()
-        retry_count = 0
     except pika.exceptions.AMQPConnectionError as e:
         raise pika.exceptions.AMQPConnectionError
 
@@ -137,6 +136,7 @@ def main():
             if 'public_ip' in data or 'external_ip' in data:
                 try:
                     amqp_send(json.dumps(data))
+                    retry_count = 0
                 except pika.exceptions.AMQPConnectionError as e:
                     if retry_count == 0:
                         logger.error("Could not connect to AMQP Server after {0} retry attempts. Please check if AMQP server is running.\nError: {1}".format(config.reconnect_retries,e))
