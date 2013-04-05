@@ -26,6 +26,8 @@ logger = logging.getLogger('shoal-agent')
 
 private_address = ('10.','172.','192.')
 external_ip = config.external_ip
+retry = config.reconnect_retries
+retry_count = 0
 
 def amqp_send(data):
     exchange = config.amqp_exchange
@@ -43,9 +45,9 @@ def amqp_send(data):
                               body=data,
                               properties=pika.BasicProperties(content_type='application/json', delivery_mode=1))
         connection.close()
-    except Exception as e:
-        logger.error("Could not connect to AMQP Server. Is it running at url: {0}\nPlease check configuration settings.\nError: {1}".format(host,e))
-        sys.exit(1)
+        retry_count = 0
+    except pika.exceptions.AMQPConnectionError as e:
+        raise pika.exceptions.AMQPConnectionError
 
 def get_load_data(path):
     try:
@@ -79,6 +81,9 @@ def get_ip_addresses():
 
 def main():
     config.setup()
+
+    retry_count = config.reconnect_retries
+
     try:
         logging.basicConfig(level=logging.ERROR, format=LOG_FORMAT, filename=config.log_file)
     except IOError as e:
@@ -130,7 +135,14 @@ def main():
             data['load'] = get_load_data(tx_bytes_path)
 
             if 'public_ip' in data or 'external_ip' in data:
-                amqp_send(json.dumps(data))
+                try:
+                    amqp_send(json.dumps(data))
+                except pika.exceptions.AMQPConnectionError as e:
+                    if retry_count == 0:
+                        logger.error("Could not connect to AMQP Server after {0} retry attempts. Please check if AMQP server is running.\nError: {1}".format(config.reconnect_retries,e))
+                        sys.exit(1)
+                    retry_count -= 1
+                    logger.error("Could not connect to AMQP Server. Attempting to connect in {0}s...".format(INTERVAL,retry_count))
 
             time.sleep(INTERVAL)
         except KeyboardInterrupt:

@@ -159,9 +159,14 @@ class RabbitMQConsumer(object):
         self._url = amqp_url
 
     def connect(self):
-        return pika.SelectConnection(pika.URLParameters(self._url),
-                                         self.on_connection_open,
-                                         stop_ioloop_on_close=False)
+        try:
+            return pika.SelectConnection(pika.URLParameters(self._url),
+                                             self.on_connection_open,
+                                             stop_ioloop_on_close=False)
+        except pika.exceptions.AMQPConnectionError as e:
+            logging.error("Could not connect to AMQP Server. Retrying in 30 seconds...")
+            sleep(30)
+            self.run()
 
     def close_connection(self):
         self._connection.close()
