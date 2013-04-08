@@ -10,7 +10,6 @@ except:
         print "Couldn't use either setuputils or distutils. Install one of those."
         sys.exit(1)
 
-from setuptools import setup
 from shoal_client.__version__ import version
 
 if not os.geteuid() == 0:

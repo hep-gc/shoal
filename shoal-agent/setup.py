@@ -10,7 +10,6 @@ except:
         print "Couldn't use either setuputils or distutils. Install one of those."
         sys.exit(1)
 
-from setuptools import setup
 from shoal_agent.__version__ import version
 
 data_files = []
