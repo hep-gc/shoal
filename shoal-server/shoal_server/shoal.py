@@ -36,6 +36,21 @@ class SquidNode(object):
         self.last_active = time()
         self.load = load
 
+    def jsonify(self):
+        return dict({
+                  "created": self.created,
+                  "last_active": self.last_active,
+                  "hostname": self.hostname,
+                  "squid_port": self.squid_port,
+                  "public_ip": self.public_ip,
+                  "private_ip": self.private_ip,
+                  "external_ip": self.external_ip,
+                  "geo_data": self.geo_data,
+                  "load": self.load,
+                },
+               )
+
+
 """
     Main application that will delegate RabbitMQ and ShoalUpdate threads.
 """
@@ -122,7 +137,6 @@ class WebpyServer(object):
         self.urls = (
             '/nearest/?(\d+)?/?', 'shoal_server.urls.nearest',
             '/wpad.dat', 'shoal_server.urls.wpad',
-            '/external', 'shoal_server.urls.external_ip',
             '/(\d+)?/?', 'shoal_server.urls.index',
         )
     def run(self):

@@ -71,17 +71,11 @@ def nearest(count):
     if squids:
         squid_json = {}
         for i,squid in enumerate(squids):
-            squid_json[i] = squid
-        squid_json = json.dumps(squid_json)
-        web.header('Content-Length', len(squid_json))
-        return squid_json
+            squid_json[i] = squid[0].jsonify()
+            squid_json[i]['distance'] = squid[1]
+        return json.dumps(squid_json)
     else:
-        web.header('Content-Length', 4)
         return json.dumps(None)
-
-def external_ip(**k):
-    ip = web.ctx['ip']
-    return json.dumps({'external_ip':ip,})
 
 def wpad_generator(**k):
     data = render.wpad(wpad.generate_wpad(web.ctx['ip']))

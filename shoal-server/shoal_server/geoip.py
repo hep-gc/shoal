@@ -47,16 +47,9 @@ def get_nearest_squids(ip, count=10):
 
         distance = haversine(r_lat,r_long,s_lat,s_long)
 
-        nearest_squids.append({
-                                'distance':distance,
-                                'load':squid.load,
-                                'public_ip':squid.public_ip,
-                                'private_ip':squid.private_ip,
-                                'hostname':squid.hostname,
-                                'squid_port':squid.squid_port,
-                              })
+        nearest_squids.append((squid,distance))
 
-    squids = sorted(nearest_squids, key=lambda k: (k['distance'], k['load']))
+    squids = sorted(nearest_squids, key=lambda k: (k[1], k[0].load))
     return squids[:count]
 
 """
