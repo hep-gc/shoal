@@ -61,11 +61,11 @@ _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/sho
         WSGIScriptAlias / /var/www/shoal/scripts/shoal_wsgi.py
         WSGIProcessGroup shoal
 
-        Alias /static /var/www/shoal/shoal-server/static/
+        Alias /static /var/www/shoal/static/
 
         AddType text/html .py 
 
-        <Directory /var/www/shoal-server/>
+        <Directory /var/www/shoal/>
             Order deny,allow
             Allow from all 
         </Directory>
