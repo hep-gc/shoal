@@ -76,12 +76,12 @@ class ThreadMonitor(Thread):
         for thread in self.threads:
             print "starting", thread
             thread.start()
-         while True:
-             for thread in self.threads:
-                 if not thread.is_alive():
-                     logging.error('{0} died. Stopping application...'.format(thread))
-                     sys.exit(1)
-             sleep(1)
+        while True:
+            for thread in self.threads:
+                if not thread.is_alive():
+                    logging.error('{0} died. Stopping application...'.format(thread))
+                    sys.exit(1)
+            sleep(1)
 
     def stop(self):
         print "\nShutting down Shoal-Server... Please wait."
