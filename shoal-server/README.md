@@ -55,6 +55,8 @@ _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/sho
 2. Adjust settings in `/etc/shoal/shoal_server.conf`
 3. Make sure you have a working Apache installation with mod_wsgi.
 4. Move Shoal folder to Apache readable location. `mv /var/shoal/ /var/www/`
+ - _Ensure you also change `shoal_dir` in `shoal_server.conf` to point to new directory (`/var/www/shoal/` as per example)_
+
 5. Include this bare minimum Apache config settings in a file within `/etc/apache2/conf.d/` or similiar location.
 
         WSGIDaemonProcess shoal user=www-data group=www-data threads=10 processes=1
