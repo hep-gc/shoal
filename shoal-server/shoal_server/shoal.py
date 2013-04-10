@@ -11,9 +11,8 @@ import uuid
 from time import time, sleep
 from threading import Thread
 
-from shoal_server import config as config
-from shoal_server import geoip as geoip
-from shoal_server import urls as urls
+from shoal_server import config
+from shoal_server import utilities
 
 """
     Basic class to store and update information about each squid server.
@@ -50,41 +49,39 @@ class SquidNode(object):
                 },
                )
 
-
 """
-    Main application that will delegate RabbitMQ and ShoalUpdate threads.
+    Main application that will monitor RabbitMQ and ShoalUpdate threads.
 """
-class Application(object):
+class ThreadMonitor(Thread):
 
     def __init__(self, shoal):
         # check if geolitecity database needs updating
-        if geoip.check_geolitecity_need_update():
-            geoip.download_geolitecity()
+        if utilities.check_geolitecity_need_update():
+            utilities.download_geolitecity()
+
+        Thread.__init__(self)
 
         self.shoal = shoal
         self.threads = []
 
-        rabbitmq_thread = Thread(target=self.rabbitmq, name='RabbitMQ')
+        rabbitmq_thread = RabbitMQConsumer(self.shoal)
         rabbitmq_thread.daemon = True
         self.threads.append(rabbitmq_thread)
 
-        update_thread = Thread(target=self.update, name="ShoalUpdate")
+        update_thread = ShoalUpdate(self.shoal)
         update_thread.daemon = True
         self.threads.append(update_thread)
 
     def run(self):
         for thread in self.threads:
+            print "starting", thread
             thread.start()
-
-    def rabbitmq(self):
-        url, vh = config.amqp_server_url, config.amqp_virtual_host
-        host = "{0}/{1}".format(url, urllib.quote_plus(vh))
-        self.rabbitmq = RabbitMQConsumer(host, self.shoal)
-        self.rabbitmq.run()
-
-    def update(self):
-        self.update = ShoalUpdate(self.shoal)
-        self.update.run()
+         while True:
+             for thread in self.threads:
+                 if not thread.is_alive():
+                     logging.error('{0} died. Stopping application...'.format(thread))
+                     sys.exit(1)
+             sleep(1)
 
     def stop(self):
         print "\nShutting down Shoal-Server... Please wait."
@@ -101,12 +98,13 @@ class Application(object):
 """
     ShoalUpdate is used for trimming inactive squids every set interval.
 """
-class ShoalUpdate(object):
+class ShoalUpdate(Thread):
 
     INTERVAL = config.squid_cleanse_interval
     INACTIVE = config.squid_inactive_time
 
     def __init__(self, shoal):
+        Thread.__init__(self)
         self.shoal = shoal
         self.running = False
 
@@ -128,16 +126,17 @@ class ShoalUpdate(object):
 """
     Webpy webserver used to serve up active squid lists and API calls. Can run as either the development server or under mod_wsgi.
 """
-class WebpyServer(object):
+class WebpyServer(Thread):
 
     def __init__(self, shoal):
+        Thread.__init__(self)
         web.shoal = shoal
         web.config.debug = False
         self.app = None
         self.urls = (
-            '/nearest/?(\d+)?/?', 'shoal_server.urls.nearest',
-            '/wpad.dat', 'shoal_server.urls.wpad',
-            '/(\d+)?/?', 'shoal_server.urls.index',
+            '/nearest/?(\d+)?/?', 'shoal_server.view.nearest',
+            '/wpad.dat', 'shoal_server.view.wpad',
+            '/(\d+)?/?', 'shoal_server.view.index',
         )
     def run(self):
         try:
@@ -154,9 +153,10 @@ class WebpyServer(object):
         self.app.stop()
 
 """
-    Basic RabbitMQ async consumer. Consumes messages from `config.amqp_server_queue` takes the json in message body, and tracks it in the dictionary `shoal`
+    Basic RabbitMQ async consumer. Consumes messages from a unique queue that is declared when Shoal server first starts.
+    The consumer takes the json in message body, and tracks it in the dictionary `shoal`
 """
-class RabbitMQConsumer(object):
+class RabbitMQConsumer(Thread):
 
     QUEUE = socket.gethostname() + "-" + uuid.uuid1().hex
     EXCHANGE = config.amqp_exchange
@@ -164,17 +164,18 @@ class RabbitMQConsumer(object):
     ROUTING_KEY = '#'
     INACTIVE = config.squid_inactive_time
 
-    def __init__(self, amqp_url, shoal):
+    def __init__(self, shoal):
+        Thread.__init__(self)
+        self.host = "{0}/{1}".format(config.amqp_server_url, urllib.quote_plus(config.amqp_virtual_host))
         self.shoal = shoal
         self._connection = None
         self._channel = None
         self._closing = False
         self._consumer_tag = None
-        self._url = amqp_url
 
     def connect(self):
         try:
-            return pika.SelectConnection(pika.URLParameters(self._url),
+            return pika.SelectConnection(pika.URLParameters(self.host),
                                              self.on_connection_open,
                                              stop_ioloop_on_close=False)
         except pika.exceptions.AMQPConnectionError as e:
@@ -316,9 +317,9 @@ class RabbitMQConsumer(object):
         if key in self.shoal:
             self.shoal[key].update(load)
         elif (curr - time_sent < self.INACTIVE) and (public_ip or private_ip):
-            geo_data = geoip.get_geolocation(public_ip)
+            geo_data = utilities.get_geolocation(public_ip)
             if not geo_data:
-                geo_data = geoip.get_geolocation(external_ip)
+                geo_data = utilities.get_geolocation(external_ip)
             if not geo_data:
                 logging.error("Unable to generate geo location data, discarding message")
             else:

@@ -1,13 +1,12 @@
 import web
 import re
-import geoip
 import json
 import operator
 import config
 import math
-import wpad
 
 from time import time
+from shoal_server import utilities
 from __version__ import version
 
 t_globals = dict(
@@ -22,21 +21,32 @@ TEMPLATES = 'templates/'
 render = web.template.render(TEMPLATES, cache=CACHE, globals=t_globals)
 render._keywords['globals']['render'] = render
 
-def get_slices(page, page_size=100):
-    return (int(page_size * (page - 1)), int((page_size * page)))
+class index:
+    def GET(self, size):
+        return render.base(view_index(size))
 
-def index(size):
+class nearest:
+    def GET(self, count):
+        web.header('Content-Type', 'application/json')
+        return view_nearest(count)
+
+class wpad:
+    def GET(self):
+        web.header('Content-Type', 'application/x-ns-proxy-autoconfig')
+        return view_wpad()
+
+def view_index(size):
     params = web.input()
     page = params.page if hasattr(params, 'page') else 1
     sorted_shoal = sorted(web.shoal.values(), key=operator.attrgetter('last_active'))
     sorted_shoal.reverse()
     total = len(sorted_shoal)
+    page = int(page)
 
     try:
         size = int(size)
     except (ValueError, TypeError):
         size = 20
-    page = int(page)
     try:
         pages = int(math.ceil(len(sorted_shoal) / float(size)))
     except ZeroDivisionError:
@@ -47,26 +57,18 @@ def index(size):
     if page > pages:
         page = pages
 
-    lower, upper = get_slices(page,size)
+    lower, upper = int(size * (page - 1)), int(size * page)
     return render.index(time(), total, sorted_shoal[lower:upper], page, pages, size)
 
-def nearest(count):
+def view_nearest(count):
     try:
         count = int(count)
     except (ValueError, TypeError):
         count = 5
 
-    if web.ctx.query:
-        try:
-            ip = re.findall(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', web.ctx.query)[0]
-        except IndexError:
-            ip = None
-    else:
-        ip = web.ctx['ip']
+    ip = web.ctx['ip']
 
-    squids = geoip.get_nearest_squids(ip,count)
-
-    web.header('Content-Type', 'application/json')
+    squids = utilities.get_nearest_squids(ip,count)
 
     if squids:
         squid_json = {}
@@ -77,8 +79,6 @@ def nearest(count):
     else:
         return json.dumps(None)
 
-def wpad_generator(**k):
-    data = render.wpad(wpad.generate_wpad(web.ctx['ip']))
-    web.header('Content-Type', 'application/x-ns-proxy-autoconfig')
-    web.header('Content-Length', len(data['__body__']))
+def view_wpad(**k):
+    data = render.wpad(utilities.generate_wpad(web.ctx['ip']))
     return data

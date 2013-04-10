@@ -99,3 +99,15 @@ def download_geolitecity():
     if check_geolitecity_need_update():
         logger.error('GeoLiteCity database failed to update.')
 
+def generate_wpad(ip):
+    squids = get_nearest_squids(ip)
+    if squids:
+        proxy_str = ''
+        for squid in squids:
+            try:
+                proxy_str += "PROXY http://{0}:{1};".format(squid[0].hostname,squid[0].squid_port)
+            except TypeError as e:
+                continue
+        return proxy_str
+    else:
+        return None

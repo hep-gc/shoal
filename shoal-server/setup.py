@@ -22,12 +22,6 @@ if not os.geteuid() == 0:
 else:
     config_files_dir = "/etc/shoal/"
     shoal_server_dir = "/var/shoal/"
-    initd_dir = "/etc/init.d/"
-    initd_script = "scripts/shoal_server"
-
-    # check for preexisiting initd script
-    if not isfile(initd_dir + "shoal_server"):
-        data_files += [(initd_dir, [initd_script])]
 
 static_files_dir = "static/"
 template_files_dir = "templates/"
@@ -67,6 +61,6 @@ setup(name='shoal-server',
       author_email='mchester@uvic.ca',
       url='http://github.com/hep-gc/shoal',
       packages=['shoal_server'],
-      scripts=[],
+      scripts=["shoal-server"],
       data_files=data_files,
 )
