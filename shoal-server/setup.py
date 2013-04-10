@@ -24,6 +24,7 @@ else:
     shoal_server_dir = "/var/shoal/"
 
 static_files_dir = "static/"
+script_files_dir = "scripts/"
 template_files_dir = "templates/"
 config_file = "shoal_server.conf"
 
@@ -47,6 +48,8 @@ if not isfile(join(config_files_dir, config_file)):
 data_files += include_files(static_files_dir, shoal_server_dir)
 # add all files in templates/
 data_files += include_files(template_files_dir, shoal_server_dir)
+# add all files in scripts/
+data_files += include_files(script_files_dir, shoal_server_dir)
 
 setup(name='shoal-server',
       version=version,
