@@ -54,9 +54,9 @@ except (urllib2.URLError,ValueError), e:
     logging.error("Unable to open url. %s" % e)
 
 if data:
-    for i in data:
+    for i in range(0, len(data)):
         try:
-            closest_http_proxy = 'http://%s:%s;' % (data[i]['hostname'], data[i]['squid_port']) + closest_http_proxy
+            closest_http_proxy += 'http://%s:%s;' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
         except KeyError, e:
             logging.error("The data returned from '%s' was missing the key: %s. Please ensure the url is running the latest Shoal-Server." % (server, e))
             sys.exit(1)

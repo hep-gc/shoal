@@ -6,14 +6,13 @@ import ConfigParser
 
 # set default values
 shoal_dir = '/var/shoal/'
-geolitecity_path = join(shoal_dir,'GeoLiteCity.dat')
+geolitecity_path = shoal_dir
 geolitecity_url = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
 geolitecity_update = 2592000
 squid_cleanse_interval = 15
 squid_inactive_time = 180
 amqp_server_url = 'amqp://guest:guest@localhost:5672'
 amqp_virtual_host = '/'
-amqp_server_queue = 'squiddata'
 amqp_exchange = 'shoal'
 amqp_exchange_type = 'topic'
 webpy_cache = False
@@ -31,7 +30,6 @@ def setup(path=None):
     global squid_inactive_time
     global amqp_server_url
     global amqp_virtual_host
-    global amqp_server_queue
     global amqp_exchange
     global amqp_exchange_type
     global webpy_cache
@@ -73,7 +71,7 @@ def setup(path=None):
         shoal_dir = config_file.get("general",
                                        "shoal_dir")
         if not config_file.has_option("general", "geolitecity_path"):
-            geolitecity_path = join(shoal_dir,"GeoLiteCity.dat")
+            geolitecity_path = shoal_dir
 
     if config_file.has_option("general", "geolitecity_path"):
         geolitecity_path = config_file.get("general",
@@ -117,10 +115,6 @@ def setup(path=None):
     if config_file.has_option("rabbitmq", "amqp_virtual_host"):
         amqp_virtual_host = config_file.get("rabbitmq",
                                                 "amqp_virtual_host")
-
-    if config_file.has_option("rabbitmq", "amqp_server_queue"):
-        amqp_server_queue = config_file.get("rabbitmq",
-                                                "amqp_server_queue")
 
     if config_file.has_option("rabbitmq", "amqp_exchange"):
         amqp_exchange = config_file.get("rabbitmq",

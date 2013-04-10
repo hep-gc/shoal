@@ -5,12 +5,14 @@ import pygeoip
 import web
 import logging
 import operator
+import gzip
 from time import time, sleep
 from math import radians, cos, sin, asin, sqrt
+from urllib import urlretrieve
 
 import config
 
-GEOLITE_DB = config.geolitecity_path
+GEOLITE_DB = os.path.join(config.geolitecity_path,"GeoLiteCity.dat")
 GEOLITE_URL = config.geolitecity_url
 GEOLITE_UPDATE = config.geolitecity_update
 
@@ -45,16 +47,9 @@ def get_nearest_squids(ip, count=10):
 
         distance = haversine(r_lat,r_long,s_lat,s_long)
 
-        nearest_squids.append({
-                                'distance':distance,
-                                'load':squid.load,
-                                'public_ip':squid.public_ip,
-                                'private_ip':squid.private_ip,
-                                'hostname':squid.hostname,
-                                'squid_port':squid.squid_port,
-                              })
+        nearest_squids.append((squid,distance))
 
-    squids = sorted(nearest_squids, key=lambda k: (k['distance'], k['load']))
+    squids = sorted(nearest_squids, key=lambda k: (k[1], k[0].load))
     return squids[:count]
 
 """
@@ -70,7 +65,7 @@ def haversine(lat1,lon1,lat2,lon2):
     a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
     c = 2 * asin(sqrt(a))
 
-    return r * c
+    return round((r * c),2)
 
 def check_geolitecity_need_update():
     curr = time()
@@ -87,18 +82,32 @@ def check_geolitecity_need_update():
         return True
 
 def download_geolitecity():
-    cmd = ['wget','-O','{0}.gz'.format(GEOLITE_DB),GEOLITE_URL]
-    ungz = ['gunzip','-f','{0}.gz'.format(GEOLITE_DB)]
-
     try:
-        dl = subprocess.Popen(cmd)
-        dl.wait()
-        gz = subprocess.Popen(ungz)
-        gz.wait()
-
-        if check_geolitecity_need_update():
-            logger.error('GeoLiteCity database failed to update.')
-
+        urlretrieve(GEOLITE_URL,GEOLITE_DB + '.gz')
     except Exception as e:
         logger.error("Could not download the database. - {0}".format(e))
         sys.exit(1)
+    try:
+        content = gzip.open(GEOLITE_DB + '.gz').read()
+    except Exception as e:
+        logger.error("GeoLiteCity.dat file was not properly downloaded. Check contents of {} for possible errors.".format(GEOLITE_DB + '.gz'))
+        sys.exit(1)
+
+    with open(GEOLITE_DB,'w') as f:
+        f.write(content)
+
+    if check_geolitecity_need_update():
+        logger.error('GeoLiteCity database failed to update.')
+
+def generate_wpad(ip):
+    squids = get_nearest_squids(ip)
+    if squids:
+        proxy_str = ''
+        for squid in squids:
+            try:
+                proxy_str += "PROXY http://{0}:{1};".format(squid[0].hostname,squid[0].squid_port)
+            except TypeError as e:
+                continue
+        return proxy_str
+    else:
+        return None

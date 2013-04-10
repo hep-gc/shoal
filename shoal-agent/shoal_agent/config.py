@@ -9,6 +9,7 @@ amqp_server_url = 'amqp://guest:guest@localhost:5672'
 amqp_virtual_host = '/'
 amqp_exchange = 'shoal'
 amqp_exchange_type = 'topic'
+reconnect_retries = 0
 external_ip = None
 tx_bytes_path = None
 interval = 30
@@ -26,6 +27,7 @@ def setup(path=None):
     global amqp_virtual_host
     global amqp_exchange
     global amqp_exchange_type
+    global reconnect_retries
     global external_ip
     global tx_bytes_path
     global interval
@@ -86,6 +88,14 @@ def setup(path=None):
             interval = config_file.getint("general", "interval")
         except ValueError:
             print "Configuration file problem: amqp_port must be an " \
+                  "integer value."
+            sys.exit(1)
+
+    if config_file.has_option("general", "reconnect_retries"):
+        try:
+            reconnect_retries = config_file.getint("general", "reconnect_retries")
+        except ValueError:
+            print "Configuration file problem: reconnect_retries must be an " \
                   "integer value."
             sys.exit(1)
 
