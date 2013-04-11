@@ -2,15 +2,15 @@
 
 ##Basic Commands
 With the basic `shoal_agent` init script you can do the following:
-- Start shoal agent
+- Start Shoal Agent
  - `service shoal_agent start`
-- Stop shoal agent
+- Stop Shoal Agent
  - `service shoal_agent stop` 
-- Restart shoal agent
+- Restart Shoal Agent
  - `service shoal_agent reload` 
-- Status of shoal agent
+- Status of Shoal Agent
  - `service shoal_agent status` 
-- Force restart shoal agent
+- Force restart Shoal Agent
  - `service shoal_agent force-restart`
 
 ##Installation
@@ -23,10 +23,10 @@ _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/sho
 
 1. `pip install shoal-agent`
 2. Check settings in `shoal_agent.conf` update as needed. Make sure RabbitMQ server is running.
-3. If sudo was used `chmod +x /etc/init.d/shoal_agent`, otherwise copy shoal_agent script in scripts folder to `/etc/init.d/` and make it executable.
- - May need to adjust script to point point at `shoal-agent` script and python path.
+3. If sudo was used `chmod +x /etc/init.d/shoal_agent`.
+ - May need to adjust values in init.d script to point at `shoal-agent` script and usable Python path.
 
-4. Start shoal agent `service shoal_agent start` or `shoal-agent` and confirm it works.
+4. Start Shoal Agent `service shoal_agent start` or `shoal-agent` and confirm it works.
 5. Add Shoal Agent to chkconfig or similiar service. 
  - `chkconfig --add shoal_agent`
  - `chkconfig shoal_agent on` 
