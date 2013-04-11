@@ -18,7 +18,7 @@ Clients can use the **shoal-server** REST API to retrieve a list of nearest squi
   - `http://localhost/wpad.dat`
 
 ##Installation
- _Note: Requires you have a working RabbitMQ AMQP Server, and python 2.6+_
+ _Note: Requires you have a working RabbitMQ AMQP Server, and Python 2.6+_
 _Recommended to use a system wide install (sudo), but works with virtualenv with tweaks_
 
 _**Note**: Shoal static files will be located either at `~/shoal_server/` or `/var/shoal/` if sudo was used_
