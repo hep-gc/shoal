@@ -8,10 +8,8 @@ import ConfigParser
 amqp_server_url = 'amqp://guest:guest@localhost:5672'
 amqp_virtual_host = '/'
 amqp_exchange = 'shoal'
-amqp_exchange_type = 'topic'
-reconnect_retries = 0
 external_ip = None
-tx_bytes_path = None
+interface = None
 interval = 30
 cloud = ''
 squid_port = 3128
@@ -26,10 +24,8 @@ def setup(path=None):
     global amqp_server_url
     global amqp_virtual_host
     global amqp_exchange
-    global amqp_exchange_type
-    global reconnect_retries
     global external_ip
-    global tx_bytes_path
+    global interface
     global interval
     global cloud
     global squid_port
@@ -79,23 +75,11 @@ def setup(path=None):
         amqp_exchange = config_file.get("rabbitmq",
                                                 "amqp_exchange")
 
-    if config_file.has_option("rabbitmq", "amqp_exchange_type"):
-        amqp_exchange_type = config_file.get("rabbitmq",
-                                                "amqp_exchange_type")
-
     if config_file.has_option("general", "interval"):
         try:
             interval = config_file.getint("general", "interval")
         except ValueError:
             print "Configuration file problem: amqp_port must be an " \
-                  "integer value."
-            sys.exit(1)
-
-    if config_file.has_option("general", "reconnect_retries"):
-        try:
-            reconnect_retries = config_file.getint("general", "reconnect_retries")
-        except ValueError:
-            print "Configuration file problem: reconnect_retries must be an " \
                   "integer value."
             sys.exit(1)
 
@@ -119,10 +103,6 @@ def setup(path=None):
         external_ip = config_file.get("general",
                                                 "external_ip")
 
-    if config_file.has_option("general", "tx_bytes_path"):
-        tx_bytes_path = config_file.get("general",
-                                                "tx_bytes_path")
-    else:
-        print "Configuration file problem: tx_bytes_path must be set. " \
-              "Please check configuration file:", path
-        sys.exit(1)
+    if config_file.has_option("general", "interface"):
+        interface = config_file.get("general",
+                                                "interface")
