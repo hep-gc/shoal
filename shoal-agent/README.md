@@ -1,4 +1,4 @@
-#Shoal Agent v0.5.X README
+#Shoal Agent v0.6.X README
 
 ##Basic Commands
 With the basic `shoal_agent` init script you can do the following:
