@@ -174,8 +174,22 @@ class RabbitMQConsumer(Thread):
         self._consumer_tag = None
 
     def connect(self):
+ 	sslOptions = {}
+        try: 
+          if config.use_ssl:
+            sslOptions["ca_certs"] = config.amqp_ca_cert
+            sslOptions["certfile"] = config.amqp_client_cert
+            sslOptions["keyfile"]  = config.amqp_client_key
+	except Exception as e:
+	  logging.error("Could not read SSL files")
+	  logging.error(e)
         try:
-            return pika.SelectConnection(pika.URLParameters(self.host),
+            return pika.SelectConnection(pika.ConnectionParameters(
+						host=config.amqp_server_url,
+                                                port=config.amqp_port,
+                                                ssl=config.use_ssl,
+                                                ssl_options = sslOptions
+					     ),
                                              self.on_connection_open,
                                              stop_ioloop_on_close=False)
         except pika.exceptions.AMQPConnectionError as e:
