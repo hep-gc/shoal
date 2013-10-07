@@ -33,16 +33,29 @@ def amqp_send(data, topics=['info']):
         routing_key += topic + '.'
     routing_key = routing_key.strip('.')
     logging.info('AMQP routing key: {0}'.format(routing_key))
+    sslOptions = {}
     try:
-        connection = pika.BlockingConnection(pika.URLParameters(HOST))
-        channel = connection.channel()
-        channel.basic_publish(exchange=config.amqp_exchange,
-                              routing_key=routing_key,
-                              body=data,
-                              properties=pika.BasicProperties(content_type='application/json'))
-        connection.close()
-    except pika.exceptions.AMQPConnectionError as e:
-        raise pika.exceptions.AMQPConnectionError
+      if config.use_ssl:
+        sslOptions["ca_certs"] = config.amqp_ca_cert
+        sslOptions["certfile"] = config.amqp_client_cert
+        sslOptions["keyfile"]  = config.amqp_client_key
+    except:
+      logging.error("Could not read SSL files")
+      sys.exit(1)
+    connection = pika.BlockingConnection(pika.ConnectionParameters
+                                       (
+                                        host=config.amqp_server_url,
+                                        port=config.amqp_port,
+                                        ssl=config.use_ssl,
+                                        ssl_options = sslOptions
+                                       ),
+                                      )
+    channel = connection.channel()
+    channel.basic_publish(exchange=config.amqp_exchange,
+                          routing_key=routing_key,
+                          body=data,
+                          properties=pika.BasicProperties(content_type='application/json'))
+    connection.close()
 
 def get_load_data(interface):
     path = '/sys/class/net/{0}/statistics/tx_bytes'.format(interface)
@@ -72,8 +85,9 @@ def get_ip_addresses():
                     private[interface] = link['addr']
                 elif not link['addr'].startswith('127.'):
                     public[interface] = link['addr']
-        except Exception as e:
+        except Exception:
             continue
+
     logging.info('Public IPs found: {0}, Private IPs found: {1}'.format(public, private))
     return public, private
 
@@ -95,7 +109,7 @@ def main():
 
     try:
         data['private_ip'] = private_ip.values()[0]
-    except IndexError:
+    except IndexError as e:
         pass
     
     if public_ip:
@@ -133,4 +147,5 @@ def main():
             sys.exit()
 
 if __name__ == '__main__':
+    print "starting shoal-agent"
     main()

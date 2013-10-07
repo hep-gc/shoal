@@ -1,13 +1,18 @@
-from os.path import exists, join, expanduser
+from os.path import exists, join, expanduser, abspath
 import sys
 import ConfigParser
 
 # Shoal Options Module
 
 # set default values
-amqp_server_url = 'amqp://guest:guest@localhost:5672'
+amqp_server_url = 'localhost'
+amqp_port = 5672
 amqp_virtual_host = '/'
 amqp_exchange = 'shoal'
+use_ssl = False
+amqp_ca_cert = ''
+amqp_client_cert = ''
+amqp_client_key = ''
 external_ip = None
 interface = None
 interval = 30
@@ -37,8 +42,8 @@ def setup(path=None):
     if not path:
         if exists("/etc/shoal/shoal_agent.conf"):
             path = "/etc/shoal/shoal_agent.conf"
-        elif exists(join(homedir, ".shoal/shoal_agent.conf")):
-            path = join(homedir, ".shoal/shoal_agent.conf")
+        elif exists(abspath(homedir + "/shoal/shoal-server/shoal_server.conf")):
+            path = abspath(homedir + "/shoal/shoal-server/shoal_server.conf")
         else:
             print >> sys.stderr, "Configuration file problem: There doesn't " \
                   "seem to be a configuration file. " \
@@ -66,6 +71,20 @@ def setup(path=None):
     if config_file.has_option("rabbitmq", "amqp_server_url"):
         amqp_server_url = config_file.get("rabbitmq",
                                                 "amqp_server_url")
+
+    if config_file.has_option("rabbitmq", "amqp_port"):
+        amqp_port = config_file.get("rabbitmq", "amqp_port")
+
+    if config_file.has_option("rabbitmq", "use_ssl") and config_file.getboolean("rabbitmq", "use_ssl"):
+        try:
+	  use_ssl = True
+          amqp_ca_cert     = abspath(config_file.get("rabbitmq", "amqp_ca_cert"))
+          amqp_client_cert = abspath(config_file.get("rabbitmq", "amqp_client_cert"))
+          amqp_client_key  = abspath(config_file.get("rabbitmq", "amqp_client_key"))
+        except Exception as e:
+          print "Configuration file problem: could not load SSL certs"
+	  print e
+          sys.exit(1)
 
     if config_file.has_option("rabbitmq", "amqp_virtual_host"):
         amqp_virtual_host = config_file.get("rabbitmq",
