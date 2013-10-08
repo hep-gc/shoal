@@ -33,7 +33,9 @@ class shoalDecisionEngine(object):
       self.token   = tokenDict["token"]
 
       self.domain_name        = config.get("general", "DOMAIN")
+      self.domainID           = 0 # set on creation of domain
       self.launch_config_name = config.get("general", "LAUNCH_CONFIG")
+      self.launchConfigID     = 0 # set on creation of domain
       self.vm_image           = config.get("general", "VM_IMAGE")
       self.image_type         = config.get("general", "VM_IMAGE_TYPE")           
       self.key_name           = config.get("general", "KEY")
@@ -55,7 +57,7 @@ class shoalDecisionEngine(object):
       self.createDomain()
       self.run()
     
-    def createLaunchConfig():
+    def createLaunchConfig(self):
       # Get a list of existing launch configurations
       r = requests.get("%s/launchconfigurations" % self.api_url, auth=(self.user_id, self.token))
       existing_launch_configurations = r.json()
@@ -63,7 +65,7 @@ class shoalDecisionEngine(object):
 
       # For now error if launch config already exsists
       if self.launch_config_name in existing_lc_names:
-        sys.exit("Error launch config already exsists: %s" % self.launch_config_name
+        sys.exit("Error launch config already exsists: %s" % self.launch_config_name)
       
       # Get ip of rabbitMQ server as user data for the launching squid
       # TODO might be PITA but could load this from shoal server config 
@@ -74,6 +76,7 @@ class shoalDecisionEngine(object):
         rabbitMQIP = subprocess.check_output("ifconfig eth0 |" + " grep 'inet addr:' |" \
                    + "cut -d: -f2 |" + " awk '{ print $1}'", shell=True)
         rabbitMQIP = rabbitMQIP.strip()	
+      print "using rabbitMQ ip : %s" % rabbitMQIP
 
       print "Creating launch config '%s'" % self.launch_config_name
       new_lc = {
@@ -90,12 +93,24 @@ class shoalDecisionEngine(object):
                 'max_vms': self.maximumVMs,
                 'common': True,
                 'rank': rank,
-	        'user_data': 
+	        'user_data': rabbitMQIP
+	        #TODO user data should probably use a JSON to make this more extendable
+                #TODO doesn't work (user data probably needs to be more than just a string)
         }
         new_lc['cloud_params'][cloud] = cloud_param
 
       r = requests.post("%s/launchconfigurations" % self.api_url,
           data=json.dumps(new_lc), auth=(self.user_id, self.token))
+      if r.status_code != 201:
+        sys.exit("Error: %s" % r.text)
+
+      r = requests.get("%s/launchconfigurations" % self.api_url, auth=(self.user_id, self.token))
+
+      all_lcs = r.json()
+      for lc in all_lcs:
+        if lc.get('name') == self.launch_config_name:
+          self.launchConfigID = lc.get('id')
+          break
 
     def createDomain(self):
       # Check if domain already exist
@@ -118,6 +133,13 @@ class shoalDecisionEngine(object):
                          data=json.dumps(new_domain), auth=(self.user_id, self.token))
       if r.status_code != 201:
         sys.exit("Error: %s" % r.text)
+      
+      r = requests.get("%s/domains" % self.api_url, auth=(self.user_id, self.token))
+      allDomains = r.json()
+      for domain in allDomains:
+        if domain.get('name') == self.domain_name:
+          self.domainID = domain.get('id')
+          break
 
     def getTotalLoadOnShoalServer(self):
       loadSum = 0
@@ -155,27 +177,36 @@ class shoalDecisionEngine(object):
 
       prevVMCount = vmCount
       while True:
-        self.getTotalLoadOnShoalServer()
+        try:
+          self.getTotalLoadOnShoalServer()
         
-	#scale up/down based on thresholds
-	if self.shoalLoad < self.scaleDownThreshold:
-          print "Load less than scale down threshold"
-          vmCount -= self.scaleDownAmount
-        elif self.shoalLoad > self.scaleUpThreshold:
-          print "Load creater than scale up threshold"
-	  vmCount += self.sacleUpAmount
+	  #scale up/down based on thresholds
+	  if self.shoalLoad < self.scaleDownThreshold:
+            print "Load less than scale down threshold"
+            vmCount -= self.scaleDownAmount
+          elif self.shoalLoad > self.scaleUpThreshold:
+            print "Load greater than scale up threshold"
+	    vmCount += self.sacleUpAmount
         
-	#lock vm count in to specified range
-	if vmCount < self.minimumVMs: vmCount = self.minimumVMs
-        if vmCount > self.maximumVMs: vmCount = self.maximumVMs
+ 	  #lock vm count in to specified range
+ 	  if vmCount < self.minimumVMs: vmCount = self.minimumVMs
+          if vmCount > self.maximumVMs: vmCount = self.maximumVMs
 	   
-	#if number of vms needs to change
-	if vmCount is not prevVMCount:
-	  print "Scaling to %d VMs" % vmCount
-          domainData['vm_count'] = vmCount
-          r = requests.put("%s/domains/%s" % (self.api_url, domain.get('id')),
-                            data=json.dumps(domainData), auth=(self.user_id, self.token))
+	  #if number of vms needs to change
+	  if vmCount is not prevVMCount:
+	    print "Scaling to %d VMs" % vmCount
+            domainData['vm_count'] = vmCount
+            r = requests.put("%s/domains/%s" % (self.api_url, domain.get('id')),
+                             data=json.dumps(domainData), auth=(self.user_id, self.token))
 
-        time.sleep(self.updateInterval)
+          time.sleep(self.updateInterval)
+
+        except KeyboardInterrupt:
+          print "\nExiting Cleaning up domain and launch config"
+          r = requests.delete("%s/domains/%s" % (self.api_url, self.domainID),
+                               auth=(self.user_id, self.token))
+          r = requests.delete("%s/launchconfigurations/%s" % (self.api_url, self.launchConfigID),
+                                auth=(self.user_id, self.token))
+          sys.exit() 
 
 shoalDecisionEngine()     
