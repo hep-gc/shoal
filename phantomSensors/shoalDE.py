@@ -1,4 +1,3 @@
-
 import os
 import sys
 import time
@@ -198,7 +197,8 @@ class shoalDecisionEngine(object):
             domainData['vm_count'] = vmCount
             r = requests.put("%s/domains/%s" % (self.api_url, domain.get('id')),
                              data=json.dumps(domainData), auth=(self.user_id, self.token))
-
+	  
+	  vmCount = prevVMCount
           time.sleep(self.updateInterval)
 
         except KeyboardInterrupt:
