@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/local/bin/python
 import os
 import sys
 import json
@@ -8,10 +8,11 @@ import subprocess
 try:
   config = ConfigParser.ConfigParser()
   config.read(os.path.abspath("~/shoal/shoal-agent/shoal_agent.conf"))
-
-  return = subprocess.check_output(["cat", "/var/nimbus-metadata-server-url"])
-  userDataJSONStr = subprocess.chceck_output(["curl", return + "/latest/user-data"])
-  userDataJSON = json.loads(userDataJSONStr)
+  
+  userDataServer  = subprocess.check_output(["cat", "/var/nimbus-metadata-server-url"])
+  userDataJSONStr = subprocess.check_output(["curl", userDataServer + "/latest/user-data"])
+  print userDataJSONStr
+  userDataJSON    = json.loads(userDataJSONStr)
 except Exception as e:
   print e
   sys.exit("Could not read config file or user data, exiting")
@@ -19,7 +20,7 @@ except Exception as e:
 #debugging
 print userDataJSON
 
-config.set("rabbitMQ", "amqp_server_url", userDataJSON["rabbitMQServerIP])
-config.set("rabbitMQ", "amqp_port",       userDataJSON["rabbitMQServerPort])
+config.set("rabbitMQ", "amqp_server_url", userDataJSON["rabbitMQServerIP"])
+config.set("rabbitMQ", "amqp_port",       userDataJSON["rabbitMQServerPort"])
 
 #good to start shoal agent
