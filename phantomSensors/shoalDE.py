@@ -81,7 +81,8 @@ class shoalDecisionEngine(object):
       print "Creating launch config '%s'" % self.launch_config_name
       new_lc = {
         'name': self.launch_config_name,
-        'cloud_params': {}
+        'cloud_params': {},
+	'contextualization_method': 'user_data'
       }
 
       rank = 0
