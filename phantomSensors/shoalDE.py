@@ -15,21 +15,7 @@ class shoalDecisionEngine(object):
     def __init__(self):
       
       self.api_url = "https://phantom.nimbusproject.org/api/dev"
-       
-      #Get an API Token
-      #Construct username / password string
-      userStr = "username=" + config.get("general", "USER") + "&"  \
-              + "password=" + config.get("general", "password")
-      #Get token from phantom using curl
-      tokenAsJSONStr = subprocess.check_output(["curl", "-d", userStr, self.api_url +"/token"])
-      #load returned JSON string as a dictionary
-      tokenDict = json.loads(tokenAsJSONStr)
-
-      if not tokenDict["success"]:
-	sys.exit("Could not get phantom api token")
-
-      self.user_id = tokenDict["user"]
-      self.token   = tokenDict["token"]
+      self.loadApiToken()
 
       self.domain_name        = config.get("general", "DOMAIN")
       self.domainID           = 0 # set on creation of domain
@@ -52,10 +38,44 @@ class shoalDecisionEngine(object):
       self.maximumVMs         = config.getint("general", "MAX_VMS")
       self.updateInterval     = config.getint("general", "UPDATE_INTERVAL")
 
-      self.createLaunchConfig()
-      self.createDomain()
-      self.run()
-    
+    def loadApiToken(self):     
+      tokenAsJSONStr =''
+      tokenJSON = {}
+      #attempt to load a saved token
+      try:
+        with open("savedToken", "r") as st:
+	  tokenAsJSONStr = st.read()
+        tokenDict = json.loads(tokenAsJSONStr) 
+        #test it to see if it works/is still valid
+        r = requests.get("%s/launchconfigurations" % self.api_url, 
+                          auth=(tokenDict["user"], tokenDict["token"]))
+        #no good need a new one
+        if r.status_code != 200:
+          tokenDict = self.getNewApiToken()
+      except:
+        tokenDict = self.getNewApiToken()
+      #set the token 
+      self.user_id = tokenDict["user"]
+      self.token   = tokenDict["token"]
+     
+    def getNewApiToken(self):   
+      #Get an API Token
+      #Construct username / password string
+      userStr = "username=" + config.get("general", "USER") + "&"  \
+              + "password=" + config.get("general", "password")
+      #Get token from phantom using curl
+      tokenAsJSONStr = subprocess.check_output(["curl", "-s", "-d",
+                                                userStr, self.api_url +"/token"])
+      #save the token
+      with open("savedToken", "w") as st:
+        st.write(tokenAsJSONStr)
+      #load returned JSON string as a dictionary
+      tokenDict = json.loads(tokenAsJSONStr)
+      #this script can't do anything without a token
+      if not tokenDict["success"]:
+        sys.exit("Could not get phantom api token")
+      return tokenDict
+
     def createLaunchConfig(self):
       # Get a list of existing launch configurations
       r = requests.get("%s/launchconfigurations" % self.api_url, auth=(self.user_id, self.token))
@@ -75,13 +95,17 @@ class shoalDecisionEngine(object):
         rabbitMQIP = subprocess.check_output("ifconfig eth0 |" + " grep 'inet addr:' |" \
                    + "cut -d: -f2 |" + " awk '{ print $1}'", shell=True)
         rabbitMQIP = rabbitMQIP.strip()	
-      print "using rabbitMQ ip : %s" % rabbitMQIP
+      rabbitMQPort = config.get("general", "RABBIT_MQ_PORT")
 
-      print "Creating launch config '%s'" % self.launch_config_name
+      userDataDict = {}
+      userDataDict["rabbitMQServerIP"]   = rabbitMQIP
+      userDataDict["rabbitMQServerPort"] = rabbitMQPort
+
       new_lc = {
         'name': self.launch_config_name,
         'cloud_params': {},
-	'contextualization_method': 'user_data'
+	'contextualization_method': 'user_data',
+        'user_data': json.dumps(userDataDict)
       }
 
       rank = 0
@@ -92,10 +116,7 @@ class shoalDecisionEngine(object):
                 'instance_type': self.image_type,
                 'max_vms': self.maximumVMs,
                 'common': True,
-                'rank': rank,
-	        'user_data': rabbitMQIP
-	        #TODO user data should probably use a JSON to make this more extendable
-                #TODO doesn't work (user data probably needs to be more than just a string)
+                'rank': rank
         }
         new_lc['cloud_params'][cloud] = cloud_param
 
@@ -122,7 +143,6 @@ class shoalDecisionEngine(object):
           sys.exit("Error: domain already exists")
 
       # Create our domain
-      print "Creating domain %s" % self.domain_name
       new_domain = {
     	'name': self.domain_name,
 	'de_name': 'multicloud',
@@ -210,4 +230,8 @@ class shoalDecisionEngine(object):
                                 auth=(self.user_id, self.token))
           sys.exit() 
 
-shoalDecisionEngine()     
+shoalDE = shoalDecisionEngine()     
+shoalDE.createLaunchConfig()
+shoalDE.createDomain()
+shoalDE.run()
+    
