@@ -1,6 +1,7 @@
 from os.path import exists, join, expanduser, abspath
 import sys
 import ConfigParser
+import logging
 
 # Shoal Options Module
 
@@ -19,7 +20,7 @@ interval = 30
 cloud = ''
 squid_port = 3128
 log_file = '/var/log/shoal_agent.log'
-
+logging_level = logging.ERROR
 
 def setup(path=None):
     """Setup shoal using config file.
@@ -35,6 +36,7 @@ def setup(path=None):
     global cloud
     global squid_port
     global log_file
+    global logging_level
 
     homedir = expanduser('~')
 
@@ -109,6 +111,21 @@ def setup(path=None):
     if config_file.has_option("logging", "log_file"):
         log_file = config_file.get("logging",
                                         "log_file")
+
+    if config_file.has_option("logging", "logging_level"):
+        temp = config_file.get("logging", "logging_level")
+        logLevels = {
+ 		     "DEBUG"    : logging.DEBUG,
+		     "INFO"     : logging.INFO,
+		     "WARNING"  : logging.WARNING,
+		     "ERROR"    : logging.ERROR,
+		     "CRITICAL" : logging.CRITICAL,
+                    }
+        try:
+	  logging_level = logLevels[temp]
+        except KeyError:
+	  print "Configuration file problem: Invalid logging level"
+	  sys.exit(1)
 
     if config_file.has_option("general", "squid_port"):
         try:
