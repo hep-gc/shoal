@@ -8,9 +8,8 @@ import logging
 # set default values
 shoal_server_url = 'http://localhost:8080/nearest'
 cvmfs_config = '/etc/cvmfs/default.local'
-default_squid_proxy = "\"http://chrysaor.westgrid.ca:3128;http://cernvm-webfs.atlas-canada.ca:3128;DIRECT\""
-default_config_format = "VMFS_REPOSITORIES=atlas.cern.ch,atlas-condb.cern.ch,grid.cern.ch\n" \
-                        "CVMFS_QUOTA_LIMIT=3500"
+default_squid_proxy   = ""
+default_config_format = ""
 
 def setup(path=None):
     """Setup shoal using config file.
