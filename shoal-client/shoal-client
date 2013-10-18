@@ -68,9 +68,8 @@ if data:
     if dump:
         print "\nThe following would be written to cvmfs config file located at '%s' (defined in shoal_client.conf):\n%s\n" % (cvmfs_config, default_conf)
     else:
-        f = open(cvmfs_config, "w")
-        f.write(default_conf)
-        f.close()
+        with open(cvmfs_config, "w") as f:
+            f.write(default_conf)
 elif dump:
     print "There was no data returned from the url '%s'\n"\
           "cvmfs config file located at '%s' (defined in shoal_client.conf) will be untouched" % (server, cvmfs_config)
