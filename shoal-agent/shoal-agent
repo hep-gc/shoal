@@ -105,7 +105,11 @@ def main():
         except IndexError:
             pass
     elif external_ip:
-        data['external_ip'] = external_ip
+        try:
+            data['external_ip'] = external_ip
+        except KeyError:
+            #not sure this is needed, if it doesn't exist 
+            pass
     else:
         logging.error("Shoal-Agent was unable to find a public IP or external IP for this squid. Please set an external IP in shoal-agent config file.")
         sys.exit(1)
@@ -129,7 +133,7 @@ def main():
             except pika.exceptions.AMQPConnectionError as e:
                 logging.error("Could not connect to AMQP Server. Attempting to connect in {0}s...".format(INTERVAL))
             time.sleep(INTERVAL)
-        except KeyboardInterrupt:
+        except KeyboardInterrupt, KeyError:
             sys.exit()
 
 if __name__ == '__main__':
