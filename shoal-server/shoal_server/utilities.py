@@ -35,9 +35,14 @@ def get_nearest_squids(ip, count=10):
     request_data = get_geolocation(ip)
     if not request_data:
         return None
-
-    r_lat = request_data['latitude']
-    r_long = request_data['longitude']
+	
+    try:
+        r_lat = request_data['latitude']
+        r_long = request_data['longitude']
+    except KeyError as e:
+        logger.error("Could not read request data:")
+        logger.error(e)
+    return None
 
     nearest_squids = []
 
