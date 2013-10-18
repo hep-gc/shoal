@@ -28,10 +28,7 @@ LOG_FORMAT = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(messag
 HOST = "{0}/{1}".format(config.amqp_server_url, urllib.quote_plus(config.amqp_virtual_host))
 
 def amqp_send(data, topics=['info']):
-    routing_key = ''
-    for topic in topics:
-        routing_key += topic + '.'
-    routing_key = routing_key.strip('.')
+    routing_key = ''.join(topics)
     logging.info('AMQP routing key: {0}'.format(routing_key))
     sslOptions = {}
     try:
