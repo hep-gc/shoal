@@ -79,7 +79,7 @@ def setup(path=None):
         try:
             interval = config_file.getint("general", "interval")
         except ValueError:
-            print "Configuration file problem: amqp_port must be an " \
+            print "Configuration file problem: interval must be an " \
                   "integer value."
             sys.exit(1)
 
@@ -95,7 +95,7 @@ def setup(path=None):
         try:
             squid_port = config_file.getint("general", "squid_port")
         except ValueError:
-            print "Configuration file problem: amqp_port must be an " \
+            print "Configuration file problem: squid_port must be an " \
                   "integer value."
             sys.exit(1)
 
