@@ -39,23 +39,29 @@ def amqp_send(data, topics=['info']):
         sslOptions["ca_certs"] = config.amqp_ca_cert
         sslOptions["certfile"] = config.amqp_client_cert
         sslOptions["keyfile"]  = config.amqp_client_key
-    except:
-      logging.error("Could not read SSL files")
-      sys.exit(1)
-    connection = pika.BlockingConnection(pika.ConnectionParameters
-                                       (
-                                        host=config.amqp_server_url,
-                                        port=config.amqp_port,
-                                        ssl=config.use_ssl,
-                                        ssl_options = sslOptions
-                                       ),
-                                      )
-    channel = connection.channel()
-    channel.basic_publish(exchange=config.amqp_exchange,
-                          routing_key=routing_key,
-                          body=data,
-                          properties=pika.BasicProperties(content_type='application/json'))
-    connection.close()
+    except Exception as e:
+      logging.error("Could not read SSL files:")
+      logging.error(e)
+      raise e
+    try:
+      connection = pika.BlockingConnection(pika.ConnectionParameters
+                                           (
+                                            host=config.amqp_server_url,
+                                            port=config.amqp_port,
+                                            ssl=config.use_ssl,
+                                            ssl_options = sslOptions
+                                           ),
+                                          )
+      channel = connection.channel()
+      channel.basic_publish(exchange=config.amqp_exchange,
+                            routing_key=routing_key,
+                            body=data,
+                            properties=pika.BasicProperties(content_type='application/json'))
+      connection.close()
+    except Exception as e:
+      logging.error("Could not connect to amqp server:")
+      logging.error(e)
+      raise e
 
 def get_load_data(interface):
     path = '/sys/class/net/{0}/statistics/tx_bytes'.format(interface)
