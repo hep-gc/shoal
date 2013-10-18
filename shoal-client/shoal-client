@@ -5,7 +5,7 @@
 import urllib2
 import sys
 import os
-import simplejson as json
+import json
 import logging
 import time
 
@@ -31,8 +31,12 @@ def get_args():
     global dump
 
     p = OptionParser()
-    p.add_option("-d", "--dump", action="store_true", dest="dump")
-    p.add_option("-s", "--server", action="store", type="string", dest="server")
+    p.add_option("-d", "--dump", action="store_true", dest="dump",
+		 help="Print closest proxies to terminal for debugging "+ 
+                      "instead of over writing the CVMFS config file")
+    p.add_option("-s", "--server", action="store", type="string", dest="server", 
+                 help="Also needs string for specifying the shoal server to use. " +
+		      "Takes presedence over the option in config file")
 
     (options, args) = p.parse_args()
 

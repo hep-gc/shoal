@@ -1,4 +1,4 @@
-from os.path import exists, join, expanduser
+from os.path import exists, join, expanduser, abspath
 import sys
 import ConfigParser
 import logging
@@ -22,13 +22,12 @@ def setup(path=None):
     global default_squid_proxy
 
     homedir = expanduser('~')
-
     # find config file
     if not path:
         if exists("/etc/shoal/shoal_client.conf"):
             path = "/etc/shoal/shoal_client.conf"
-        elif exists(join(homedir, ".shoal/shoal_client.conf")):
-            path = join(homedir, ".shoal/shoal_client.conf")
+        elif exists(abspath(homedir + "/shoal/shoal-client/shoal_client.conf")):
+            path =  abspath(homedir + "/shoal/shoal-client/shoal_client.conf")
         else:
             print >> sys.stderr, "Configuration file problem: There doesn't " \
                   "seem to be a configuration file. " \
