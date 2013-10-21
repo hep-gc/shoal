@@ -73,6 +73,12 @@ def get_ip_addresses():
                 elif not link['addr'].startswith('127.'):
                     public[interface] = link['addr']
         except Exception as e:
+            #This is intentionally left blank
+            #Not all interfaces returned form netifaces.interfaces have an internet address (some are ethernet or MAC)
+            #This code only looks for adresses with proper internet adresses
+            #Note IPV6 addresses are not checked and netifaces.AF_INET6 needs to be used to get those 
+            #(Note this currently does not work on all platforms unlike AF_INET/IPV4)
+            #For more information on netifaces, see the readme at https://github.com/raphdg/netifaces
             continue
     logging.info('Public IPs found: {0}, Private IPs found: {1}'.format(public, private))
     return public, private
