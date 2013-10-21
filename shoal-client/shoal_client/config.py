@@ -1,4 +1,4 @@
-from os.path import exists, join, expanduser
+from os.path import exists, join, expanduser, abspath
 import sys
 import ConfigParser
 import logging
@@ -8,9 +8,8 @@ import logging
 # set default values
 shoal_server_url = 'http://localhost:8080/nearest'
 cvmfs_config = '/etc/cvmfs/default.local'
-default_squid_proxy = "\"http://chrysaor.westgrid.ca:3128;http://cernvm-webfs.atlas-canada.ca:3128;DIRECT\""
-default_config_format = "VMFS_REPOSITORIES=atlas.cern.ch,atlas-condb.cern.ch,grid.cern.ch\n" \
-                        "CVMFS_QUOTA_LIMIT=3500"
+default_squid_proxy   = ""
+default_config_format = ""
 
 def setup(path=None):
     """Setup shoal using config file.
@@ -22,13 +21,12 @@ def setup(path=None):
     global default_squid_proxy
 
     homedir = expanduser('~')
-
     # find config file
     if not path:
         if exists("/etc/shoal/shoal_client.conf"):
             path = "/etc/shoal/shoal_client.conf"
-        elif exists(join(homedir, ".shoal/shoal_client.conf")):
-            path = join(homedir, ".shoal/shoal_client.conf")
+        elif exists(abspath(homedir + "/shoal/shoal-client/shoal_client.conf")):
+            path =  abspath(homedir + "/shoal/shoal-client/shoal_client.conf")
         else:
             print >> sys.stderr, "Configuration file problem: There doesn't " \
                   "seem to be a configuration file. " \

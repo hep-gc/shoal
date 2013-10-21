@@ -28,10 +28,7 @@ LOG_FORMAT = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(messag
 HOST = "{0}/{1}".format(config.amqp_server_url, urllib.quote_plus(config.amqp_virtual_host))
 
 def amqp_send(data, topics=['info']):
-    routing_key = ''
-    for topic in topics:
-        routing_key += topic + '.'
-    routing_key = routing_key.strip('.')
+    routing_key = ''.join(topics)
     logging.info('AMQP routing key: {0}'.format(routing_key))
     sslOptions = {}
     try:
@@ -39,23 +36,29 @@ def amqp_send(data, topics=['info']):
         sslOptions["ca_certs"] = config.amqp_ca_cert
         sslOptions["certfile"] = config.amqp_client_cert
         sslOptions["keyfile"]  = config.amqp_client_key
-    except:
-      logging.error("Could not read SSL files")
-      sys.exit(1)
-    connection = pika.BlockingConnection(pika.ConnectionParameters
-                                       (
-                                        host=config.amqp_server_url,
-                                        port=config.amqp_port,
-                                        ssl=config.use_ssl,
-                                        ssl_options = sslOptions
-                                       ),
-                                      )
-    channel = connection.channel()
-    channel.basic_publish(exchange=config.amqp_exchange,
-                          routing_key=routing_key,
-                          body=data,
-                          properties=pika.BasicProperties(content_type='application/json'))
-    connection.close()
+    except Exception as e:
+      logging.error("Could not read SSL files:")
+      logging.error(e)
+      raise e
+    try:
+      connection = pika.BlockingConnection(pika.ConnectionParameters
+                                           (
+                                            host=config.amqp_server_url,
+                                            port=config.amqp_port,
+                                            ssl=config.use_ssl,
+                                            ssl_options = sslOptions
+                                           ),
+                                          )
+      channel = connection.channel()
+      channel.basic_publish(exchange=config.amqp_exchange,
+                            routing_key=routing_key,
+                            body=data,
+                            properties=pika.BasicProperties(content_type='application/json'))
+      connection.close()
+    except Exception as e:
+      logging.error("Could not connect to amqp server:")
+      logging.error(e)
+      raise e
 
 def get_load_data(interface):
     path = '/sys/class/net/{0}/statistics/tx_bytes'.format(interface)
@@ -93,7 +96,7 @@ def get_ip_addresses():
 
 def main():
     try:
-        logging.basicConfig(level=logging.ERROR, format=LOG_FORMAT, filename=config.log_file)
+        logging.basicConfig(level=config.logging_level, format=LOG_FORMAT, filename=config.log_file)
     except IOError as e:
         print "Could not set logging file. Please check config file.", e
         sys.exit(1)
@@ -119,7 +122,11 @@ def main():
         except IndexError:
             pass
     elif external_ip:
-        data['external_ip'] = external_ip
+        try:
+            data['external_ip'] = external_ip
+        except KeyError:
+            #not sure this is needed, if it doesn't exist 
+            pass
     else:
         logging.error("Shoal-Agent was unable to find a public IP or external IP for this squid. Please set an external IP in shoal-agent config file.")
         sys.exit(1)
@@ -143,7 +150,7 @@ def main():
             except pika.exceptions.AMQPConnectionError as e:
                 logging.error("Could not connect to AMQP Server. Attempting to connect in {0}s...".format(INTERVAL))
             time.sleep(INTERVAL)
-        except KeyboardInterrupt:
+        except KeyboardInterrupt, KeyError:
             sys.exit()
 
 if __name__ == '__main__':

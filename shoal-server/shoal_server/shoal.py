@@ -74,7 +74,7 @@ class ThreadMonitor(Thread):
 
     def run(self):
         for thread in self.threads:
-            print "starting", thread
+            logging.info("starting", thread)
             thread.start()
         while True:
             for thread in self.threads:
@@ -84,7 +84,7 @@ class ThreadMonitor(Thread):
             sleep(1)
 
     def stop(self):
-        print "\nShutting down Shoal-Server... Please wait."
+        logging.info("Shutting down Shoal-Server... Please wait.")
         try:
             self.rabbitmq.stop()
             self.update.stop()
