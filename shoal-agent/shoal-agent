@@ -24,10 +24,11 @@ INTERVAL = config.interval
 PRIVATE_ADDRESS = ('10.','172.','192.')
 LOG_FORMAT = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
 
-# AMQP configurations
-HOST = "{0}/{1}".format(config.amqp_server_url, urllib.quote_plus(config.amqp_virtual_host))
-
 def amqp_send(data, topics=['info']):
+    """
+	amqp_send sends the passed in data to the rabbitMQ exchange with a routing key that is a concatination of all items in topics seperated by periods
+        This method on each call reads SSL certificate/key files, establishes a connection to the AMQP server, sends the data then closes the connection.
+    """
     routing_key = ''.join(topics)
     logging.info('AMQP routing key: {0}'.format(routing_key))
     sslOptions = {}
@@ -61,15 +62,20 @@ def amqp_send(data, topics=['info']):
       raise e
 
 def get_load_data(interface):
+    """
+    	get_load_data returns the outgoing kilbytes per second of the passed in interface
+        note this is UNIX specifc 
+    """
     path = '/sys/class/net/{0}/statistics/tx_bytes'.format(interface)
     logging.info("Path to '{0}' load data: {1}".format(interface, path))
     try:
+        # Get the change in outgoing bytes over 1 second
         with open(path) as tx:
             tx1 = int(tx.read())
         time.sleep(1)
         with open(path) as tx:
             tx2 = int(tx.read())
-
+        # get kilobytes
         return (tx2 - tx1) / 1024
     except IOError as e:
         logging.error("Path '{0}' does not exist. Please change NIC to monitor in configuration file.".format(path))
@@ -79,6 +85,9 @@ def get_load_data(interface):
         sys.exit(1)
 
 def get_ip_addresses():
+    """
+	Uses netifaces to return public and private dictionaries of IP addresses
+    """
     public = {}
     private = {}
     for interface in netifaces.interfaces():
@@ -109,12 +118,13 @@ def main():
     public_ip, private_ip = get_ip_addresses()
     external_ip = config.external_ip
 
+    #set the data to the first valid IP address
     try:
         data['private_ip'] = private_ip.values()[0]
     except IndexError:
         pass
-    
-    if public_ip:
+
+    if public_ip: 
         try:
             data['public_ip'] = public_ip.values()[0]
             data['hostname'] = socket.gethostbyaddr(public_ip.values()[0])[0]
@@ -130,6 +140,8 @@ def main():
         logging.error("Shoal-Agent was unable to find a public IP or external IP for this squid. Please set an external IP in shoal-agent config file.")
         sys.exit(1)
 
+    # assumes only one interface is used by shoal-agent
+    # the user specifying an interface to use takes priority
     if config.interface:
         interface = config.interface
     elif public_ip:
@@ -141,6 +153,9 @@ def main():
         sys.exit(1)
 
     while True:
+	# only time/load are expected to change
+        # private/public/external IPs are kept constant while shoal-agent is running
+        # the load is read only from a single interface either user specified or the first valid one netifaces finds
         try:
             data['timestamp'] = time.time()
             data['load'] = get_load_data(interface)
