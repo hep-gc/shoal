@@ -22,6 +22,8 @@ amqp_client_cert = ''
 amqp_client_key  = ''
 webpy_cache = False
 log_file = '/var/log/shoal_server.log'
+error_reconnect_time = 30
+error_reconnect_attempts = 10
 
 def setup(path=None):
     """Setup shoal using config file.
@@ -41,7 +43,9 @@ def setup(path=None):
     global amqp_client_cert 
     global amqp_client_key  
     global webpy_cache
-    global log_file
+    global log_file   
+    global error_reconnect_time 
+    global error_reconnect_attempts 
 
     homedir = expanduser('~')
 
@@ -158,3 +162,15 @@ def setup(path=None):
     if config_file.has_option("logging", "log_file"):
         log_file = config_file.get("logging",
                                         "log_file")
+
+    if config_file.has_option("error", "error_reconnect_time"):
+        try:
+            error_reconnect_time = config_file.getint("error", "error_reconnect_time")
+        except ValueError:
+            print "Configuration file problem: error_reconnect_time must be an integer"
+
+    if config_file.has_option("error", "error_reconnect_attempts"):
+        try:
+            error_reconnect_attempts = config_file.getint("error", "error_reconnect_attempts")
+        except ValueError:
+            print "Configuration file problem: error_reconnect_attempts must be an integer"

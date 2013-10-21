@@ -174,6 +174,7 @@ class RabbitMQConsumer(Thread):
         self._consumer_tag = None
 
     def connect(self):
+        failedConnectionAttempts = 0
  	sslOptions = {}
         try: 
           if config.use_ssl:
@@ -183,19 +184,28 @@ class RabbitMQConsumer(Thread):
 	except Exception as e:
 	  logging.error("Could not read SSL files")
 	  logging.error(e)
-        try:
-            return pika.SelectConnection(pika.ConnectionParameters(
-						host=config.amqp_server_url,
-                                                port=config.amqp_port,
-                                                ssl=config.use_ssl,
-                                                ssl_options = sslOptions
-					     ),
-                                             self.on_connection_open,
-                                             stop_ioloop_on_close=False)
-        except pika.exceptions.AMQPConnectionError as e:
-            logging.error("Could not connect to AMQP Server. Retrying in 30 seconds...")
-            sleep(30)
-            self.run()
+        # tries to establish a connection with AMQP server
+        # will retry a number of times before passing the exception up
+        while True:
+          try:
+            connection = pika.SelectConnection(pika.ConnectionParameters(
+                                                 host=config.amqp_server_url,
+                                                 port=config.amqp_port,
+                                                 ssl=config.use_ssl,
+                                                 ssl_options = sslOptions
+                                               ),
+                                               self.on_connection_open,
+                                               stop_ioloop_on_close=False)
+            return connection
+          except pika.exceptions.AMQPConnectionError as e:
+            failedConnectionAttempts += 1
+            if failedConnectionAttempts >= config.error_reconnect_attempts:
+              logging.error("Was not able to establish connection to AMQP server after {0} attempts.".format(failedConnectionAttempts))
+              logging.error(e)
+              raise e
+            logging.error("Could not connect to AMQP Server. Retrying in {0} seconds...".format(config.error_reconnect_time))
+            sleep(config.error_reconnect_time)
+            continue
 
     def close_connection(self):
         self._connection.close()
