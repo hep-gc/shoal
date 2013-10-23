@@ -1,5 +1,6 @@
 import re
 import json
+from os.path import abspath
 
 
 def parseValue(val):
@@ -15,7 +16,7 @@ def parseValue(val):
           return unicode(val.strip("\""))
 
 #read the shoal server data (will be curl)
-f=open("/root/10", "r")
+f=open(abspath("./testShoalData"), "r")
 jStr = f.read()
 f.close()
 
