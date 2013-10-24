@@ -21,7 +21,8 @@ config.setup()
 
 # Time interval to send data
 INTERVAL = config.interval
-PRIVATE_ADDRESS = ('10.','172.','192.')
+privAddressList = ['172.' + str(x) for x in range(16,32)] + ['10.', '192.168.']
+PRIVATE_ADDRESS = tuple(privAddressList)
 LOG_FORMAT = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
 
 def amqp_send(data, topics=['info']):
