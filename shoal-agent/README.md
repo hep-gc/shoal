@@ -31,11 +31,11 @@ _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/sho
  - `chkconfig --add shoal_agent`
  - `chkconfig shoal_agent on` 
 
-###Using Git
-1. `git clone git://github.com/hep-gc/shoal.git`
-2. `cd shoal/shoal-agent/`
+###Check out from Github
+1. `git clone git://github.com/hep-gc/shoal/trunk/shoal-agent` or `svn co https://github.com/hep-gc/shoal/trunk/shoal-agent`
+2. `cd shoal-agent/`
 3. `python setup.py install`
-4. Adjust config file located at `/etc/shoal/shoal_agent.conf` or `~/.shoal/shoal_agent.conf`
+4. Adjust config file located at `/etc/shoal/shoal_agent.conf` or `shoal-agent/shoal_agent.conf`
 5. Confirm `shoal-agent` runs.
 6. Add Shoal Agent to chkconfig or similiar service. 
  - `chkconfig --add shoal_agent`
