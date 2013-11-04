@@ -15,7 +15,7 @@ With the basic `shoal_agent` init script you can do the following:
 
 ##Installation
 
- _**Note**: Requires you have a working RabbitMQ AMQP Server, and Python 2.6+_
+ _**Note**: Requires you have Python 2.6+, and the pika python module (available from EPEL)._
 
 _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if sudo was used_
 
