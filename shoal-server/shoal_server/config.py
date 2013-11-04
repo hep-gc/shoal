@@ -51,10 +51,13 @@ def setup(path=None):
 
     # find config file
     if not path:
-        if exists("/etc/shoal/shoal_server.conf"):
+        # this heavily relies on the directory structure of shoal not changing
+        if exists(abspath(realpath(__file__)+"/../shoal_server.conf")):
+            path = abspath(realpath(__file__)+"/../shoal_server.conf")
+        elif exists("/etc/shoal/shoal_server.conf"):
             path = "/etc/shoal/shoal_server.conf"
-        elif exists(abspath(homedir + "/shoal/shoal-server/shoal_server.conf")):
-            path = abspath(homedir + "/shoal/shoal-server/shoal_server.conf")
+        elif exists(abspath(homedir + "/.shoal/shoal_server.conf")):
+            path = abspath(homedir + "/.shoal/shoal_server.conf")
         else:
             print >> sys.stderr, "Configuration file problem: There doesn't " \
                   "seem to be a configuration file. " \

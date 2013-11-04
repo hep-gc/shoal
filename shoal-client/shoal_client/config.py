@@ -20,10 +20,13 @@ def setup(path=None):
     homedir = expanduser('~')
     # find config file
     if not path:
-        if exists("/etc/shoal/shoal_client.conf"):
+        # this heavily relies on the directory structure of shoal not changing
+        if exists(abspath(realpath(__file__)+"/../shoal_client.conf")):
+            path = abspath(realpath(__file__)+"/../shoal_client.conf")
+        elif exists("/etc/shoal/shoal_client.conf"):
             path = "/etc/shoal/shoal_client.conf"
-        elif exists(abspath(homedir + "/shoal/shoal-client/shoal_client.conf")):
-            path =  abspath(homedir + "/shoal/shoal-client/shoal_client.conf")
+        elif exists(abspath(homedir + "/.shoal/shoal_client.conf")):
+            path =  abspath(homedir + "/.shoal/shoal_client.conf")
         else:
             print >> sys.stderr, "Configuration file problem: There doesn't " \
                   "seem to be a configuration file. " \
