@@ -14,7 +14,7 @@ retrieve an ordered list of the nearest squids. The diagram below should give yo
 
 ## Components
 
-**shoal-server** maintains the list of running squids. It uses RabbitMQ to handle incomming AMQP messages from 
+**shoal-server** maintains the list of running squids. It uses RabbitMQ to handle incoming AMQP messages from 
 squid servers. It provides a REST interface for programatically retrieving a json formatted ordered list of squids.
 It also provides a web interface for viewing the list.
 
