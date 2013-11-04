@@ -20,7 +20,7 @@ With the basic `shoal_agent` init script you can do the following:
 _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if sudo was used_
 
 ###Prerequisites
-1. [http://fedoraproject.org/wiki/EPEL](Install EPEL)
+1. [Install EPEL](http://fedoraproject.org/wiki/EPEL)
 2. `yum install python-pika python-netifaces`
 
 ###Method 1: Using Pip
