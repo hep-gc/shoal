@@ -7,9 +7,7 @@ import logging
 
 # set default values
 shoal_server_url = 'http://localhost:8080/nearest'
-cvmfs_config = '/etc/cvmfs/default.local'
 default_squid_proxy   = ""
-default_config_format = ""
 
 def setup(path=None):
     """Setup shoal using config file.
@@ -17,7 +15,6 @@ def setup(path=None):
        or ~/.shoal/shoal_client.conf
     """
     global shoal_server_url
-    global cvmfs_config
     global default_squid_proxy
 
     homedir = expanduser('~')
@@ -54,10 +51,6 @@ def setup(path=None):
     if config_file.has_option("general", "shoal_server_url"):
         shoal_server_url = config_file.get("general",
                                                 "shoal_server_url")
-
-    if config_file.has_option("general", "cvmfs_config"):
-        cvmfs_config = config_file.get("general",
-                                                "cvmfs_config")
 
     if config_file.has_option("general", "default_squid_proxy"):
         default_squid_proxy = config_file.get("general",
