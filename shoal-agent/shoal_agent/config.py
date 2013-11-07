@@ -1,4 +1,4 @@
-from os.path import exists, join, expanduser, abspath, realpath
+from os.path import exists, join, expanduser, abspath
 import sys
 import ConfigParser
 import logging
@@ -42,9 +42,9 @@ def setup(path=None):
 
     # find config file
     if not path:
-        # this heavily relies on the directory structure of shoal not changing
-        if exists(abspath(realpath(__file__)+"/../shoal_agent.conf")):
-            path = abspath(realpath(__file__)+"/../shoal_agent.conf")
+        # check the directory of the calling script 
+        if  exists(abspath(sys.path[0]+"/shoal_agent.conf")):
+            path = abspath(sys.path[0]+"/shoal_agent.conf")
         elif exists("/etc/shoal/shoal_agent.conf"):
             path = "/etc/shoal/shoal_agent.conf"
         elif exists(abspath(homedir + "/.shoal/shoal_agent.conf")):
