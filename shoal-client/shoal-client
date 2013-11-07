@@ -17,27 +17,34 @@ from urllib2 import urlopen
 
 config.setup()
 server = config.shoal_server_url
+cvmfs_config = config.cvmfs_config
 default_http_proxy = config.default_squid_proxy
 
 data = None
+dump = False 
 closest_http_proxy = ''
-cvmfs_http_proxy = ""
+cvmfs_http_proxy = "CVMFS_HTTP_PROXY="
 
 logging.basicConfig(filename="shoal_client.log", format='%(asctime)s %(message)s')
 
 def get_args():
 
     global server
+    global dump
 
     p = OptionParser()
     p.add_option("-s", "--server", action="store", type="string", dest="server", 
                  help="Also needs string for specifying the shoal server to use. " +
 		      "Takes presedence over the option in config file")
-
+    p.add_option("-d", "--dump", action="store_true", dest="dump",
+                 help="Print closest proxies to terminal for debugging "+ 
+                      "instead of over writing the CVMFS config file")
     (options, args) = p.parse_args()
 
     if options.server:
         server = options.server
+    if options.dump:
+        dump = True
 
 def convertServerData(val):
     if val.isdigit():
@@ -76,6 +83,8 @@ def parseServerData(jsonStr):
     outDict[unicode(str(i))] = {}
     outDict[unicode(str(i))][unicode("geo_data")] = {}
 
+  # TODO probably don't need seperate regexes
+  # test using geodata one for both
   for dataType in dataTypes:
     p = re.compile("\""+dataType+"\": ([^,]+)[,|}]")
     dataList = p.findall(jsonStr)
@@ -108,5 +117,42 @@ if data:
             logging.error("The data returned from '%s' was missing the key: %s. Please ensure the url is running the latest Shoal-Server." % (server, e))
             sys.exit(1)
 
-cvmfs_http_proxy += closest_http_proxy + default_http_proxy
-print cvmfs_http_proxy
+cvmfs_http_proxy += closest_http_proxy + default_http_proxy + "\n"
+
+if dump:
+    print "%s would have been written to the CVMFS config file", cvmfs_http_proxy
+else:
+    # attempt to read the cvmfs_config file, no point in continuing if it can't be read
+    try:
+        f = open(cvmfs_config)
+        lines = f.readlines()
+    except:
+        logging.error("Could not open and read the CVMFS config file")
+        sys.exit(1)
+    f.close()
+    # create a list of tuples of lines/line numbers that have "CVMFS_HTTP_PROXY" 
+    CVMFS_proxy_lines = [t for t in enumerate(lines) if "CVMFS_HTTP_PROXY" in t[1]]
+    # if there is only one can just replace it with the new proxy
+    if len(CVMFS_proxy_lines) == 1:
+        lines[CVMFS_proxy_lines[0][0]] = cvmfs_http_proxy
+    # add a line if it doesn't exist
+    elif len(CVMFS_proxy_lines) == 0:
+        lines += cvmfs_http_proxy
+    # something is wrong with the CVMFS config; there are multiple entries
+    # fixing it by changing the first and removing the extras
+    else:
+        logging.error("CVMFS file had duplicate CVMFS_HTTP_PROXY entries;" +
+                      " writing the first deleting the rest")
+        lines[CVMFS_proxy_lines[0][0]] = cvmfs_http_proxy
+        for line in CVMFS_proxy_lines[1:]:
+            lines[line[0]] = ""
+    # open the file again this time for writing and replace its contents with the modified lines
+    try:
+        try:
+            f = open(cvmfs_config, "w")
+            f.writelines(lines)
+        except Exception:
+            logging.error("Could not write CVMFS config file")
+    finally:
+            f.close()
+

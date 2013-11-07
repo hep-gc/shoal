@@ -1,4 +1,4 @@
-from os.path import exists, join, expanduser, abspath
+from os.path import exists, join, expanduser, abspath, realpath
 import sys
 import ConfigParser
 import logging
@@ -7,6 +7,7 @@ import logging
 
 # set default values
 shoal_server_url = 'http://localhost:8080/nearest'
+cvmfs_config = "/etc/cvmfs/default.local"
 default_squid_proxy   = ""
 
 def setup(path=None):
@@ -15,14 +16,15 @@ def setup(path=None):
        or ~/.shoal/shoal_client.conf
     """
     global shoal_server_url
+    global cvmfs_config
     global default_squid_proxy
 
     homedir = expanduser('~')
     # find config file
     if not path:
-        # this heavily relies on the directory structure of shoal not changing
-        if exists(abspath(realpath(__file__)+"/../shoal_client.conf")):
-            path = abspath(realpath(__file__)+"/../shoal_client.conf")
+        # check the directory of the calling script 
+        if  exists(abspath(sys.path[0]+"/shoal_client.conf")):
+            path = abspath(sys.path[0]+"/shoal_client.conf")
         elif exists("/etc/shoal/shoal_client.conf"):
             path = "/etc/shoal/shoal_client.conf"
         elif exists(abspath(homedir + "/.shoal/shoal_client.conf")):
@@ -54,6 +56,9 @@ def setup(path=None):
     if config_file.has_option("general", "shoal_server_url"):
         shoal_server_url = config_file.get("general",
                                                 "shoal_server_url")
+    if config_file.has_option("general", "cvmfs_config"):
+        cvmfs_config = config_file.get("general",
+                                                "cvmfs_config")
 
     if config_file.has_option("general", "default_squid_proxy"):
         default_squid_proxy = config_file.get("general",
