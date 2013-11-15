@@ -11,6 +11,7 @@ import pika
 import time
 import netifaces
 import uuid
+import signal
 import socket
 import logging
 import urllib
@@ -24,6 +25,13 @@ INTERVAL = config.interval
 privAddressList = ['172.' + str(x) for x in range(16,32)] + ['10.', '192.168.']
 PRIVATE_ADDRESS = tuple(privAddressList)
 LOG_FORMAT = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
+
+def SIGTERM_handler(signal, frame):
+    """
+       Catches sigterm sent by the start-stop script when running shoal agent as a service. Allows logging be
+    """
+    logging.info("shoal-agent exiting")
+    sys.exit(0)
 
 def amqp_send(data, topics=['info']):
     """
@@ -154,6 +162,10 @@ def main():
         logging.error("Unable to automatically detect interface to monitor, please set the interface to monitor in configuration file.")
         sys.exit(1)
 
+    # enable the sigterm signal handler to log before exit
+    signal.signal(signal.SIGTERM, SIGTERM_handler)
+
+    logging.info("shoal-agent configured, starting up")
     while True:
 	# only time/load are expected to change
         # private/public/external IPs are kept constant while shoal-agent is running
@@ -163,10 +175,12 @@ def main():
             data['load'] = get_load_data(interface)
             try:
                 amqp_send(json.dumps(data))
+                logging.debug("heartbeat sent to shoal-server sucessfully")
             except pika.exceptions.AMQPConnectionError as e:
                 logging.error("Could not connect to AMQP Server. Attempting to connect in {0}s...".format(INTERVAL))
             time.sleep(INTERVAL)
         except KeyboardInterrupt, KeyError:
+            logging.info("shoal-agent exiting")
             sys.exit()
 
 if __name__ == '__main__':
