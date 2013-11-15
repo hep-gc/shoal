@@ -12,6 +12,7 @@ EXECUTABLEPATH="shoal-agent"
 # Non-default python.
 PYTHON=""
 
+USER=nobody
 SERVICE=shoal_agent
 LOG=/var/log/${SERVICE}.log
 PIDFILE=/var/run/$SERVICE.pid
@@ -31,10 +32,8 @@ done
 start () {
     if [ -f $PIDFILE ]; then
         PID=`cat $PIDFILE`
-        ps $PID >/dev/null
-
+        ps -p $PID >/dev/null
         if [ $? -eq 0 ]; then
-            PID=`cat $PIDFILE`
             echo $"$SERVICE is already running with PID ${PID}."
             return 1
         else
@@ -42,20 +41,20 @@ start () {
             rm -f $PIDFILE
         fi
     fi
-    echo "Starting $EXECUTABLEPATH"
-    ${PYTHON} ${EXECUTABLEPATH} >> $LOG 2>&1 &
+    echo "Starting $EXECUTABLEPATH:"
+    /sbin/runuser -l -s /bin/bash "${USER}" -c "${EXECUTABLEPATH}" >> $LOG 2>&1 &
     echo $! > $PIDFILE
 }
 
 # stop [signum]
 stop () {
     if [ -f $PIDFILE ]; then
-        echo -n $"Stopping $SERVICE:"
+        echo $"Stopping $SERVICE:"
         PID=`cat $PIDFILE`
-        /bin/kill $PID
+        /sbin/runuser -l -s /bin/bash "${USER}" -c "/usr/bin/pkill -P ${PID}"
         while ps -p $PID >/dev/null; do sleep 1; done
         if [ $? -eq 0 ]; then
-            rm -f $PIDFILE >/dev/null 2>&1
+            rm -f $PIDFILE
         fi
     fi
 }
@@ -63,8 +62,7 @@ stop () {
 status () {
         if [ -f $PIDFILE ]; then
             PID=`cat $PIDFILE`
-            ps $PID >/dev/null
-
+            ps -p $PID >/dev/null
             if [ $? -eq 0 ]; then
                 PID=`cat $PIDFILE`
                 echo $"$SERVICE is running with PID ${PID}."
@@ -78,10 +76,11 @@ status () {
 
 forcekill () {
     if [ -f $PIDFILE ]; then
-        echo -n $"Killing $SERVICE:"
-        /bin/kill -9 `cat $PIDFILE`
+        echo $"Killing $SERVICE:"
+        PID=`cat $PIDFILE`
+        /sbin/runuser -l -s /bin/bash "${USER}" -c "/usr/bin/pkill -SIGKILL -P ${PID}"
         if [ $? -eq 0 ]; then
-            rm -f $PIDFILE >/dev/null 2>&1
+            rm -f $PIDFILE
         fi
     fi
 }
@@ -106,4 +105,3 @@ case $COMMAND in
         exit 1
         ;;
 esac
-
