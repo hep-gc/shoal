@@ -338,7 +338,12 @@ class RabbitMQConsumer(Thread):
             private_ip = data['private_ip']
         except KeyError:
             pass
-        if key in self.shoal or public_ip in self.shoal.values() or private_ip in self.shoal.values():
+        for squid in self.shoal.values():
+           if squid.public_ip == public_ip or squid.private_ip == private_ip:
+              squid.update(load)
+              self.acknowledge_message(basic_deliver.delivery_tag)
+              return
+        if key in self.shoal:
             self.shoal[key].update(load)
         elif (curr - time_sent < self.INACTIVE) and (public_ip or private_ip):
             geo_data = utilities.get_geolocation(public_ip)
