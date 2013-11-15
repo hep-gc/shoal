@@ -338,7 +338,7 @@ class RabbitMQConsumer(Thread):
             private_ip = data['private_ip']
         except KeyError:
             pass
-        if key in self.shoal:
+        if key in self.shoal or public_ip in self.shoal.values() or private_ip in self.shoal.values():
             self.shoal[key].update(load)
         elif (curr - time_sent < self.INACTIVE) and (public_ip or private_ip):
             geo_data = utilities.get_geolocation(public_ip)
