@@ -19,27 +19,24 @@ With the basic `shoal_agent` init script you can do the following:
 
 _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if sudo was used_
 
-###Prerequisites
+
+###Recommended Method: Use YUM
+1. [Install EPEL](http://fedoraproject.org/wiki/EPEL)
+2. `wget http://shoal.heprc.uvic.ca/repo/shoal.repo`
+3. `sudo mv shoal.repo /etc/yum.repos.d/`
+4. `sudo yum install shoal-agent`
+5. Configure `/etc/shoal/shoal_agent.conf` as needed
+6. Create `/var/log/shoal_agent.log` and chown it to the appropriate user
+7. `sudo service shoal_agent start`
+8. `sudo /sbin/chkconfig --add shoal_agent`
+
+###Other Methods
 1. [Install EPEL](http://fedoraproject.org/wiki/EPEL)
 2. `yum install python-pika python-netifaces`
+3. Use either Pip OR checkout from Github:
+ - Using Pip: `pip install shoal-agent` 
+ - Using Github: `svn co https://github.com/hep-gc/shoal/trunk/shoal-agent` and `python setup.py install`
+4. Modify the settings in `shoal_agent.conf` as needed.
+5. If the installation is not in a system location, the init script could be used if modified
+6. Otherwise, use the init script and chkconfig to start Shoal. 
 
-###Method 1: Using Pip
-1. `pip install shoal-agent`
-2. Modify the settings in `shoal_agent.conf` as needed.
-3. If sudo was used `chmod +x /etc/init.d/shoal_agent`.
- - May need to adjust values in init.d script to point at `shoal-agent` script and usable Python path.
-
-4. Start Shoal Agent `service shoal_agent start` or `shoal-agent` and confirm it works.
-5. Add Shoal Agent to chkconfig or similiar service. 
- - `chkconfig --add shoal_agent`
- - `chkconfig shoal_agent on` 
-
-###Method 2: Check out from Github
-1. `git clone git://github.com/hep-gc/shoal/trunk/shoal-agent` or `svn co https://github.com/hep-gc/shoal/trunk/shoal-agent`
-2. `cd shoal-agent/`
-3. `python setup.py install`
-2. Modify the settings in `shoal_agent.conf` as needed.
-5. Confirm `shoal-agent` runs.
-6. Add Shoal Agent to chkconfig or similiar service. 
- - `chkconfig --add shoal_agent`
- - `chkconfig shoal_agent on`
