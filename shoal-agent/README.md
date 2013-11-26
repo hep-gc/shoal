@@ -17,8 +17,12 @@ With the basic `shoal_agent` init script you can do the following:
 
  _**Note**: Requires you have Python 2.6+, and the pika python module (available from EPEL)._
 
-_**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if sudo was used_
+_**Note**: Shoal config files will be located either at `/etc/shoal/` or `~/.shoal/` depending on the installation method_
 
+If YUM is used to install the Shoal RPM, then the Shoal agent files will be placed in the standard system locations.
+Otherwise, Shoal can be installed in e.g. your home directory without needing root privileges.
+
+In either case, the Shoal agent does not require root privilege to run. The init script uses the `nobody` user by default, although this is adjustable.
 
 ###Recommended Method: Use YUM
 1. [Install EPEL](http://fedoraproject.org/wiki/EPEL)
