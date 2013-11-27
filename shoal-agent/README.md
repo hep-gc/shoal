@@ -2,37 +2,51 @@
 
 ##Basic Commands
 With the basic `shoal_agent` init script you can do the following:
-- Start Shoal Agent
- - `service shoal_agent start`
-- Stop Shoal Agent
- - `service shoal_agent stop` 
-- Restart Shoal Agent
- - `service shoal_agent reload` 
-- Status of Shoal Agent
- - `service shoal_agent status` 
-- Force restart Shoal Agent
- - `service shoal_agent force-restart`
+
+```
+service shoal_agent start
+service shoal_agent stop
+service shoal_agent reload 
+service shoal_agent status
+service shoal_agent force-restart
+```
 
 ##Installation
+
+The **best** way to install is with yum using our provided repositories. The imapatient should skip to the Recomeneded Method section below.
+
+If yum is used to install the Shoal RPM, then the Shoal agent files will be placed in the standard system locations.
+Otherwise, Shoal can be installed your home directory without needing root privileges (or anywhere else).
+
+In either case, the Shoal agent does not require root privilege to run. The init script uses the `nobody` user by default, although this is adjustable.
 
  _**Note**: Requires you have Python 2.6+, and the pika python module (available from EPEL)._
 
 _**Note**: Shoal config files will be located either at `/etc/shoal/` or `~/.shoal/` depending on the installation method_
 
-If YUM is used to install the Shoal RPM, then the Shoal agent files will be placed in the standard system locations.
-Otherwise, Shoal can be installed in e.g. your home directory without needing root privileges.
+###Recommended Method: Use yum
 
-In either case, the Shoal agent does not require root privilege to run. The init script uses the `nobody` user by default, although this is adjustable.
+First install [EPEL](http://fedoraproject.org/wiki/EPEL)
 
-###Recommended Method: Use YUM
-1. [Install EPEL](http://fedoraproject.org/wiki/EPEL)
-2. `wget http://shoal.heprc.uvic.ca/repo/prod/shoal.repo`
-3. `sudo mv shoal.repo /etc/yum.repos.d/`
-4. `sudo yum install shoal-agent`
-5. Configure `/etc/shoal/shoal_agent.conf` as needed
-6. Create `/var/log/shoal_agent.log` and chown it to the appropriate user
-7. `sudo service shoal_agent start`
-8. `sudo /sbin/chkconfig --add shoal_agent`
+    sudo yum install yum-conf-epel
+    sudo yum update
+
+Get the Shoal yum repository:
+
+    sudo curl http://shoal.heprc.uvic.ca/repo/prod/shoal.repo -o /etc/yum.repos.d/shoal.repo
+   
+Install the agent:
+
+    sudo yum install shoal-agent
+
+Configure the agent and start it:
+
+    vim /etc/shoal/shoal_agent.conf`
+    touch /var/log/shoal_agent.log
+    chown nobody:nobody /var/log/shoal_agent.log
+    sudo service shoal_agent start
+    sudo /sbin/chkconfig --add shoal_agent
+
 
 ###Other Methods
 1. [Install EPEL](http://fedoraproject.org/wiki/EPEL)
