@@ -48,56 +48,56 @@ def get_args():
 
 def convertServerData(val):
     if val.isdigit():
-      return int(val)
+        return int(val)
     else:
-      try:
-        return float(val)
-      except:
-        if "null" in val:
-          return None
-        else:
-          return unicode(val.strip("\""))
+        try:
+            return float(val)
+        except:
+            if "null" in val:
+                return None
+            else:
+                return unicode(val.strip("\""))
 
 # TODO is this parser sufficient or should a full JSON parser be implemented?
 # Seperating out the list of properties should be done but does support
 #  for arbitrary json strings add anything?
 def parseServerData(jsonStr):
 
-  # TODO should load this from a config file as it has to match the server
-  # Nested properties (i.e geo_data) needs to be handled seperatly
-  dataTypes    = ["load",        "distance", "squid_port", "last_active", "created",      \
-                  "external_ip", "hostname", "public_ip",  "private_ip"]
+    # TODO should load this from a config file as it has to match the server
+    # Nested properties (i.e geo_data) needs to be handled seperatly
+    dataTypes    = ["load",        "distance", "squid_port", "last_active", "created",      \
+                    "external_ip", "hostname", "public_ip",  "private_ip"]
 
-  geoDataTypes = ["city",       "region_name",   "area_code",    "time_zone", "dma_code", \
-                  "metro_code", "country_code3", "latitude",     "postal_code",           \
-                  "longitude",  "country_code",  "country_name", "continent"]
+    geoDataTypes = ["city",       "region_name",   "area_code",    "time_zone", "dma_code", \
+                    "metro_code", "country_code3", "latitude",     "postal_code",           \
+                    "longitude",  "country_code",  "country_name", "continent"]
 
-  # don't really care about data here
-  # it is just a simple way to get number of nearest squids
-  p = re.compile("\""+dataTypes[0]+"\": ([^,}]+)")
-  numNearestSquids = len(p.findall(jsonStr))
+    # don't really care about data here
+    # it is just a simple way to get number of nearest squids
+    p = re.compile("\""+dataTypes[0]+"\": ([^,}]+)")
+    numNearestSquids = len(p.findall(jsonStr))
   
-  # initalize the dictionaries
-  outDict = {}
-  for i in range(0, numNearestSquids):
-    outDict[unicode(str(i))] = {}
-    outDict[unicode(str(i))][unicode("geo_data")] = {}
+    # initalize the dictionaries
+    outDict = {}
+    for i in range(0, numNearestSquids):
+        outDict[unicode(str(i))] = {}
+        outDict[unicode(str(i))][unicode("geo_data")] = {}
 
-  # TODO probably don't need seperate regexes
-  # test using geodata one for both
-  for dataType in dataTypes:
-    p = re.compile("\""+dataType+"\": ([^,]+)[,|}]")
-    dataList = p.findall(jsonStr)
-    for i, val in enumerate(dataList):
-      outDict[unicode(str(i))][unicode(dataType)] = convertServerData(val)
+    # TODO probably don't need seperate regexes
+    # test using geodata one for both
+    for dataType in dataTypes:
+        p = re.compile("\""+dataType+"\": ([^,]+)[,|}]")
+        dataList = p.findall(jsonStr)
+        for i, val in enumerate(dataList):
+            outDict[unicode(str(i))][unicode(dataType)] = convertServerData(val)
 
-  for geoDataType in geoDataTypes:
-    p = re.compile("\""+geoDataType+"\": (\"[^\"]*|[^,]*)")
-    dataList = p.findall(jsonStr)
-    for i, val in enumerate(dataList):
-      outDict[unicode(str(i))][unicode("geo_data")][unicode(geoDataType)] = convertServerData(val)
+    for geoDataType in geoDataTypes:
+        p = re.compile("\""+geoDataType+"\": (\"[^\"]*|[^,]*)")
+        dataList = p.findall(jsonStr)
+        for i, val in enumerate(dataList):
+            outDict[unicode(str(i))][unicode("geo_data")][unicode(geoDataType)] = convertServerData(val)
 
-  return outDict
+    return outDict
 
 get_args()
 
