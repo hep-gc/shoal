@@ -26,7 +26,7 @@ In either case, the Shoal agent does not require root privilege to run. The init
 
 ###Recommended Method: Use YUM
 1. [Install EPEL](http://fedoraproject.org/wiki/EPEL)
-2. `wget http://shoal.heprc.uvic.ca/repo/shoal.repo`
+2. `wget http://shoal.heprc.uvic.ca/repo/prod/shoal.repo`
 3. `sudo mv shoal.repo /etc/yum.repos.d/`
 4. `sudo yum install shoal-agent`
 5. Configure `/etc/shoal/shoal_agent.conf` as needed
