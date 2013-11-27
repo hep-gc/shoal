@@ -21,8 +21,8 @@ else:
     # if root install the init.d scripts.
     # check for preexisiting initd script
     initd_dir = "/etc/init.d/"
-    initd_script = "scripts/shoal_agent"
-    if not isfile(initd_dir + "shoal_agent"):
+    initd_script = "scripts/shoal-agent"
+    if not isfile(initd_dir + "shoal-agent"):
         data_files += [(initd_dir, [initd_script])]
 
 config_file = "shoal_agent.conf"
