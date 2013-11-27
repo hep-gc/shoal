@@ -145,7 +145,7 @@ def main():
         try:
             data['external_ip'] = external_ip
         except KeyError:
-            #not sure this is needed, if it doesn't exist 
+            #not sure this is needed, if the key doesn't exist it will be created
             pass
     else:
         logging.error("Shoal-Agent was unable to find a public IP or external IP for this squid. Please set an external IP in shoal-agent config file.")
