@@ -1,4 +1,4 @@
-from os.path import join, expanduser, exists
+from os.path import join, expanduser, exists, abspath
 import sys
 import ConfigParser
 
@@ -11,12 +11,19 @@ geolitecity_url = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCit
 geolitecity_update = 2592000
 squid_cleanse_interval = 15
 squid_inactive_time = 180
-amqp_server_url = 'amqp://guest:guest@localhost:5672'
+amqp_server_url = 'localhost'
+amqp_port       = 5672
 amqp_virtual_host = '/'
 amqp_exchange = 'shoal'
 amqp_exchange_type = 'topic'
+use_ssl = False
+amqp_ca_cert     = ''
+amqp_client_cert = ''
+amqp_client_key  = ''
 webpy_cache = False
 log_file = '/var/log/shoal_server.log'
+error_reconnect_time = 30
+error_reconnect_attempts = 10
 
 def setup(path=None):
     """Setup shoal using config file.
@@ -32,17 +39,25 @@ def setup(path=None):
     global amqp_virtual_host
     global amqp_exchange
     global amqp_exchange_type
+    global amqp_ca_cert     
+    global amqp_client_cert 
+    global amqp_client_key  
     global webpy_cache
-    global log_file
+    global log_file   
+    global error_reconnect_time 
+    global error_reconnect_attempts 
 
     homedir = expanduser('~')
 
     # find config file
     if not path:
-        if exists("/etc/shoal/shoal_server.conf"):
+        # check the directory of the calling script
+        if  exists(abspath(sys.path[0]+"/shoal_server.conf")):
+            path = abspath(sys.path[0]+"/shoal_server.conf")
+        elif exists("/etc/shoal/shoal_server.conf"):
             path = "/etc/shoal/shoal_server.conf"
-        elif exists(join(homedir, '.shoal/shoal_server.conf')):
-            path = join(homedir, '.shoal/shoal_server.conf')
+        elif exists(abspath(homedir + "/.shoal/shoal_server.conf")):
+            path = abspath(homedir + "/.shoal/shoal_server.conf")
         else:
             print >> sys.stderr, "Configuration file problem: There doesn't " \
                   "seem to be a configuration file. " \
@@ -112,6 +127,9 @@ def setup(path=None):
         amqp_server_url = config_file.get("rabbitmq",
                                                 "amqp_server_url")
 
+    if config_file.has_option("rabbitmq", "amqp_port"):
+        amqp_port = config_file.getint("rabbitmq", "amqp_port")
+
     if config_file.has_option("rabbitmq", "amqp_virtual_host"):
         amqp_virtual_host = config_file.get("rabbitmq",
                                                 "amqp_virtual_host")
@@ -123,6 +141,17 @@ def setup(path=None):
     if config_file.has_option("rabbitmq", "amqp_exchange_type"):
         amqp_exchange_type = config_file.get("rabbitmq",
                                                 "amqp_exchange_type")
+
+    if config_file.has_option("rabbitmq", "use_ssl") and config_file.getboolean("rabbitmq", "use_ssl"):
+        try:
+	  use_ssl = True
+          amqp_ca_cert     = abspath(config_file.get("rabbitmq", "amqp_ca_cert"))
+          amqp_client_cert = abspath(config_file.get("rabbitmq", "amqp_client_cert"))
+          amqp_client_key  = abspath(config_file.get("rabbitmq", "amqp_client_key"))
+        except Exception as e:
+	  print "Configuration file problem: could not load SSL certs"
+	  print e
+	  sys.exit(1)
 
     if config_file.has_option("webpy", "webpy_cache"):
         try:
@@ -136,3 +165,15 @@ def setup(path=None):
     if config_file.has_option("logging", "log_file"):
         log_file = config_file.get("logging",
                                         "log_file")
+
+    if config_file.has_option("error", "error_reconnect_time"):
+        try:
+            error_reconnect_time = config_file.getint("error", "error_reconnect_time")
+        except ValueError:
+            print "Configuration file problem: error_reconnect_time must be an integer"
+
+    if config_file.has_option("error", "error_reconnect_attempts"):
+        try:
+            error_reconnect_attempts = config_file.getint("error", "error_reconnect_attempts")
+        except ValueError:
+            print "Configuration file problem: error_reconnect_attempts must be an integer"

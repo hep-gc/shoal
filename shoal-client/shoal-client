@@ -4,8 +4,9 @@
 """
 import urllib2
 import sys
+# import json
+import re
 import os
-import simplejson as json
 import logging
 import time
 
@@ -18,12 +19,13 @@ config.setup()
 server = config.shoal_server_url
 cvmfs_config = config.cvmfs_config
 default_http_proxy = config.default_squid_proxy
-default_conf = config.default_config_format
 
 data = None
-dump = False
+dump = False 
 closest_http_proxy = ''
-cvmfs_http_proxy = "\nCVMFS_HTTP_PROXY="
+cvmfs_http_proxy = "CVMFS_HTTP_PROXY="
+
+logging.basicConfig(filename="shoal_client.log", format='%(asctime)s %(message)s')
 
 def get_args():
 
@@ -31,9 +33,12 @@ def get_args():
     global dump
 
     p = OptionParser()
-    p.add_option("-d", "--dump", action="store_true", dest="dump")
-    p.add_option("-s", "--server", action="store", type="string", dest="server")
-
+    p.add_option("-s", "--server", action="store", type="string", dest="server", 
+                 help="Also needs string for specifying the shoal server to use. " +
+		      "Takes presedence over the option in config file")
+    p.add_option("-d", "--dump", action="store_true", dest="dump",
+                 help="Print closest proxies to terminal for debugging "+ 
+                      "instead of over writing the CVMFS config file")
     (options, args) = p.parse_args()
 
     if options.server:
@@ -41,17 +46,68 @@ def get_args():
     if options.dump:
         dump = True
 
-get_args()
+def convertServerData(val):
+    if val.isdigit():
+        return int(val)
+    else:
+        try:
+            return float(val)
+        except:
+            if "null" in val:
+                return None
+            else:
+                return unicode(val.strip("\""))
 
-if not os.path.exists(cvmfs_config):
-    logging.error("'%s' does not exist, is cvmfs installed? Please check config file." % cvmfs_config)
-    sys.exit(1)
+# TODO is this parser sufficient or should a full JSON parser be implemented?
+# Seperating out the list of properties should be done but does support
+#  for arbitrary json strings add anything?
+def parseServerData(jsonStr):
+
+    # TODO should load this from a config file as it has to match the server
+    # Nested properties (i.e geo_data) needs to be handled seperatly
+    dataTypes    = ["load",        "distance", "squid_port", "last_active", "created",      \
+                    "external_ip", "hostname", "public_ip",  "private_ip"]
+
+    geoDataTypes = ["city",       "region_name",   "area_code",    "time_zone", "dma_code", \
+                    "metro_code", "country_code3", "latitude",     "postal_code",           \
+                    "longitude",  "country_code",  "country_name", "continent"]
+
+    # don't really care about data here
+    # it is just a simple way to get number of nearest squids
+    p = re.compile("\""+dataTypes[0]+"\": ([^,}]+)")
+    numNearestSquids = len(p.findall(jsonStr))
+  
+    # initalize the dictionaries
+    outDict = {}
+    for i in range(0, numNearestSquids):
+        outDict[unicode(str(i))] = {}
+        outDict[unicode(str(i))][unicode("geo_data")] = {}
+
+    # TODO probably don't need seperate regexes
+    # test using geodata one for both
+    for dataType in dataTypes:
+        p = re.compile("\""+dataType+"\": ([^,]+)[,|}]")
+        dataList = p.findall(jsonStr)
+        for i, val in enumerate(dataList):
+            outDict[unicode(str(i))][unicode(dataType)] = convertServerData(val)
+
+    for geoDataType in geoDataTypes:
+        p = re.compile("\""+geoDataType+"\": (\"[^\"]*|[^,]*)")
+        dataList = p.findall(jsonStr)
+        for i, val in enumerate(dataList):
+            outDict[unicode(str(i))][unicode("geo_data")][unicode(geoDataType)] = convertServerData(val)
+
+    return outDict
+
+get_args()
 
 try:
     f = urlopen(server)
-    data = json.loads(f.read())
+    # data = json.loads(f.read())
+    data = parseServerData(f.read())
 except (urllib2.URLError,ValueError), e:
     logging.error("Unable to open url. %s" % e)
+    data = None
 
 if data:
     for i in range(0, len(data)):
@@ -61,16 +117,42 @@ if data:
             logging.error("The data returned from '%s' was missing the key: %s. Please ensure the url is running the latest Shoal-Server." % (server, e))
             sys.exit(1)
 
-    cvmfs_http_proxy += "\"" + closest_http_proxy + default_http_proxy + "\""
+cvmfs_http_proxy += closest_http_proxy + default_http_proxy + "\n"
 
-    default_conf += cvmfs_http_proxy
-
-    if dump:
-        print "\nThe following would be written to cvmfs config file located at '%s' (defined in shoal_client.conf):\n%s\n" % (cvmfs_config, default_conf)
+if dump:
+    print "%s would have been written to the CVMFS config file", cvmfs_http_proxy
+else:
+    # attempt to read the cvmfs_config file, no point in continuing if it can't be read
+    try:
+        f = open(cvmfs_config)
+        lines = f.readlines()
+    except:
+        logging.error("Could not open and read the CVMFS config file")
+        sys.exit(1)
+    f.close()
+    # create a list of tuples of lines/line numbers that have "CVMFS_HTTP_PROXY" 
+    CVMFS_proxy_lines = [t for t in enumerate(lines) if "CVMFS_HTTP_PROXY" in t[1]]
+    # if there is only one can just replace it with the new proxy
+    if len(CVMFS_proxy_lines) == 1:
+        lines[CVMFS_proxy_lines[0][0]] = cvmfs_http_proxy
+    # add a line if it doesn't exist
+    elif len(CVMFS_proxy_lines) == 0:
+        lines += cvmfs_http_proxy
+    # something is wrong with the CVMFS config; there are multiple entries
+    # fixing it by changing the first and removing the extras
     else:
-        f = open(cvmfs_config, "w")
-        f.write(default_conf)
-        f.close()
-elif dump:
-    print "There was no data returned from the url '%s'\n"\
-          "cvmfs config file located at '%s' (defined in shoal_client.conf) will be untouched" % (server, cvmfs_config)
+        logging.error("CVMFS file had duplicate CVMFS_HTTP_PROXY entries;" +
+                      " writing the first deleting the rest")
+        lines[CVMFS_proxy_lines[0][0]] = cvmfs_http_proxy
+        for line in CVMFS_proxy_lines[1:]:
+            lines[line[0]] = ""
+    # open the file again this time for writing and replace its contents with the modified lines
+    try:
+        try:
+            f = open(cvmfs_config, "w")
+            f.writelines(lines)
+        except Exception:
+            logging.error("Could not write CVMFS config file")
+    finally:
+            f.close()
+

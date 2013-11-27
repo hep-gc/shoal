@@ -1,4 +1,4 @@
-from os.path import exists, join, expanduser
+from os.path import exists, join, expanduser, abspath, realpath
 import sys
 import ConfigParser
 import logging
@@ -7,10 +7,8 @@ import logging
 
 # set default values
 shoal_server_url = 'http://localhost:8080/nearest'
-cvmfs_config = '/etc/cvmfs/default.local'
-default_squid_proxy = "\"http://chrysaor.westgrid.ca:3128;http://cernvm-webfs.atlas-canada.ca:3128;DIRECT\""
-default_config_format = "VMFS_REPOSITORIES=atlas.cern.ch,atlas-condb.cern.ch,grid.cern.ch\n" \
-                        "CVMFS_QUOTA_LIMIT=3500"
+cvmfs_config = "/etc/cvmfs/default.local"
+default_squid_proxy   = ""
 
 def setup(path=None):
     """Setup shoal using config file.
@@ -22,13 +20,15 @@ def setup(path=None):
     global default_squid_proxy
 
     homedir = expanduser('~')
-
     # find config file
     if not path:
-        if exists("/etc/shoal/shoal_client.conf"):
+        # check the directory of the calling script 
+        if  exists(abspath(sys.path[0]+"/shoal_client.conf")):
+            path = abspath(sys.path[0]+"/shoal_client.conf")
+        elif exists("/etc/shoal/shoal_client.conf"):
             path = "/etc/shoal/shoal_client.conf"
-        elif exists(join(homedir, ".shoal/shoal_client.conf")):
-            path = join(homedir, ".shoal/shoal_client.conf")
+        elif exists(abspath(homedir + "/.shoal/shoal_client.conf")):
+            path =  abspath(homedir + "/.shoal/shoal_client.conf")
         else:
             print >> sys.stderr, "Configuration file problem: There doesn't " \
                   "seem to be a configuration file. " \
@@ -56,7 +56,6 @@ def setup(path=None):
     if config_file.has_option("general", "shoal_server_url"):
         shoal_server_url = config_file.get("general",
                                                 "shoal_server_url")
-
     if config_file.has_option("general", "cvmfs_config"):
         cvmfs_config = config_file.get("general",
                                                 "cvmfs_config")
