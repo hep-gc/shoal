@@ -4,8 +4,9 @@
 """
 import urllib2
 import sys
+# import json
+import re
 import os
-import simplejson as json
 import logging
 import time
 
@@ -41,6 +42,57 @@ def get_args():
     if options.dump:
         dump = True
 
+def convertServerData(val):
+    if val.isdigit():
+      return int(val)
+    else:
+      try:
+        return float(val)
+      except:
+        if "null" in val:
+          return None
+        else:
+          return unicode(val.strip("\""))
+
+# TODO is this parser sufficient or should a full JSON parser be implemented?
+# Seperating out the list of properties should be done but does support
+#  for arbitrary json strings add anything?
+def parseServerData(jsonStr):
+
+  # TODO should load this from a config file as it has to match the server
+  # Nested properties (i.e geo_data) needs to be handled seperatly
+  dataTypes    = ["load",        "distance", "squid_port", "last_active", "created",      \
+                  "external_ip", "hostname", "public_ip",  "private_ip"]
+
+  geoDataTypes = ["city",       "region_name",   "area_code",    "time_zone", "dma_code", \
+                  "metro_code", "country_code3", "latitude",     "postal_code",           \
+                  "longitude",  "country_code",  "country_name", "continent"]
+
+  # don't really care about data here
+  # it is just a simple way to get number of nearest squids
+  p = re.compile("\""+dataTypes[0]+"\": ([^,}]+)")
+  numNearestSquids = len(p.findall(jsonStr))
+  
+  # initalize the dictionaries
+  outDict = {}
+  for i in range(0, numNearestSquids):
+    outDict[unicode(str(i))] = {}
+    outDict[unicode(str(i))][unicode("geo_data")] = {}
+
+  for dataType in dataTypes:
+    p = re.compile("\""+dataType+"\": ([^,]+)[,|}]")
+    dataList = p.findall(jsonStr)
+    for i, val in enumerate(dataList):
+      outDict[unicode(str(i))][unicode(dataType)] = convertServerData(val)
+
+  for geoDataType in geoDataTypes:
+    p = re.compile("\""+geoDataType+"\": (\"[^\"]*|[^,]*)")
+    dataList = p.findall(jsonStr)
+    for i, val in enumerate(dataList):
+      outDict[unicode(str(i))][unicode("geo_data")][unicode(geoDataType)] = convertServerData(val)
+
+  return outDict
+
 get_args()
 
 if not os.path.exists(cvmfs_config):
@@ -49,7 +101,8 @@ if not os.path.exists(cvmfs_config):
 
 try:
     f = urlopen(server)
-    data = json.loads(f.read())
+    # data = json.loads(f.read())
+    data = parseServerData(f.read())
 except (urllib2.URLError,ValueError), e:
     logging.error("Unable to open url. %s" % e)
 
@@ -68,9 +121,14 @@ if data:
     if dump:
         print "\nThe following would be written to cvmfs config file located at '%s' (defined in shoal_client.conf):\n%s\n" % (cvmfs_config, default_conf)
     else:
-        f = open(cvmfs_config, "w")
-        f.write(default_conf)
-        f.close()
+        try:
+            try:
+                f = open(cvmfs_config, "w")
+                f.write(default_conf)
+            except Exception:
+                logging.error("Could not write data to the cvmfs config file")
+        finally:
+            f.close()
 elif dump:
     print "There was no data returned from the url '%s'\n"\
           "cvmfs config file located at '%s' (defined in shoal_client.conf) will be untouched" % (server, cvmfs_config)
