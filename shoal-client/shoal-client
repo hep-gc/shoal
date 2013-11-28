@@ -117,7 +117,7 @@ if data:
             logging.error("The data returned from '%s' was missing the key: %s. Please ensure the url is running the latest Shoal-Server." % (server, e))
             sys.exit(1)
 
-cvmfs_http_proxy += closest_http_proxy + default_http_proxy + "\n"
+cvmfs_http_proxy += "\"" +closest_http_proxy + default_http_proxy + "\"\n"
 
 if dump:
     print "%s would have been written to the CVMFS config file", cvmfs_http_proxy
