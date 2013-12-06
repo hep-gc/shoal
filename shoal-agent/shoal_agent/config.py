@@ -30,6 +30,10 @@ def setup(path=None):
     global amqp_server_url
     global amqp_virtual_host
     global amqp_exchange
+    global use_ssl
+    global amqp_ca_cert
+    global amqp_client_cert
+    global amqp_client_key
     global external_ip
     global interface
     global interval
