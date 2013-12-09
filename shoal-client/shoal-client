@@ -15,7 +15,6 @@ from shoal_client import config as config
 from optparse import OptionParser
 from urllib2 import urlopen
 
-config.setup()
 server = config.shoal_server_url
 cvmfs_config = config.cvmfs_config
 default_http_proxy = config.default_squid_proxy
