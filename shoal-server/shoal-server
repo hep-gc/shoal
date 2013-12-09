@@ -6,7 +6,6 @@ import logging
 from threading import Thread
 from time import sleep
 from shoal_server import config
-config.setup()
 from shoal_server.shoal import ThreadMonitor, WebpyServer
 
 def main():
