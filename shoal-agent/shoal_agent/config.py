@@ -28,6 +28,7 @@ def setup(path=None):
        or ~/.shoal/shoal_agent.conf
     """
     global amqp_server_url
+    global amqp_port
     global amqp_virtual_host
     global amqp_exchange
     global use_ssl
