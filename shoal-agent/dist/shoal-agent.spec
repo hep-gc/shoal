@@ -1,7 +1,6 @@
 %define name shoal-agent
-%define version 0.6.0
-%define unmangled_version 0.6.0
-%define unmangled_version 0.6.0
+%define version 0.7.1
+%define unmangled_version 0.7.1
 %define release 1
 
 Summary: A squid cache publishing and advertising tool designed to work in fast changing environments
@@ -15,7 +14,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Prefix: %{_prefix}
 BuildArch: noarch
 Vendor: Mike Chester <mchester@uvic.ca>
-Requires: netifaces >= 0.8 pika >= 0.9.13 python >= 2.6
+Requires: netifaces >= 0.8 pika >= 0.9.13
 Url: http://github.com/hep-gc/shoal
 
 %description

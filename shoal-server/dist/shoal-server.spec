@@ -1,7 +1,6 @@
 %define name shoal-server
-%define version 0.6.1
-%define unmangled_version 0.6.1
-%define unmangled_version 0.6.1
+%define version 0.7.0
+%define unmangled_version 0.7.0
 %define release 1
 
 Summary: A squid cache publishing and advertising tool designed to work in fast changing environments
