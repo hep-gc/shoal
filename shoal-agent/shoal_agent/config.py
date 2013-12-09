@@ -35,22 +35,17 @@ homedir = expanduser('~')
 
 # find config file
 # check the directory of the calling script  
-if exists(abspath(sys.path[0]+"/shoal_agent.conf")):
+if  exists(abspath(sys.path[0]+"/shoal_agent.conf")):
     path = abspath(sys.path[0]+"/shoal_agent.conf")
-elif exists("/etc/shoal/shoal_agentf"):
-    path = "/etc/shoal/shoal_agentf"
-elif exists(abspath(homedir + "/.l/shoal_agent.conf")):
-    path = abspath(homedir + "/.l/shoal_agent.conf")
+elif exists("/etc/shoal/shoal_agent.conf"):
+    path = "/etc/shoal/shoal_agent.conf"
+elif exists(abspath(homedir + "/.shoal/shoal_agent.conf")):
+    path = abspath(homedir + "/.shoal/shoal_agent.conf")
 else:
     print >> sys.stderr, "Configuration file problem: There doesn't " \
                           "seem to be a configuration file. " \
-                          "You can specify one in: " \
-                          "directory of shoal agent " \
-                          "/etc/shoal/shoal_agent.conf or " \
-                          " ~/.shoal/shoal_agent.conf"
+                          "You can specify one in /etc/shoal/shoal_agent.conf"
     sys.exit(1)
-
-print "Using config file at %s", path
 
 # Read config file
 config_file = ConfigParser.ConfigParser()
