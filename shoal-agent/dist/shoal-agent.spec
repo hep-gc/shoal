@@ -1,6 +1,6 @@
 %define name shoal-agent
-%define version 0.7.1
-%define unmangled_version 0.7.1
+%define version 0.7.2
+%define unmangled_version 0.7.2
 %define release 1
 
 Summary: A squid cache publishing and advertising tool designed to work in fast changing environments
@@ -40,4 +40,5 @@ chkconfig --add shoal-agent
 rm -rf $RPM_BUILD_ROOT
 
 %files -f INSTALLED_FILES
+%config(noreplace) %{_sysconfdir}/shoal/shoal_agent.conf
 %defattr(-,root,root)
