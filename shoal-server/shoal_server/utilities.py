@@ -42,7 +42,7 @@ def get_nearest_squids(ip, count=10):
     except KeyError as e:
         logger.error("Could not read request data:")
         logger.error(e)
-    return None
+        return None
 
     nearest_squids = []
 
