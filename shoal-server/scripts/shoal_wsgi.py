@@ -3,7 +3,6 @@ import sys
 import os
 
 from shoal_server import config as config
-config.setup()
 
 from shoal_server import shoal as shoal
 from threading import Thread
