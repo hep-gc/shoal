@@ -30,8 +30,10 @@ python setup.py build
 python setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
 
 %post
-touch /var/log/shoal_agent.log
-chown nobody:nobody /var/log/shoal_agent.log
+if [ ! -f /var/log/shoal_agent.log ]; then 
+  touch /var/log/shoal_agent.log
+  chown nobody:nobody /var/log/shoal_agent.log
+fi
 chmod 0644 /etc/shoal/shoal_agent.conf
 chkconfig --add shoal-agent
 
