@@ -33,8 +33,7 @@ logging_level = logging.ERROR
 
 homedir = expanduser('~')
 
-# find config file
-# check the directory of the calling script  
+# find config file by checking the directory of the calling script and sets path
 if  exists(abspath(sys.path[0]+"/shoal_agent.conf")):
     path = abspath(sys.path[0]+"/shoal_agent.conf")
 elif exists("/etc/shoal/shoal_agent.conf"):
@@ -47,7 +46,7 @@ else:
                           "You can specify one in /etc/shoal/shoal_agent.conf"
     sys.exit(1)
 
-# Read config file
+# Read config file from the given path above
 config_file = ConfigParser.ConfigParser()
 try:
     config_file.read(path)
@@ -65,6 +64,7 @@ except:
           "your config file."
     raise
 
+# sets defaults to the options in the config file
 if config_file.has_option("rabbitmq", "amqp_server_url"):
     amqp_server_url = config_file.get("rabbitmq", "amqp_server_url")
 

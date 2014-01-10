@@ -113,6 +113,10 @@ def get_ip_addresses():
     return public, private
 
 def main():
+    """
+	Sets up uuid, hostname, squid_port, public/private/external ip, and interface
+	Establishes connection and publishes the load and ip of the squid server using a json formatted amqp message at regular intervals
+    """
     try:
         logging.basicConfig(level=config.logging_level, format=LOG_FORMAT, filename=config.log_file)
     except IOError as e:

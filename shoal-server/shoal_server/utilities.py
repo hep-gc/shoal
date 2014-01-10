@@ -30,7 +30,7 @@ def get_geolocation(ip):
 
 def get_nearest_squids(ip, count=10):  
     """
-    Given an IP return IP of nearest squid.
+    Given an IP return a sorted list of squids up to a given count
     """
     request_data = get_geolocation(ip)
     if not request_data:
@@ -45,7 +45,9 @@ def get_nearest_squids(ip, count=10):
         return None
 
     nearest_squids = []
-
+    
+    ## computes the distance between each squid and the given ip address
+    ## and sorts them in a list of squids
     for squid in web.shoal.values():
         s_lat = float(squid.geo_data['latitude'])
         s_long = float(squid.geo_data['longitude'])
