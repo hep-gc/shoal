@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-  Very simple client script used to get nearest squid server using the RESTful API.
+    Very simple client script used to get nearest squid server using the RESTful API.
 """
 import urllib2
 import sys
@@ -27,14 +27,16 @@ cvmfs_http_proxy = "CVMFS_HTTP_PROXY="
 logging.basicConfig(filename="shoal_client.log", format='%(asctime)s %(message)s')
 
 def get_args():
-    """gets server and dump variables from command line arguments"""
+    """
+        gets server and dump variables from command line arguments
+    """
     global server
     global dump
 
     p = OptionParser()
     p.add_option("-s", "--server", action="store", type="string", dest="server", 
                  help="Also needs string for specifying the shoal server to use. " +
-		      "Takes presedence over the option in config file")
+                      "Takes presedence over the option in config file")
     p.add_option("-d", "--dump", action="store_true", dest="dump",
                  help="Print closest proxies to terminal for debugging "+ 
                       "instead of over writing the CVMFS config file")
@@ -46,7 +48,9 @@ def get_args():
         dump = True
 
 def convertServerData(val):
-    """converts val to digits if it's not already or else return None"""
+    """
+        converts val to digits if it's not already or else return None
+    """
     if val.isdigit():
         return int(val)
     else:
@@ -62,10 +66,12 @@ def convertServerData(val):
 # Seperating out the list of properties should be done but does support
 #  for arbitrary json strings add anything?
 def parseServerData(jsonStr):
-   """creates a multidimensional server data dictionary indexed by
-      unicode integers with dataTypes, geo_data and geoDataTypes. Each
-      respective entry holds the appropriate dataTypes and geoDataTypes
-      found in jsonStr"""
+    """
+        creates a multidimensional server data dictionary indexed by
+        unicode integers with dataTypes, geo_data and geoDataTypes. Each
+        respective entry holds the appropriate dataTypes and geoDataTypes
+        found in jsonStr
+    """
 
     # TODO should load this from a config file as it has to match the server
     # Nested properties (i.e geo_data) needs to be handled separately
@@ -101,22 +107,22 @@ def parseServerData(jsonStr):
         dataList = p.findall(jsonStr)
         for i, val in enumerate(dataList):
             outDict[unicode(str(i))][unicode(dataType)] = convertServerData(val)
-	## outDict is a multidimensional dict that now holds a val in each dataType per i
+    ## outDict is a multidimensional dict that now holds a val in each dataType per i
     ## same as above just for geoDataTypes
     for geoDataType in geoDataTypes:
         p = re.compile("\"" + geoDataType + "\": (\"[^\"]*|[^,]*)")
         dataList = p.findall(jsonStr)
         for i, val in enumerate(dataList):
             outDict[unicode(str(i))][unicode("geo_data")][unicode(geoDataType)] = convertServerData(val)
-	## outDict in geo_data for each geoDataType holds a val
+    ## outDict in geo_data for each geoDataType holds a val
     return outDict
 
 get_args()
 
 """
-opens up a url to a server, parses server data from there
-from that data, creates addresses to each squid, stores in cvmfs_http_proxy
-overwrites cvmfs config file with cvmfs_http_proxy if dump is not specified
+    opens up a url to a server, parses server data from there
+    from that data, creates addresses to each squid, stores in cvmfs_http_proxy
+    overwrites cvmfs config file with cvmfs_http_proxy if dump is not specified
 """
 ## CVMFS = CERN Virtual Machine File System
 
