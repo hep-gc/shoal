@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-  Very simple client script used to get nearest squid server using the RESTful API.
+    Very simple client script used to get nearest squid server using the RESTful API.
 """
 import urllib2
 import sys
@@ -27,14 +27,16 @@ cvmfs_http_proxy = "CVMFS_HTTP_PROXY="
 logging.basicConfig(filename="shoal_client.log", format='%(asctime)s %(message)s')
 
 def get_args():
-
+    """
+        gets server and dump variables from command line arguments
+    """
     global server
     global dump
 
     p = OptionParser()
     p.add_option("-s", "--server", action="store", type="string", dest="server", 
                  help="Also needs string for specifying the shoal server to use. " +
-		      "Takes presedence over the option in config file")
+                      "Takes presedence over the option in config file")
     p.add_option("-d", "--dump", action="store_true", dest="dump",
                  help="Print closest proxies to terminal for debugging "+ 
                       "instead of over writing the CVMFS config file")
@@ -46,6 +48,9 @@ def get_args():
         dump = True
 
 def convertServerData(val):
+    """
+        converts val to digits if it's not already or else return None
+    """
     if val.isdigit():
         return int(val)
     else:
@@ -61,9 +66,15 @@ def convertServerData(val):
 # Seperating out the list of properties should be done but does support
 #  for arbitrary json strings add anything?
 def parseServerData(jsonStr):
+    """
+        creates a multidimensional server data dictionary indexed by
+        unicode integers with dataTypes, geo_data and geoDataTypes. Each
+        respective entry holds the appropriate dataTypes and geoDataTypes
+        found in jsonStr
+    """
 
     # TODO should load this from a config file as it has to match the server
-    # Nested properties (i.e geo_data) needs to be handled seperatly
+    # Nested properties (i.e geo_data) needs to be handled separately
     dataTypes    = ["load",        "distance", "squid_port", "last_active", "created",      \
                     "external_ip", "hostname", "public_ip",  "private_ip"]
 
@@ -73,33 +84,49 @@ def parseServerData(jsonStr):
 
     # don't really care about data here
     # it is just a simple way to get number of nearest squids
-    p = re.compile("\""+dataTypes[0]+"\": ([^,}]+)")
+    p = re.compile("\"" + dataTypes[0] + "\": ([^,}]+)")
     numNearestSquids = len(p.findall(jsonStr))
-  
+    ## compiles regex "load": ([^,}]+), although it doesn't really matter that fact that it's a load
+    ## this will find the number of above matches in jsonStr and return into numNearestSquids  
+    ## therefore each match in json is a 'nearest' squid
+
     # initalize the dictionaries
     outDict = {}
     for i in range(0, numNearestSquids):
         outDict[unicode(str(i))] = {}
         outDict[unicode(str(i))][unicode("geo_data")] = {}
+    ## creates a multidimensional dict with each key 1 being u'i' (i in unicode)
+    ## and key 2 being "geo_data" for all entries
 
     # TODO probably don't need seperate regexes
     # test using geodata one for both
+    ## for each item in dataTypes, compile a regex for that item and find all the matches with jsonStr
+    ## and put those matches in dataList.
     for dataType in dataTypes:
-        p = re.compile("\""+dataType+"\": ([^,]+)[,|}]")
+        p = re.compile("\"" + dataType + "\": ([^,]+)[,|}]")
         dataList = p.findall(jsonStr)
         for i, val in enumerate(dataList):
             outDict[unicode(str(i))][unicode(dataType)] = convertServerData(val)
-
+    ## outDict is a multidimensional dict that now holds a val in each dataType per i
+    ## same as above just for geoDataTypes
     for geoDataType in geoDataTypes:
-        p = re.compile("\""+geoDataType+"\": (\"[^\"]*|[^,]*)")
+        p = re.compile("\"" + geoDataType + "\": (\"[^\"]*|[^,]*)")
         dataList = p.findall(jsonStr)
         for i, val in enumerate(dataList):
             outDict[unicode(str(i))][unicode("geo_data")][unicode(geoDataType)] = convertServerData(val)
-
+    ## outDict in geo_data for each geoDataType holds a val
     return outDict
 
 get_args()
 
+"""
+    opens up a url to a server, parses server data from there
+    from that data, creates addresses to each squid, stores in cvmfs_http_proxy
+    overwrites cvmfs config file with cvmfs_http_proxy if dump is not specified
+"""
+## CVMFS = CERN Virtual Machine File System
+
+## reads in server data (if it can be read in) into a dictionary called data
 try:
     f = urlopen(server)
     # data = json.loads(f.read())
@@ -109,6 +136,8 @@ except (urllib2.URLError,ValueError), e:
     data = None
 
 if data:
+    ## iterates through the data dict and uses all hostname and squid_port keys
+    ## to create addresses for each squid in closest_http_proxy
     for i in range(0, len(data)):
         try:
             closest_http_proxy += 'http://%s:%s;' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
@@ -116,8 +145,9 @@ if data:
             logging.error("The data returned from '%s' was missing the key: %s. Please ensure the url is running the latest Shoal-Server." % (server, e))
             sys.exit(1)
 
-cvmfs_http_proxy += "\"" +closest_http_proxy + default_http_proxy + "\"\n"
+cvmfs_http_proxy += "\"" + closest_http_proxy + default_http_proxy + "\"\n"
 
+## if dump -> don't overwrite CVMFS config file
 if dump:
     print "%s would have been written to the CVMFS config file", cvmfs_http_proxy
 else:

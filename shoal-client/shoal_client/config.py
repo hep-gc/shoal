@@ -18,8 +18,7 @@ cvmfs_config = "/etc/cvmfs/default.local"
 default_squid_proxy   = ""
 
 homedir = expanduser('~')
-# find config file
-# check the directory of the calling script 
+# find config file by checking the directory of the calling script and sets path
 if  exists(abspath(sys.path[0]+"/shoal_client.conf")):
     path = abspath(sys.path[0]+"/shoal_client.conf")
 elif exists("/etc/shoal/shoal_client.conf"):
@@ -32,7 +31,7 @@ else:
                          "You can specify one in /etc/shoal/shoal_client.conf"
     sys.exit(1)
 
-# Read config file
+# Read config file from the given path above
 config_file = ConfigParser.ConfigParser()
 try:
     config_file.read(path)
@@ -50,6 +49,7 @@ except:
           "your config file."
     raise
 
+# sets defaults to the options in config_file
 if config_file.has_option("general", "shoal_server_url"):
     shoal_server_url = config_file.get("general", "shoal_server_url")
 if config_file.has_option("general", "cvmfs_config"):

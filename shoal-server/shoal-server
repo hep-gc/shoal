@@ -13,18 +13,22 @@ def main():
     shoal_list = {}
     threads = []
 
+    # establishes ThreadMonitor and its thread
     monitor_thread = ThreadMonitor(shoal_list)
     monitor_thread.daemon = True
     threads.append(monitor_thread)
 
+    # establishes WebpyServer and its thread
     webpy_thread = WebpyServer(shoal_list)
     webpy_thread.daemon = True
     threads.append(webpy_thread)
 
+    # starts running threads
     for thread in threads:
         print "starting", thread
         thread.start()
 
+    # keep running threads until KeyboardInterrupt
     try:
         while True:
             for thread in threads:
@@ -36,6 +40,7 @@ def main():
         sys.exit()
 
 if __name__ == '__main__':
+    # sets up logging file
     shoal_dir = config.shoal_dir
     log_file = config.log_file
     log_format = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'

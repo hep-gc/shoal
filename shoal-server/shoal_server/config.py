@@ -33,8 +33,7 @@ error_reconnect_attempts = 10
 
 homedir = expanduser('~')
 
-# find config file
-# check the directory of the calling script
+# find config file by checking the directory of the calling script and sets path
 if  exists(abspath(sys.path[0]+"/shoal_server.conf")):
     path = abspath(sys.path[0]+"/shoal_server.conf")
 elif exists("/etc/shoal/shoal_server.conf"):
@@ -47,7 +46,7 @@ else:
                          "You can specify one in /etc/shoal/shoal_server.conf"
     sys.exit(1)
 
-# Read config file
+# Read config file from the given path above
 config_file = ConfigParser.ConfigParser()
 try:
     config_file.read(path)
@@ -65,6 +64,7 @@ except:
           "your config file."
     raise
 
+# sets defaults to the options in the config_file
 if config_file.has_option("general", "shoal_dir"):
     shoal_dir = config_file.get("general", "shoal_dir")
 

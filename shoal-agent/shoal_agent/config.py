@@ -5,13 +5,13 @@ import logging
 
 # Shoal Options Module
 
-"""Setup shoal using config file.
-   setup will look for a configuration file specified in the following order:
+""" Setup shoal using config file.
+    setup will look for a configuration file specified in the following order:
        directory of shoal-agent script
        /etc/shoal/shoal_agent.conf
        ~/.shoal/shoal_agent.conf
    
-   The first config found will be used.
+    The first config found will be used.
 """
 
 # set default values
@@ -33,8 +33,7 @@ logging_level = logging.ERROR
 
 homedir = expanduser('~')
 
-# find config file
-# check the directory of the calling script  
+# find config file by checking the directory of the calling script and sets path
 if  exists(abspath(sys.path[0]+"/shoal_agent.conf")):
     path = abspath(sys.path[0]+"/shoal_agent.conf")
 elif exists("/etc/shoal/shoal_agent.conf"):
@@ -47,7 +46,7 @@ else:
                           "You can specify one in /etc/shoal/shoal_agent.conf"
     sys.exit(1)
 
-# Read config file
+# Read config file from the given path above
 config_file = ConfigParser.ConfigParser()
 try:
     config_file.read(path)
@@ -65,6 +64,7 @@ except:
           "your config file."
     raise
 
+# sets defaults to the options in the config file
 if config_file.has_option("rabbitmq", "amqp_server_url"):
     amqp_server_url = config_file.get("rabbitmq", "amqp_server_url")
 
@@ -78,13 +78,13 @@ if config_file.has_option("rabbitmq", "amqp_port"):
 
 if config_file.has_option("rabbitmq", "use_ssl") and config_file.getboolean("rabbitmq", "use_ssl"):
     try:
-	use_ssl = True
+        use_ssl = True
         amqp_ca_cert     = abspath(config_file.get("rabbitmq", "amqp_ca_cert"))
         amqp_client_cert = abspath(config_file.get("rabbitmq", "amqp_client_cert"))
         amqp_client_key  = abspath(config_file.get("rabbitmq", "amqp_client_key"))
     except Exception as e:
         print "Configuration file problem: could not load SSL certs"
-	print e
+    print e
         sys.exit(1)
 
 if config_file.has_option("rabbitmq", "amqp_virtual_host"):
@@ -110,17 +110,17 @@ if config_file.has_option("logging", "log_file"):
 if config_file.has_option("logging", "logging_level"):
     temp = config_file.get("logging", "logging_level")
     logLevels = {
- 		 "DEBUG"    : logging.DEBUG,
-		 "INFO"     : logging.INFO,
-		 "WARNING"  : logging.WARNING,
-		 "ERROR"    : logging.ERROR,
-		 "CRITICAL" : logging.CRITICAL,
+        "DEBUG"    : logging.DEBUG,
+        "INFO"     : logging.INFO,
+        "WARNING"  : logging.WARNING,
+        "ERROR"    : logging.ERROR,
+        "CRITICAL" : logging.CRITICAL,
                 }
     try:
         logging_level = logLevels[temp]
     except KeyError:
-	print "Configuration file problem: Invalid logging level"
-	sys.exit(1)
+    print "Configuration file problem: Invalid logging level"
+    sys.exit(1)
 
 if config_file.has_option("general", "squid_port"):
     try:

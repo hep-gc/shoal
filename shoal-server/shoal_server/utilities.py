@@ -19,7 +19,7 @@ GEOLITE_UPDATE = config.geolitecity_update
 logger = logging.getLogger('shoal_server')
 def get_geolocation(ip):
     """
-    Given an IP return all its geographical information (using GeoLiteCity.dat)
+        Given an IP return all its geographical information (using GeoLiteCity.dat)
     """
     try:
         gi = pygeoip.GeoIP(GEOLITE_DB)
@@ -30,7 +30,7 @@ def get_geolocation(ip):
 
 def get_nearest_squids(ip, count=10):  
     """
-    Given an IP return IP of nearest squid.
+        Given an IP return a sorted list of nearest squids up to a given count
     """
     request_data = get_geolocation(ip)
     if not request_data:
@@ -45,7 +45,9 @@ def get_nearest_squids(ip, count=10):
         return None
 
     nearest_squids = []
-
+    
+    ## computes the distance between each squid and the given ip address
+    ## and sorts them in a list of squids
     for squid in web.shoal.values():
         s_lat = float(squid.geo_data['latitude'])
         s_long = float(squid.geo_data['longitude'])
@@ -59,7 +61,7 @@ def get_nearest_squids(ip, count=10):
 
 def haversine(lat1,lon1,lat2,lon2):
     """
-    Calculate distance between two points using Haversine Formula.
+        Calculate distance between two points using Haversine Formula.
     """
     # radius of earth
     r = 6371
@@ -74,7 +76,7 @@ def haversine(lat1,lon1,lat2,lon2):
 
 def check_geolitecity_need_update():
     """
-    Checks if the geolite database is outdated
+        Checks if the geolite database is outdated
     """
     curr = time()
 
@@ -91,7 +93,7 @@ def check_geolitecity_need_update():
 
 def download_geolitecity():
     """
-    Downloads a new geolite database
+        Downloads a new geolite database
     """
     try:
         urlretrieve(GEOLITE_URL,GEOLITE_DB + '.gz')
@@ -112,7 +114,7 @@ def download_geolitecity():
 
 def generate_wpad(ip):
     """
-    Parses the JSON of nearest squids and provides the data as a wpad
+        Parses the JSON of nearest squids and provides the data as a wpad
     """
     squids = get_nearest_squids(ip)
     if squids:

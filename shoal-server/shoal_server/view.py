@@ -36,6 +36,10 @@ class wpad:
         return view_wpad()
 
 def view_index(size):
+    """
+        returns an index template with a sorted_shoal list with upper
+        and lower bounds from the given size
+    """
     params = web.input()
     page = params.page if hasattr(params, 'page') else 1
     sorted_shoal = sorted(web.shoal.values(), key=operator.attrgetter('last_active'))
@@ -61,6 +65,9 @@ def view_index(size):
     return render.index(time(), total, sorted_shoal[lower:upper], page, pages, size)
 
 def view_nearest(count):
+    """
+        returns the nearest squid as a JSON formatted str
+    """
     try:
         count = int(count)
     except (ValueError, TypeError):
@@ -80,5 +87,8 @@ def view_nearest(count):
         return json.dumps(None)
 
 def view_wpad(**k):
+    """
+        returns data as a wpad
+    """
     data = render.wpad(utilities.generate_wpad(web.ctx['ip']))
     return data
