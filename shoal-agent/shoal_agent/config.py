@@ -10,7 +10,7 @@ import logging
        directory of shoal-agent script
        /etc/shoal/shoal_agent.conf
        ~/.shoal/shoal_agent.conf
-   
+
     The first config found will be used.
 """
 
@@ -84,7 +84,7 @@ if config_file.has_option("rabbitmq", "use_ssl") and config_file.getboolean("rab
         amqp_client_key  = abspath(config_file.get("rabbitmq", "amqp_client_key"))
     except Exception as e:
         print "Configuration file problem: could not load SSL certs"
-    print e
+        print e
         sys.exit(1)
 
 if config_file.has_option("rabbitmq", "amqp_virtual_host"):
@@ -119,8 +119,8 @@ if config_file.has_option("logging", "logging_level"):
     try:
         logging_level = logLevels[temp]
     except KeyError:
-    print "Configuration file problem: Invalid logging level"
-    sys.exit(1)
+        print "Configuration file problem: Invalid logging level"
+        sys.exit(1)
 
 if config_file.has_option("general", "squid_port"):
     try:
@@ -129,7 +129,7 @@ if config_file.has_option("general", "squid_port"):
         print "Configuration file problem: squid_port must be an " \
               "integer value."
         sys.exit(1)
- 
+
 if config_file.has_option("general", "external_ip"):
     external_ip = config_file.get("general", "external_ip")
 

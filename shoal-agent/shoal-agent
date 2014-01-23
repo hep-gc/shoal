@@ -70,46 +70,49 @@ def get_load_data(interface):
         get_load_data returns the outgoing kilobytes per second of the passed in interface
         note this is UNIX specifc 
     """
-    path = '/sys/class/net/{0}/statistics/tx_bytes'.format(interface)
-    logging.info("Path to '{0}' load data: {1}".format(interface, path))
-    try:
-        # Get the change in outgoing bytes over 1 second
-        with open(path) as tx:
-            tx1 = int(tx.read())
-        time.sleep(1)
-        with open(path) as tx:
-            tx2 = int(tx.read())
-        # get kilobytes
-        return (tx2 - tx1) / 1024
-    except IOError as e:
-        logging.error("Path '{0}' does not exist. Please change NIC to monitor in configuration file.".format(path))
-        sys.exit(1)
-    except Exception as e:
-        logging.error(e)
-        sys.exit(1)
+    return 1337
+    #path = '/sys/class/net/{0}/statistics/tx_bytes'.format(interface)
+    #logging.info("Path to '{0}' load data: {1}".format(interface, path))
+    #try:
+    #    # Get the change in outgoing bytes over 1 second
+    #    with open(path) as tx:
+    #        tx1 = int(tx.read())
+    #    time.sleep(1)
+    #    with open(path) as tx:
+    #        tx2 = int(tx.read())
+    #    # get kilobytes
+    #    return (tx2 - tx1) / 1024
+    #except IOError as e:
+    #    logging.error("Path '{0}' does not exist. Please change NIC to monitor in configuration file.".format(path))
+    #    sys.exit(1)
+    #except Exception as e:
+    #    logging.error(e)
+    #    sys.exit(1)
 
 def get_ip_addresses():
     """
         Uses netifaces to return public and private dictionaries of IP addresses
     """
-    public = {}
-    private = {}
-    for interface in netifaces.interfaces():
-        try:
-            for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
-                if link['addr'].startswith(PRIVATE_ADDRESS):
-                    private[interface] = link['addr']
-                elif not link['addr'].startswith('127.'):
-                    public[interface] = link['addr']
-        except Exception as e:
-            # This is intentionally left blank
-            # Not all interfaces returned form netifaces.interfaces have an internet address (some are ethernet or MAC)
-            # This code only looks for adresses with proper internet adresses
-            # Note IPV6 addresses are not checked and netifaces.AF_INET6 needs to be used to get those 
-            # (Note this currently does not work on all platforms unlike AF_INET/IPV4)
-            # For more information on netifaces, see the readme at https://github.com/raphdg/netifaces
-            continue
-    logging.info('Public IPs found: {0}, Private IPs found: {1}'.format(public, private))
+    public = {'eth0': '142.142.0.1'}
+    private = {'eth0': '192.168.0.1'}
+    #public = {}
+    #private = {}
+    #for interface in netifaces.interfaces():
+    #    try:
+    #        for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
+    #            if link['addr'].startswith(PRIVATE_ADDRESS):
+    #                private[interface] = link['addr']
+    #            elif not link['addr'].startswith('127.'):
+    #                public[interface] = link['addr']
+    #    except Exception as e:
+    #        # This is intentionally left blank
+    #        # Not all interfaces returned form netifaces.interfaces have an internet address (some are ethernet or MAC)
+    #        # This code only looks for adresses with proper internet adresses
+    #        # Note IPV6 addresses are not checked and netifaces.AF_INET6 needs to be used to get those 
+    #        # (Note this currently does not work on all platforms unlike AF_INET/IPV4)
+    #        # For more information on netifaces, see the readme at https://github.com/raphdg/netifaces
+    #        continue
+    #logging.info('Public IPs found: {0}, Private IPs found: {1}'.format(public, private))
     return public, private
 
 def main():
@@ -118,7 +121,8 @@ def main():
         Establishes connection and publishes the load and ip of the squid server using a json formatted amqp message at regular intervals
     """
     try:
-        logging.basicConfig(level=config.logging_level, format=LOG_FORMAT, filename=config.log_file)
+        logging.basicConfig(level=config.logging_level, format=LOG_FORMAT)
+        #logging.basicConfig(level=config.logging_level, format=LOG_FORMAT, filename=config.log_file)
     except IOError as e:
         print "Could not set logging file. Please check config file.", e
         sys.exit(1)
@@ -141,7 +145,8 @@ def main():
     if public_ip: 
         try:
             data['public_ip'] = public_ip.values()[0]
-            data['hostname'] = socket.gethostbyaddr(public_ip.values()[0])[0]
+            data['hostname'] = 'testHost'
+            #data['hostname'] = socket.gethostbyaddr(public_ip.values()[0])[0]
         except IndexError:
             pass
     elif external_ip:
