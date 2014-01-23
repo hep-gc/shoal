@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import os
 import sys
 import time
@@ -29,6 +31,7 @@ class shoalDecisionEngine(object):
         self.key_name = config.get("general", "KEY")
         self.clouds = json.loads(config.get("general", "CLOUDS"))
 
+        # shoalURL for heprc is http://shoal.heprc.uvic.ca/nearest
         self.shoalURL = config.get("general", "SHOAL_SERVER")
         self.shoalLoad = 0
         self.shoalPrevLoad = 0
@@ -97,53 +100,53 @@ class shoalDecisionEngine(object):
         existing_launch_configurations = r.json()
         existing_lc_names = [lc.get('name') for lc in existing_launch_configurations]
 
-        # For now error if launch config already exsists
-        if self.launch_config_name in existing_lc_names:
-            sys.exit("Error launch config already exsists: %s" % self.launch_config_name)
+        # create new launch configurations
+        if self.launch_config_name not in existing_lc_names:
 
-        # Get ip of rabbitMQ server as user data for the launching squid
-        # TODO might be PITA but could load this from shoal server config
-        # (if can assume this script runs on same machine as shoal server which, isn't necesary)
-        rabbitMQIP = config.get("general", "RABBIT_MQ_IP")
-        # If provided with localhost need to convert that to public ip
-        if rabbitMQIP == "localhost":
-            rabbitMQIP = subprocess.check_output("ifconfig eth0 |" + " grep 'inet addr:' |" \
-                                                + "cut -d: -f2 |" + " awk '{ print $1}'", shell=True)
-            rabbitMQIP = rabbitMQIP.strip()
-        rabbitMQPort = config.get("general", "RABBIT_MQ_PORT")
+            # Get ip of rabbitMQ server as user data for the launching squid
+            rabbitMQIP = config.get("general", "RABBIT_MQ_IP")
+            # If provided with localhost need to convert that to public ip
+            if rabbitMQIP == "localhost":
+                rabbitMQIP = subprocess.check_output("ifconfig eth0 |" + " grep 'inet addr:' |" \
+                                                   + "cut -d: -f2 |" + " awk '{ print $1}'", shell=True)
+                rabbitMQIP = rabbitMQIP.strip()
+            rabbitMQPort = config.get("general", "RABBIT_MQ_PORT")
 
-        userDataDict = {}
-        userDataDict["rabbitMQServerIP"] = rabbitMQIP
-        userDataDict["rabbitMQServerPort"] = rabbitMQPort
+            userDataDict = {}
+            userDataDict["rabbitMQServerIP"] = rabbitMQIP
+            userDataDict["rabbitMQServerPort"] = rabbitMQPort
 
-        # initializes for new lc
-        new_lc = {
-            'name': self.launch_config_name,
-            'cloud_params': {},
-            'contextualization_method': 'user_data',
-            'user_data': json.dumps(userDataDict)
-        }
-
-        # intializes clouds into lc
-        rank = 0
-        for cloud in self.clouds:
-            rank = rank + 1
-            cloud_param = {
-                'image_id': self.vm_image,
-                'instance_type': self.image_type,
-                'max_vms': self.maximumVMs,
-                'common': True,
-                'rank': rank
+            # initializes for new lc
+            new_lc = {
+                'name': self.launch_config_name,
+                'cloud_params': {},
+                'contextualization_method': 'user_data',
+                'user_data': json.dumps(userDataDict)
             }
-            new_lc['cloud_params'][cloud] = cloud_param
 
-        r = requests.post("%s/launchconfigurations" % self.api_url,
-            data=json.dumps(new_lc), auth=(self.user_id, self.token))
-        if r.status_code != 201:
-            sys.exit("Error: %s" % r.text)
+            # intializes clouds into lc
+            rank = 0
+            for cloud in self.clouds:
+                rank = rank + 1
+                cloud_param = {
+                    'image_id': self.vm_image,
+                    'instance_type': self.image_type,
+                    'max_vms': self.maximumVMs,
+                    'common': True,
+                    'rank': rank
+                }
+                new_lc['cloud_params'][cloud] = cloud_param
 
+            r = requests.post("%s/launchconfigurations" % self.api_url,
+                data=json.dumps(new_lc), auth=(self.user_id, self.token))
+            if r.status_code != 201:
+                sys.exit("Error: %s" % r.text)
+
+        else:
+            print "Launch config already exists: %s" % (self.launch_config_name)
+
+        # set launch configuration id
         r = requests.get("%s/launchconfigurations" % self.api_url, auth=(self.user_id, self.token))
-
         all_lcs = r.json()
         for lc in all_lcs:
             if lc.get('name') == self.launch_config_name:
@@ -158,27 +161,38 @@ class shoalDecisionEngine(object):
         """
         # Check if domain already exist
         r = requests.get("%s/domains" % self.api_url, auth=(self.user_id, self.token))
-        existingDomains = r.json()
+        existing_domains = r.json()
 
-        for domain in existingDomains:
+        domain_exists = False
+        domain_id = None
+        for domain in existing_domains:
             if domain.get('name') == self.domain_name:
-                sys.exit("Error: domain already exists")
+                domain_exists = True
+                domain_id = domain.get('id')
+                break
 
         # Create our domain
+        print "Creating domain: %s" % self.domain_name
         new_domain = {
             'name': self.domain_name,
             'de_name': 'multicloud',
             'lc_name': self.launch_config_name,
             'vm_count': 0
         }
-        r = requests.post("%s/domains" % self.api_url,
-                           data=json.dumps(new_domain), auth=(self.user_id, self.token))
-        if r.status_code != 201:
-            sys.exit("Error: %s" % r.text)
-      
+
+        if not domain_exists:
+            r = requests.post("%s/domains" % self.api_url,
+                               data=json.dumps(new_domain), auth=(self.user_id, self.token))
+            if r.status_code != 201:
+                sys.exit("Error: %s" % r.text)
+        else:
+            r = requests.put("%s/domains/%s" % (self.api_url, domain_id),
+                data=json.dumps(new_domain), auth=(self.user_id, self.token))
+
+        # sets domain id
         r = requests.get("%s/domains" % self.api_url, auth=(self.user_id, self.token))
-        allDomains = r.json()
-        for domain in allDomains:
+        all_domains = r.json()
+        for domain in all_domains:
             if domain.get('name') == self.domain_name:
                 self.domainID = domain.get('id')
                 break
@@ -188,6 +202,7 @@ class shoalDecisionEngine(object):
             opens the url to shoal and gets the total load on the shoal server
         """
         loadSum = 0
+
         try:
             f = urllib.urlopen(self.shoalURL)
             nearestJson = f.read()
@@ -209,47 +224,51 @@ class shoalDecisionEngine(object):
             within the min and max number of VM's given and then finally changes the domain data.
         """
         r = requests.get("%s/domains" % self.api_url, auth=(self.user_id, self.token))
-        existingDomains = r.json()
-        domainData = None
-        for domain in existingDomains:
+        existing_domains = r.json()
+        domain_data = None
+        for domain in existing_domains:
             if domain.get('name') == self.domain_name:
-                domainData = domain
+                domain_data = domain
                 break
-            else:
-                sys.exit("Couldn't get domain %s" % self.domain_name)
+        else:
+            sys.exit("Couldn't get domain in run: %s" % self.domain_name)
 
         vmCount = self.minimumVMs
         print "Starting shoal test with %d VMs" % vmCount
 
-        domainData['vm_count'] = vmCount
+        domain_data['vm_count'] = vmCount
         r = requests.put("%s/domains/%s" % (self.api_url, domain.get('id')),
-                          data=json.dumps(domainData), auth=(self.user_id, self.token))
+                          data=json.dumps(domain_data), auth=(self.user_id, self.token))
 
         prevVMCount = vmCount
         while True:
             try:
                 self.getTotalLoadOnShoalServer()
-
+                print "Current shoal load: ", self.shoalLoad
                 # scale up/down based on thresholds
                 if self.shoalLoad < self.scaleDownThreshold:
-                    print "Load less than scale down threshold"
+                    print "Load less than scale down threshold %s" % (self.scaleDownThreshold)
                     vmCount -= self.scaleDownAmount
                 elif self.shoalLoad > self.scaleUpThreshold:
-                    print "Load greater than scale up threshold"
+                    print "Load greater than scale up threshold %s" % (self.scaleUpThreshold)
                     vmCount += self.sacleUpAmount
 
                 # lock vm count in to specified range
-                if vmCount < self.minimumVMs: vmCount = self.minimumVMs
-                if vmCount > self.maximumVMs: vmCount = self.maximumVMs
+                if vmCount < self.minimumVMs:
+                    print "VM count reached minimum, bounded at %s VM's" % (self.minimumVMs)
+                    vmCount = self.minimumVMs
+                if vmCount > self.maximumVMs:
+                    print "VM count reached maximum, bounded at %s VM's" % (self.maximumVMs)
+                    vmCount = self.maximumVMs
 
                 # if number of vms needs to change
                 if vmCount is not prevVMCount:
                     print "Scaling to %d VMs" % vmCount
-                    domainData['vm_count'] = vmCount
+                    domain_data['vm_count'] = vmCount
                     r = requests.put("%s/domains/%s" % (self.api_url, domain.get('id')),
-                                     data=json.dumps(domainData), auth=(self.user_id, self.token))
+                                     data=json.dumps(domain_data), auth=(self.user_id, self.token))
 
-                vmCount = prevVMCount
+                prevVMCount = vmCount
                 time.sleep(self.updateInterval)
 
             except KeyboardInterrupt:
