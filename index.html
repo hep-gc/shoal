@@ -1,83 +1,100 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
-    <meta charset='utf-8'>
+    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Shoal by 499</title>
 
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-
-    <title>Shoal by 499</title>
   </head>
-
   <body>
-    <header>
-      <div class="inner">
+    <div class="wrapper">
+      <header>
         <h1>Shoal</h1>
-        <h2>A squid cache publishing and advertising tool designed to work in fast changing environments</h2>
-        <a href="https://github.com/499/shoal" class="button"><small>View project on</small>GitHub</a>
-      </div>
-    </header>
+        <p>A squid cache publishing and advertising tool designed to work in fast changing environments</p>
 
-    <div id="content-wrapper">
-      <div class="inner clearfix">
-        <section id="main-content">
-          <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
+        <p class="view"><a href="https://github.com/499/shoal">View the Project on GitHub <small>499/shoal</small></a></p>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
+        <ul>
+          <li><a href="https://github.com/499/shoal/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/499/shoal/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/499/shoal">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="shoal-readme" class="anchor" href="#shoal-readme"><span class="octicon octicon-link"></span></a>Shoal README</h1>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<p>A squid cache publishing and advertising tool designed to work in fast changing environments. </p>
 
-<h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+<h2>
+<a name="overview" class="anchor" href="#overview"><span class="octicon octicon-link"></span></a>Overview</h2>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<p>The purpose of shoal is to allow you to build a continually updated list of squid caches. Each squid runs 
+shoal-agent which uses AMQP messages to publish the existence and load of the squid to the central shoal-server. 
+Shoal-server keeps a list of squids in memory and removes any squid which has not sent it a message recently. 
+The IPs of all squid servers are geo-referenced. Clients contact the squid server using a REST interface to 
+retrieve an ordered list of the nearest squids. The diagram below should give you some idea how this works:</p>
 
-<h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
+<p><img src="https://raw.github.com/hep-gc/shoal/gh-pages/shoal_diagram.png" alt="shoal diagram"></p>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<h2>
+<a name="components" class="anchor" href="#components"><span class="octicon octicon-link"></span></a>Components</h2>
 
-<h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+<p><strong>shoal-server</strong> maintains the list of running squids. It uses RabbitMQ to handle incoming AMQP messages from 
+squid servers. It provides a REST interface for programatically retrieving a json formatted ordered list of squids.
+It also provides a web interface for viewing the list.</p>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<p><strong>shoal-agent</strong> runs on squid servers and publishes the load and IP of the squid server to the shoal-server using 
+a json formatted AMQP message at regular intervals. This agent is designed to be trivially installed in a
+few seconds with python's pip tool.</p>
 
-<h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
+<p><strong>shoal-client</strong> is a reference client that can be used to contact the REST interface of the shoal-server.</p>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
-        </section>
+<h2>
+<a name="installing" class="anchor" href="#installing"><span class="octicon octicon-link"></span></a>Installing</h2>
 
-        <aside id="sidebar">
-          <a href="https://github.com/499/shoal/zipball/master" class="button">
-            <small>Download</small>
-            .zip file
-          </a>
-          <a href="https://github.com/499/shoal/tarball/master" class="button">
-            <small>Download</small>
-            .tar.gz file
-          </a>
+<p>All the components can be installed independently. Refer to the individual component READMEs for install 
+instructions:</p>
 
-          <p class="repo-owner"><a href="https://github.com/499/shoal"></a> is maintained by <a href="https://github.com/499">499</a>.</p>
+<ul>
+<li><a href="shoal-server/README.md">shoal-server/README.md</a></li>
+<li><a href="shoal-agent/README.md">shoal-agent/README.md</a></li>
+<li><a href="shoal-client/README.md">shoal-client/README.md</a></li>
+</ul><p>For people familiar with it, everything is available from PyPI.</p>
 
-          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
-        </aside>
-      </div>
+<h2>
+<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h2>
+
+<p>This program is free software; you can redistribute it and/or modify it under the terms of either:</p>
+
+<p>a) the GNU General Public License as published by the Free Software Foundation; either version 3, or 
+(at your option) any later version, or</p>
+
+<p>b) the Apache v2 License.</p>
+
+<p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without 
+even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See either the 
+GNU General Public License or the Apache v2 License for more details.</p>
+
+<p>You should have received a copy of the Apache v2 License with this software, in the file named 
+"LICENSE".</p>
+
+<p>You should also have received a copy of the GNU General Public License along with this program in 
+the file named "COPYING". If not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA or visit their web page on the internet at <a href="http://www.gnu.org/copyleft/gpl.html">http://www.gnu.org/copyleft/gpl.html</a>.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/499">499</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
     </div>
-
-  
+    <script src="javascripts/scale.fix.js"></script>
+    
   </body>
 </html>
