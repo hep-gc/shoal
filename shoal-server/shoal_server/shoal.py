@@ -20,7 +20,9 @@ from shoal_server import utilities
 class SquidNode(object):
 
     def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, last_active=time()):
-    """constructor for SquidNode, time created is current time"""
+        """
+        constructor for SquidNode, time created is current time
+        """
         self.key = key
         self.created = time()
         self.last_active = last_active
@@ -33,12 +35,16 @@ class SquidNode(object):
         self.load = load
 
     def update(self, load):
-    """updates SquidNode with current time and load"""
+        """
+        updates SquidNode with current time and load
+        """
         self.last_active = time()
         self.load = load
 
     def jsonify(self):
-    """returns a dictionary with current Squid data"""
+        """
+        returns a dictionary with current Squid data
+        """
         return dict({
                   "created": self.created,
                   "last_active": self.last_active,
@@ -58,7 +64,9 @@ class SquidNode(object):
 class ThreadMonitor(Thread):
 
     def __init__(self, shoal):
-    """constructor for ThreadMonitor, sets up and threads together RabbitMQConsumer and ShoalUpdate threads, also checks and downloads update as needed"""
+        """
+        constructor for ThreadMonitor, sets up and threads together RabbitMQConsumer and ShoalUpdate threads, also checks and downloads update as needed
+        """
         # check if geolitecity database needs updating
         if utilities.check_geolitecity_need_update():
             utilities.download_geolitecity()
@@ -77,7 +85,9 @@ class ThreadMonitor(Thread):
         self.threads.append(update_thread)
 
     def run(self):
-    """runs ThreadMonitor threads"""
+        """
+        runs ThreadMonitor threads
+        """
         for thread in self.threads:
             logging.info("starting", thread)
             thread.start()
@@ -89,7 +99,9 @@ class ThreadMonitor(Thread):
             sleep(1)
 
     def stop(self):
-    """stops ThreadMonitor threads"""
+        """
+        stops ThreadMonitor threads
+        """
         logging.info("Shutting down Shoal-Server... Please wait.")
         try:
             self.rabbitmq.stop()
@@ -110,27 +122,35 @@ class ShoalUpdate(Thread):
     INACTIVE = config.squid_inactive_time
 
     def __init__(self, shoal):
-    """constructor for ShoalUpdate, uses parent Thread constructor as well"""
+        """
+        constructor for ShoalUpdate, uses parent Thread constructor as well
+        """
         Thread.__init__(self)
         self.shoal = shoal
         self.running = False
 
     def run(self):
-    """runs ShoalUpdate"""
+        """
+        runs ShoalUpdate
+        """
         self.running = True
         while self.running:
             sleep(self.INTERVAL)
             self.update()
 
     def update(self):
-    """updates and pops squid from shoal if it's inactive"""
+        """
+        updates and pops squid from shoal if it's inactive
+        """
         curr = time()
         for squid in self.shoal.values():
             if curr - squid.last_active > self.INACTIVE:
                 self.shoal.pop(squid.key)
 
     def stop(self):
-    """stops ShoalUpdate"""
+        """
+        stops ShoalUpdate
+        """
         self.running = False
 
 """
@@ -139,7 +159,9 @@ class ShoalUpdate(Thread):
 class WebpyServer(Thread):
 
     def __init__(self, shoal):
-    """constructor for WebpyServer, uses parent Thread constructor as well, and uses values from config file and web"""
+        """
+        constructor for WebpyServer, uses parent Thread constructor as well, and uses values from config file and web
+        """
         Thread.__init__(self)
         web.shoal = shoal
         web.config.debug = False
@@ -151,7 +173,9 @@ class WebpyServer(Thread):
         )
 
     def run(self):
-    """runs web application"""
+        """
+        runs web application
+        """
         try:
             self.app = web.application(self.urls, globals())
             self.app.run()
@@ -160,11 +184,15 @@ class WebpyServer(Thread):
             sys.exit(1)
 
     def wsgi(self):
-    """returns Web Server Gateway Interface for application"""
+        """
+        returns Web Server Gateway Interface for application
+        """
         return web.application(self.urls, globals()).wsgifunc()
 
     def stop(self):
-    """stops web application"""
+        """
+        stops web application
+        """
         self.app.stop()
 
 """
@@ -181,7 +209,9 @@ class RabbitMQConsumer(Thread):
     INACTIVE = config.squid_inactive_time
 
     def __init__(self, shoal):
-    """constructor for RabbitMQConsumer, uses parent Thread constructor as well, and uses values from config file"""
+        """
+        constructor for RabbitMQConsumer, uses parent Thread constructor as well, and uses values from config file
+        """
         Thread.__init__(self)
         self.host = "{0}/{1}".format(config.amqp_server_url, urllib.quote_plus(config.amqp_virtual_host))
         self.shoal = shoal
@@ -191,7 +221,9 @@ class RabbitMQConsumer(Thread):
         self._consumer_tag = None 
 
     def connect(self):
-    """establishes a connection to the AMQP server with SSL options"""
+        """
+        establishes a connection to the AMQP server with SSL options
+        """
         # gets SSL options from config files
         failedConnectionAttempts = 0
         sslOptions = {}
@@ -228,15 +260,21 @@ class RabbitMQConsumer(Thread):
             continue
 
     def close_connection(self):
-    """closes connections with AMQP server"""
+        """
+        closes connections with AMQP server
+        """
         self._connection.close()
 
     def add_on_connection_close_callback(self):
-    """adds a connection and closes callback"""
+        """
+        adds a connection and closes callback
+        """
         self._connection.add_on_close_callback(self.on_connection_closed)
 
     def on_connection_closed(self, connection, reply_code, reply_text):
-    """stops IO connection loop"""
+        """
+        stops IO connection loop
+        """
         self._channel = None
         if self._closing:
             self._connection.ioloop.stop()
@@ -246,12 +284,16 @@ class RabbitMQConsumer(Thread):
             self._connection.add_timeout(5, self.reconnect)
 
     def on_connection_open(self, unused_connection):
-    """opens channel and connection"""
+        """
+        opens channel and connection
+        """
         self.add_on_connection_close_callback()
         self.open_channel()
 
     def reconnect(self):
-    """stops current IO loop and then reconnects"""
+        """
+        stops current IO loop and then reconnects
+        """
         # This is the old connection IOLoop instance, stop its ioloop
         self._connection.ioloop.stop()
         if not self._closing:
@@ -261,81 +303,115 @@ class RabbitMQConsumer(Thread):
             self._connection.ioloop.start()
 
     def add_on_channel_close_callback(self):
-    """adds a channel and closes callback"""
+        """
+        adds a channel and closes callback
+        """
         self._channel.add_on_close_callback(self.on_channel_closed)
 
     def on_channel_closed(self, channel, reply_code, reply_text):
-    """closes connection on channel"""
+        """
+        closes connection on channel
+        """
         logging.warning('Channel was closed: (%s) %s', reply_code, reply_text)
         self._connection.close()
 
     def on_channel_open(self, channel):
-    """opens connection on channel"""
+        """
+        opens connection on channel
+        """
         self._channel = channel
         self.add_on_channel_close_callback()
         self.setup_exchange(self.EXCHANGE)
 
     def setup_exchange(self, exchange_name):
-    """establishes exchange"""
+        """
+        establishes exchange
+        """
         self._channel.exchange_declare(self.on_exchange_declareok,
                                        exchange_name,
                                        self.EXCHANGE_TYPE)
 
     def on_exchange_declareok(self, unused_frame):
-    """callback for exchange"""
+        """
+        callback for exchange
+        """
         self.setup_queue(self.QUEUE)
 
     def setup_queue(self, queue_name):
-    """establishes queue, automatically deletes after disconnecting"""
+        """
+        establishes queue, automatically deletes after disconnecting
+        """
         self._channel.queue_declare(self.on_queue_declareok, queue_name, auto_delete=True)
 
     def on_queue_declareok(self, method_frame):
-    """callback for queue"""
+        """
+        callback for queue
+        """
         self._channel.queue_bind(self.on_bindok, self.QUEUE,
                                  self.EXCHANGE, self.ROUTING_KEY)
 
     def add_on_cancel_callback(self):
-    """cancels callback"""
+        """
+        cancels callback
+        """
         self._channel.add_on_cancel_callback(self.on_consumer_cancelled)
 
     def on_consumer_cancelled(self, method_frame):
-    """closes channel on consumer"""
+        """
+        closes channel on consumer
+        """
         if self._channel:
             self._channel.close()
 
     def acknowledge_message(self, delivery_tag):
-    """acknowledges that consumer has received the message"""
+        """
+        acknowledges that consumer has received the message
+        """
         self._channel.basic_ack(delivery_tag)
 
     def on_cancelok(self, unused_frame):
-    """calls close channel"""
+        """
+        calls close channel
+        """
         self.close_channel()
 
     def stop_consuming(self):
-    """stops consuming, exits out of basic consume"""
+        """
+        stops consuming, exits out of basic consume
+        """
         if self._channel:
             self._channel.basic_cancel(self.on_cancelok, self._consumer_tag)
 
     def start_consuming(self):
-    """starts consuming registered callbacks"""
+        """
+        starts consuming registered callbacks
+        """
         self.add_on_cancel_callback()
         self._consumer_tag = self._channel.basic_consume(self.on_message,
                                                          self.QUEUE)
 
     def on_bindok(self, unused_frame):
-    """callback for bind"""
+        """
+        callback for bind
+        """
         self.start_consuming()
 
     def close_channel(self):
-    """closes channel"""
+        """
+        closes channel
+        """
         self._channel.close()
 
     def open_channel(self):
-    """opens channel"""
+        """
+        opens channel
+        """
         self._connection.channel(on_open_callback=self.on_channel_open)
 
     def run(self):
-    """sets up connection and starts IO loop"""
+        """
+        sets up connection and starts IO loop
+        """
         try:
             self._connection = self.connect()
         except Exception as e:
@@ -344,17 +420,21 @@ class RabbitMQConsumer(Thread):
         self._connection.ioloop.start()
 
     def stop(self):
-    """stops consuming and closes IO loop"""
+        """
+        stops consuming and closes IO loop
+        """
         self._closing = True
         self.stop_consuming()
         self._connection.ioloop.start()
 
     def on_message(self, unused_channel, basic_deliver, properties, body):
-    """Retreives information from data, and then updates each squid load in 
-       shoal if the public/private ip matches. Shoal's key will update with
-       the load if there's a key in Shoal. geo_data will update or create a
-       new SquidNode if the time since the last timestamp is less than the
-       inactive time and a public/private ip exists"""
+        """
+        Retreives information from data, and then updates each squid load in 
+        shoal if the public/private ip matches. Shoal's key will update with
+        the load if there's a key in Shoal. geo_data will update or create a
+        new SquidNode if the time since the last timestamp is less than the
+        inactive time and a public/private ip exists
+        """
         external_ip = public_ip = private_ip = None
         curr = time()
     
