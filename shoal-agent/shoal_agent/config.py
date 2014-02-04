@@ -84,7 +84,7 @@ if config_file.has_option("rabbitmq", "use_ssl") and config_file.getboolean("rab
         amqp_client_key  = abspath(config_file.get("rabbitmq", "amqp_client_key"))
     except Exception as e:
         print "Configuration file problem: could not load SSL certs"
-    print e
+        print e
         sys.exit(1)
 
 if config_file.has_option("rabbitmq", "amqp_virtual_host"):
