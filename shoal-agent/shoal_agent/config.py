@@ -50,8 +50,7 @@ else:
 # Read config file from the given path above
 config_file = ConfigParser.ConfigParser()
 try:
-    
-config_file.read(path)
+    config_file.read(path)
 except IOError:
     print >> sys.stderr, "Configuration file problem: There was a " \
                           "problem reading %s. Check that it is readable," \
