@@ -171,7 +171,7 @@ def main():
 
     logging.info("shoal-agent configured, starting up")
     while True:
-    # only time/load are expected to change
+        # only time/load are expected to change
         # private/public/external IPs are kept constant while shoal-agent is running
         # the load is read only from a single interface either user specified or the first valid one netifaces finds
         try:
