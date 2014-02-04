@@ -5,13 +5,14 @@ import logging
 
 # Shoal Options Module
 
-""" Setup shoal using config file.
-    setup will look for a configuration file specified in the following order:
-       directory of shoal-agent script
-       /etc/shoal/shoal_agent.conf
-       ~/.shoal/shoal_agent.conf
+"""
+Setup shoal using config file.
+setup will look for a configuration file specified in the following order:
+directory of shoal-agent script
+/etc/shoal/shoal_agent.conf
+~/.shoal/shoal_agent.conf
    
-    The first config found will be used.
+The first config found will be used.
 """
 
 # set default values
@@ -49,7 +50,8 @@ else:
 # Read config file from the given path above
 config_file = ConfigParser.ConfigParser()
 try:
-    config_file.read(path)
+    
+config_file.read(path)
 except IOError:
     print >> sys.stderr, "Configuration file problem: There was a " \
                           "problem reading %s. Check that it is readable," \
@@ -110,17 +112,17 @@ if config_file.has_option("logging", "log_file"):
 if config_file.has_option("logging", "logging_level"):
     temp = config_file.get("logging", "logging_level")
     logLevels = {
-        "DEBUG"    : logging.DEBUG,
-        "INFO"     : logging.INFO,
-        "WARNING"  : logging.WARNING,
-        "ERROR"    : logging.ERROR,
-        "CRITICAL" : logging.CRITICAL,
+                "DEBUG"    : logging.DEBUG,
+                "INFO"     : logging.INFO,
+                "WARNING"  : logging.WARNING,
+                "ERROR"    : logging.ERROR,
+                "CRITICAL" : logging.CRITICAL,
                 }
     try:
         logging_level = logLevels[temp]
     except KeyError:
-    print "Configuration file problem: Invalid logging level"
-    sys.exit(1)
+        print "Configuration file problem: Invalid logging level"
+        sys.exit(1)
 
 if config_file.has_option("general", "squid_port"):
     try:
