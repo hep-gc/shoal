@@ -32,8 +32,11 @@ class nearest:
 
 class wpad:
     def GET(self):
+        # note view_wpad does not return a string
+        data = str(view_wpad())
         web.header('Content-Type', 'application/x-ns-proxy-autoconfig')
-        return view_wpad()
+        web.header('Content-Length',len(data))
+        return data
 
 def view_index(size):
     """
