@@ -1,8 +1,10 @@
 import tornado.web
+import config
 
 
 class IndexHandler(tornado.web.RequestHandler):
-    pass
+    def get(self):
+        self.write(self.application.global_settings)
 
 class NearestHandler(tornado.web.RequestHandler):
     pass

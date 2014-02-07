@@ -11,18 +11,18 @@ class Consumer(object):
 
     def __init__(self, settings, io_loop):
         """constructor for RabbitMQConsumer, uses values from settings file"""
-        self.host = "{0}/{1}".format(settings['rabbitmq']['host']['value'],
-                                     urllib.quote_plus(settings['rabbitmq']['virtual_host']['value']))
+        self.host = "{0}/{1}".format(settings['rabbitmq']['host'],
+                                     urllib.quote_plus(settings['rabbitmq']['virtual_host']))
         #self.shoal = shoal
         self._connection = None
         self._channel = None
         self._closing = False
         self._consumer_tag = None
         self.queue = socket.gethostname() + "-" + uuid.uuid1().hex
-        self.exchange = settings['rabbitmq']['exchange']['value']
-        self.exchange_type = settings['rabbitmq']['exchange_type']['value']
+        self.exchange = settings['rabbitmq']['exchange']
+        self.exchange_type = settings['rabbitmq']['exchange_type']
         self.routing_key = '#'
-        self.inactive = settings['squid']['inactive_time']['value']
+        self.inactive = settings['squid']['inactive_time']
 
     def connect(self):
         """establishes a connection to the AMQP server with SSL options"""
@@ -30,10 +30,10 @@ class Consumer(object):
         failedConnectionAttempts = 0
         sslOptions = {}
         try:
-            if settings['rabbitmq']['use_ssl']['value']:
-                sslOptions["ca_certs"] = settings['rabbitmq']['ca_cert']['value']
-                sslOptions["certfile"] = settings['rabbitmq']['client_cert']['value']
-                sslOptions["keyfile"]  = settings['rabbitmq']['client_key']['value']
+            if settings['rabbitmq']['use_ssl']:
+                sslOptions["ca_certs"] = settings['rabbitmq']['ca_cert']
+                sslOptions["certfile"] = settings['rabbitmq']['client_cert']
+                sslOptions["keyfile"]  = settings['rabbitmq']['client_key']
         except Exception as e:
             logging.error("Could not read SSL files")
             logging.error(e)
@@ -43,9 +43,9 @@ class Consumer(object):
         while True:
             try:
                 connection = pika.SelectConnection(pika.ConnectionParameters(
-                                                     host=settings['rabbitmq']['host']['value'],
-                                                     port=settings['rabbitmq']['port']['value'],
-                                                     ssl=settings['rabbitmq']['use_ssl']['value'],
+                                                     host=settings['rabbitmq']['host'],
+                                                     port=settings['rabbitmq']['port'],
+                                                     ssl=settings['rabbitmq']['use_ssl'],
                                                      ssl_options = sslOptions
                                                    ),
                                                    self.on_connection_open,
@@ -53,12 +53,12 @@ class Consumer(object):
                 return connection
             except pika.exceptions.AMQPConnectionError as e:
                 failedConnectionAttempts += 1
-                if failedConnectionAttempts >= settings['error']['reconnect_attempts']['value']:
+                if failedConnectionAttempts >= settings['error']['reconnect_attempts']:
                     logging.error("Was not able to establish connection to AMQP server after {0} attempts.".format(failedConnectionAttempts))
                     logging.error(e)
                     raise e
-            logging.error("Could not connect to AMQP Server. Retrying in {0} seconds...".format(settings['error']['reconnect_time']['value']))
-            sleep(settings['error']['reconnect_time']['value'])
+            logging.error("Could not connect to AMQP Server. Retrying in {0} seconds...".format(settings['error']['reconnect_time']))
+            sleep(settings['error']['reconnect_time'])
 
     def close_connection(self):
         """closes connections with AMQP server"""

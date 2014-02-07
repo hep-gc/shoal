@@ -15,68 +15,68 @@ import ConfigParser
 settings = {
     # General Section
     'general': {
-        'shoal_dir':          { 'value': '/var/shoal/',
+        'shoal_dir':          { 'default_value': '/var/shoal/',
                                 'type': 'int' },
-        'static_path':        { 'value': '',
+        'static_path':        { 'default_value': '',
                                 'type': 'string' },
-        'templates_path':     { 'value': '',
+        'template_path':     { 'default_value': '',
                                 'type': 'string' },
-        'port':               { 'value': 80,
+        'port':               { 'default_value': 80,
                                 'type': 'int' },
-        'geolitecity_path':   { 'value': '',
+        'geolitecity_path':   { 'default_value': '',
                                 'type': 'string' },
-        'geolitecity_url':    { 'value': 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz',
+        'geolitecity_url':    { 'default_value': 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz',
                                 'type': 'string' },
-        'geolitecity_update': { 'value':2592000,
+        'geolitecity_update': { 'default_value':2592000,
                                 'type': 'int' },
     },
     # Squid Section
     'squid': {
-        'cleanse_interval': { 'value': 15,
+        'cleanse_interval': { 'default_value': 15,
                               'type': 'int' },
-        'inactive_time':    { 'value': 180,
+        'inactive_time':    { 'default_value': 180,
                               'type': 'int' },
     },
     # Redis Section
     'redis': {
-        'port': { 'value': 6379,
+        'port': { 'default_value': 6379,
                   'type': 'int' },
-        'host': { 'value': 'localhost',
+        'host': { 'default_value': 'localhost',
                   'type': 'string' },
-        'db':   { 'value': 0,
+        'db':   { 'default_value': 0,
                   'type': 'int' },
     },
     # RabbitMQ Section
     'rabbitmq': {
-        'host':          { 'value': 'localhost',
+        'host':          { 'default_value': 'localhost',
                            'type': 'string' },
-        'port':          { 'value': 5672,
+        'port':          { 'default_value': 5672,
                            'type': 'int' },
-        'virtual_host':  { 'value': '/',
+        'virtual_host':  { 'default_value': '/',
                            'type': 'string' },
-        'exchange':      { 'value': 'shoal',
+        'exchange':      { 'default_value': 'shoal',
                            'type': 'string' },
-        'exchange_type': { 'value': 'topic',
+        'exchange_type': { 'default_value': 'topic',
                            'type': 'string' },
-        'use_ssl':       { 'value': False,
+        'use_ssl':       { 'default_value': False,
                            'type': 'bool' },
-        'ca_cert':       { 'value': '',
+        'ca_cert':       { 'default_value': '',
                            'type': 'string' },
-        'client_cert':   { 'value': '',
+        'client_cert':   { 'default_value': '',
                            'type': 'string' },
-        'client_key':    { 'value': '',
+        'client_key':    { 'default_value': '',
                                 'type': 'string' },
     },
     # Logging Section
     'logging': {
-        'log_file': { 'value': '/var/log/shoal_server.log',
+        'log_file': { 'default_value': '/var/log/shoal_server.log',
                       'type': 'string' },
     },
     # Error Section
     'error': {
-        'reconnect_time':     { 'value': 30,
+        'reconnect_time':     { 'default_value': 30,
                                 'type': 'int' },
-        'reconnect_attempts': { 'value': 10,
+        'reconnect_attempts': { 'default_value': 10,
                                 'type': 'int' },
     },
 }
@@ -119,36 +119,41 @@ except:
 for section in settings.keys():
     for key in settings[section]:
         try:
-            if settings[section][key]['type'] == 'string':
-                settings[section][key]['value'] = config_file.get(section, key)
-            if settings[section][key]['type'] == 'int':
-                try:
-                    settings[section][key]['value'] = config_file.getint(section, key)
-                except ValueError:
-                    print "Configuration file problem: %s must be an " \
-                            "boolean value." % key
-                    exit(1)
-            if settings[section][key]['type'] == 'bool':
-                try:
-                    settings[section][key]['value'] = config_file.getboolean(section, key)
-                except ValueError:
-                    print "Configuration file problem: %s must be an " \
-                            "boolean value." % key
-                    exit(1)
+            if config_file.has_option(section, key):
+                if settings[section][key]['type'] == 'int':
+                    try:
+                        settings[section][key] = config_file.getint(section, key)
+                    except ValueError:
+                        print "Configuration file problem: %s must be an " \
+                                "boolean value." % key
+                        exit(1)
+                elif settings[section][key]['type'] == 'bool':
+                    try:
+                        settings[section][key] = config_file.getboolean(section, key)
+                    except ValueError:
+                        print "Configuration file problem: %s must be an " \
+                                "boolean value." % key
+                        exit(1)
+                else:
+                    settings[section][key] = config_file.get(section, key)
+            else:
+                settings[section][key] = settings[section][key]['default_value']
         except Exception as e:
             pass
 
-if settings['rabbitmq']['use_ssl']['value']:
+if settings['rabbitmq']['use_ssl']:
     try:
-        settings['rabbitmq']['ca_cert']['value'] = abspath(config_file.get("rabbitmq", "ca_cert"))
-        settings['rabbitmq']['client_cert']['value'] = abspath(config_file.get("rabbitmq", "client_cert"))
-        settings['rabbitmq']['client_key']['value']  = abspath(config_file.get("rabbitmq", "client_key"))
+        settings['rabbitmq']['ca_cert'] = abspath(config_file.get("rabbitmq", "ca_cert"))
+        settings['rabbitmq']['client_cert'] = abspath(config_file.get("rabbitmq", "client_cert"))
+        settings['rabbitmq']['client_key']  = abspath(config_file.get("rabbitmq", "client_key"))
     except Exception as e:
         print "Configuration file problem: could not load SSL certs"
         print e
         sys.exit(1)
 
-if not settings['general']['static_path']['value']:
-    settings['general']['static_path']['value'] = join(settings['general']['shoal_dir']['value'], 'static')
-if not settings['general']['templates_path']['value']:
-    settings['general']['templates_path']['value'] = join(settings['general']['shoal_dir']['value'], 'templates')
+if not settings['general']['static_path']:
+    settings['general']['static_path'] = join(settings['general']['shoal_dir'], 'static')
+if not settings['general']['template_path']:
+    settings['general']['template_path'] = join(settings['general']['shoal_dir'], 'templates')
+if not settings['general']['geolitecity_path']:
+    settings['general']['geolitecity_path'] = join(settings['general']['shoal_dir'], 'bin')

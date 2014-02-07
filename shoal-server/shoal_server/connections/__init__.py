@@ -3,9 +3,9 @@ import rabbitmq
 
 def setup_redis(settings):
     """Redis Connection"""
-    return redis.StrictRedis(host=settings['redis']['host']['value'],
-                                   port=settings['redis']['port']['value'],
-                                   db=settings['redis']['db']['value'])
+    return redis.StrictRedis(host=settings['redis']['host'],
+                                   port=settings['redis']['port'],
+                                   db=settings['redis']['db'])
 
 
 def setup_rabbitmq(settings, io_loop):
