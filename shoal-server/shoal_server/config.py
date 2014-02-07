@@ -16,7 +16,7 @@ settings = {
     # General Section
     'general': {
         'shoal_dir':          { 'default_value': '/var/shoal/',
-                                'type': 'int' },
+                                'type': 'string' },
         'static_path':        { 'default_value': '',
                                 'type': 'string' },
         'template_path':     { 'default_value': '',
@@ -125,7 +125,7 @@ for section in settings.keys():
                         settings[section][key] = config_file.getint(section, key)
                     except ValueError:
                         print "Configuration file problem: %s must be an " \
-                                "boolean value." % key
+                                "int value." % key
                         exit(1)
                 elif settings[section][key]['type'] == 'bool':
                     try:
