@@ -2,7 +2,6 @@ from os.path import join, expanduser, exists, abspath
 import sys
 import ConfigParser
 
-# Shoal Options Module
 """Setup shoal using config file.
    setup will look for a configuration file specified in the following order:
      directory of shoal-server
@@ -10,26 +9,77 @@ import ConfigParser
      ~/.shoal/shoal_server.conf
    The first one found will be used.
 """
-# set default values
-shoal_dir = '/var/shoal/'
-geolitecity_path = shoal_dir
-geolitecity_url = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
-geolitecity_update = 2592000
-squid_cleanse_interval = 15
-squid_inactive_time = 180
-amqp_server_url = 'localhost'
-amqp_port       = 5672
-amqp_virtual_host = '/'
-amqp_exchange = 'shoal'
-amqp_exchange_type = 'topic'
-use_ssl = False
-amqp_ca_cert     = ''
-amqp_client_cert = ''
-amqp_client_key  = ''
-webpy_cache = False
-log_file = '/var/log/shoal_server.log'
-error_reconnect_time = 30
-error_reconnect_attempts = 10
+
+# set default values dictionary,
+# add new keys here, and they will automatically be populated
+settings = {
+    # General Section
+    'general': {
+        'shoal_dir':          { 'value': '/var/shoal/',
+                                'type': 'int' },
+        'web_static':         { 'value': '',
+                                'type': 'string' },
+        'web_templates':      { 'value': '',
+                                'type': 'string' },
+        'web_port':           { 'value': 80,
+                                'type': 'int' },
+        'geolitecity_path':   { 'value': '',
+                                'type': 'string' },
+        'geolitecity_url':    { 'value': 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz',
+                                'type': 'string' },
+        'geolitecity_update': { 'value':2592000,
+                               'type': 'int' },
+    },
+    # Squid Section
+    'squid': {
+        'squid_cleanse_interval': { 'value': 15,
+                                    'type': 'int' },
+        'squid_inactive_time':    { 'value': 180,
+                                    'type': 'int' },
+    },
+    # Redis Section
+    'redis': {
+        'redis_port': { 'value': 6379,
+                        'type': 'int' },
+        'redis_host': { 'value': 'localhost',
+                        'type': 'string' },
+        'redis_db':   { 'value': 0,
+                        'type': 'int' },
+    },
+    # RabbitMQ Section
+    'rabbitmq': {
+        'amqp_server_url':    { 'value': 'localhost',
+                                'type': 'string' },
+        'amqp_port':          { 'value': 5672,
+                                'type': 'int' },
+        'amqp_virtual_host':  { 'value': '/',
+                                'type': 'string' },
+        'amqp_exchange':      { 'value': 'shoal',
+                                'type': 'string' },
+        'amqp_exchange_type': { 'value': 'topic',
+                                'type': 'string' },
+        'use_ssl':            { 'value': False,
+                                'type': 'bool' },
+        'amqp_ca_cert':       { 'value': '',
+                                'type': 'string' },
+        'amqp_client_cert':   { 'value': '',
+                                'type': 'string' },
+        'amqp_client_key':    { 'value': '',
+                                'type': 'string' },
+    },
+    # Logging Section
+    'logging': {
+        'log_file': { 'value': '/var/log/shoal_server.log',
+                      'type': 'string' },
+    },
+    # Error Section
+    'error': {
+        'error_reconnect_time':     { 'value': 30,
+                                      'type': 'int' },
+        'error_reconnect_attempts': { 'value': 10,
+                                      'type': 'int' },
+    },
+}
 
 homedir = expanduser('~')
 
@@ -64,92 +114,36 @@ except:
           "your config file."
     raise
 
-# sets defaults to the options in the config_file
-if config_file.has_option("general", "shoal_dir"):
-    shoal_dir = config_file.get("general", "shoal_dir")
 
-if not config_file.has_option("general", "geolitecity_path"):
-    geolitecity_path = shoal_dir
-else:
-    geolitecity_path = config_file.get("general", "geolitecity_path")
+# Get values set in config file and update settings dictionary
+for section in settings.keys():
+    for key in settings[section]:
+        try:
+            if settings[section][key]['type'] == 'string':
+                settings[section][key]['value'] = config_file.get(section, key)
+            if settings[section][key]['type'] == 'int':
+                try:
+                    settings[section][key]['value'] = config_file.getint(section, key)
+                except ValueError:
+                    print "Configuration file problem: %s must be an " \
+                            "boolean value." % key
+                    exit(1)
+            if settings[section][key]['type'] == 'bool':
+                try:
+                    settings[section][key]['value'] = config_file.getboolean(section, key)
+                except ValueError:
+                    print "Configuration file problem: %s must be an " \
+                            "boolean value." % key
+                    exit(1)
+        except Exception as e:
+            pass
 
-if config_file.has_option("general", "geolitecity_url"):
-    geolitecity_url = config_file.get("general", "geolitecity_url")
-
-if config_file.has_option("general", "geolitecity_update"):
+if settings['rabbitmq']['use_ssl']['value']:
     try:
-        geolitecity_update = config_file.getint("general", "geolitecity_update")
-    except ValueError:
-        print "Configuration file problem: geolitecity_update must be an " \
-              "integer value."
-        sys.exit(1)
-
-if config_file.has_option("squid", "squid_cleanse_interval"):
-    try:
-        squid_cleanse_interval = config_file.getint("squid", "squid_cleanse_interval")
-    except ValueError:
-        print "Configuration file problem: squid_cleanse_interval must be an " \
-              "integer value."
-        sys.exit(1)
-
-if config_file.has_option("squid", "squid_inactive_time"):
-    try:
-        squid_inactive_time = config_file.getint("squid", "squid_inactive_time")
-    except ValueError:
-        print "Configuration file problem: squid_inactive_time must be an " \
-              "integer value."
-        sys.exit(1)
-
-if config_file.has_option("rabbitmq", "amqp_server_url"):
-    amqp_server_url = config_file.get("rabbitmq", "amqp_server_url")
-
-if config_file.has_option("rabbitmq", "amqp_port"):
-    try:
-        amqp_port = config_file.getint("rabbitmq", "amqp_port")
-    except ValueError:
-        print "Configuration file problem: amqp_port must be an " \
-              "integer value."
-        sys.exit(1)
-
-if config_file.has_option("rabbitmq", "amqp_virtual_host"):
-    amqp_virtual_host = config_file.get("rabbitmq", "amqp_virtual_host")
-
-if config_file.has_option("rabbitmq", "amqp_exchange"):
-    amqp_exchange = config_file.get("rabbitmq", "amqp_exchange")
-
-if config_file.has_option("rabbitmq", "amqp_exchange_type"):
-    amqp_exchange_type = config_file.get("rabbitmq", "amqp_exchange_type")
-
-if config_file.has_option("rabbitmq", "use_ssl") and config_file.getboolean("rabbitmq", "use_ssl"):
-    try:
-        use_ssl = True
-        amqp_ca_cert     = abspath(config_file.get("rabbitmq", "amqp_ca_cert"))
-        amqp_client_cert = abspath(config_file.get("rabbitmq", "amqp_client_cert"))
-        amqp_client_key  = abspath(config_file.get("rabbitmq", "amqp_client_key"))
+        settings['rabbitmq']['amqp_ca_cert']['value'] = abspath(config_file.get("rabbitmq", "amqp_ca_cert"))
+        settings['rabbitmq']['amqp_client_cert']['value'] = abspath(config_file.get("rabbitmq", "amqp_client_cert"))
+        settings['rabbitmq']['amqp_client_key']['value']  = abspath(config_file.get("rabbitmq", "amqp_client_key"))
     except Exception as e:
         print "Configuration file problem: could not load SSL certs"
         print e
         sys.exit(1)
-
-if config_file.has_option("webpy", "webpy_cache"):
-    try:
-        webpy_cache = config_file.getboolean("webpy", "webpy_cache")
-    except ValueError:
-        print "Configuration file problem: webpy_cache must be a " \
-              "boolean value."
-        sys.exit(1)
-
-if config_file.has_option("logging", "log_file"):
-    log_file = config_file.get("logging", "log_file")
-
-if config_file.has_option("error", "error_reconnect_time"):
-    try:
-        error_reconnect_time = config_file.getint("error", "error_reconnect_time")
-    except ValueError:
-        print "Configuration file problem: error_reconnect_time must be an integer"
-
-if config_file.has_option("error", "error_reconnect_attempts"):
-    try:
-        error_reconnect_attempts = config_file.getint("error", "error_reconnect_attempts")
-    except ValueError:
-        print "Configuration file problem: error_reconnect_attempts must be an integer"
