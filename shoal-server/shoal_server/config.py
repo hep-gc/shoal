@@ -17,54 +17,54 @@ settings = {
     'general': {
         'shoal_dir':          { 'value': '/var/shoal/',
                                 'type': 'int' },
-        'web_static':         { 'value': '',
+        'static_path':        { 'value': '',
                                 'type': 'string' },
-        'web_templates':      { 'value': '',
+        'templates_path':     { 'value': '',
                                 'type': 'string' },
-        'web_port':           { 'value': 80,
+        'port':               { 'value': 80,
                                 'type': 'int' },
         'geolitecity_path':   { 'value': '',
                                 'type': 'string' },
         'geolitecity_url':    { 'value': 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz',
                                 'type': 'string' },
         'geolitecity_update': { 'value':2592000,
-                               'type': 'int' },
+                                'type': 'int' },
     },
     # Squid Section
     'squid': {
-        'squid_cleanse_interval': { 'value': 15,
-                                    'type': 'int' },
-        'squid_inactive_time':    { 'value': 180,
-                                    'type': 'int' },
+        'cleanse_interval': { 'value': 15,
+                              'type': 'int' },
+        'inactive_time':    { 'value': 180,
+                              'type': 'int' },
     },
     # Redis Section
     'redis': {
-        'redis_port': { 'value': 6379,
-                        'type': 'int' },
-        'redis_host': { 'value': 'localhost',
-                        'type': 'string' },
-        'redis_db':   { 'value': 0,
-                        'type': 'int' },
+        'port': { 'value': 6379,
+                  'type': 'int' },
+        'host': { 'value': 'localhost',
+                  'type': 'string' },
+        'db':   { 'value': 0,
+                  'type': 'int' },
     },
     # RabbitMQ Section
     'rabbitmq': {
-        'amqp_server_url':    { 'value': 'localhost',
-                                'type': 'string' },
-        'amqp_port':          { 'value': 5672,
-                                'type': 'int' },
-        'amqp_virtual_host':  { 'value': '/',
-                                'type': 'string' },
-        'amqp_exchange':      { 'value': 'shoal',
-                                'type': 'string' },
-        'amqp_exchange_type': { 'value': 'topic',
-                                'type': 'string' },
-        'use_ssl':            { 'value': False,
-                                'type': 'bool' },
-        'amqp_ca_cert':       { 'value': '',
-                                'type': 'string' },
-        'amqp_client_cert':   { 'value': '',
-                                'type': 'string' },
-        'amqp_client_key':    { 'value': '',
+        'host':          { 'value': 'localhost',
+                           'type': 'string' },
+        'port':          { 'value': 5672,
+                           'type': 'int' },
+        'virtual_host':  { 'value': '/',
+                           'type': 'string' },
+        'exchange':      { 'value': 'shoal',
+                           'type': 'string' },
+        'exchange_type': { 'value': 'topic',
+                           'type': 'string' },
+        'use_ssl':       { 'value': False,
+                           'type': 'bool' },
+        'ca_cert':       { 'value': '',
+                           'type': 'string' },
+        'client_cert':   { 'value': '',
+                           'type': 'string' },
+        'client_key':    { 'value': '',
                                 'type': 'string' },
     },
     # Logging Section
@@ -74,10 +74,10 @@ settings = {
     },
     # Error Section
     'error': {
-        'error_reconnect_time':     { 'value': 30,
-                                      'type': 'int' },
-        'error_reconnect_attempts': { 'value': 10,
-                                      'type': 'int' },
+        'reconnect_time':     { 'value': 30,
+                                'type': 'int' },
+        'reconnect_attempts': { 'value': 10,
+                                'type': 'int' },
     },
 }
 
@@ -140,10 +140,15 @@ for section in settings.keys():
 
 if settings['rabbitmq']['use_ssl']['value']:
     try:
-        settings['rabbitmq']['amqp_ca_cert']['value'] = abspath(config_file.get("rabbitmq", "amqp_ca_cert"))
-        settings['rabbitmq']['amqp_client_cert']['value'] = abspath(config_file.get("rabbitmq", "amqp_client_cert"))
-        settings['rabbitmq']['amqp_client_key']['value']  = abspath(config_file.get("rabbitmq", "amqp_client_key"))
+        settings['rabbitmq']['ca_cert']['value'] = abspath(config_file.get("rabbitmq", "ca_cert"))
+        settings['rabbitmq']['client_cert']['value'] = abspath(config_file.get("rabbitmq", "client_cert"))
+        settings['rabbitmq']['client_key']['value']  = abspath(config_file.get("rabbitmq", "client_key"))
     except Exception as e:
         print "Configuration file problem: could not load SSL certs"
         print e
         sys.exit(1)
+
+if not settings['general']['static_path']['value']:
+    settings['general']['static_path']['value'] = join(settings['general']['shoal_dir']['value'], 'static')
+if not settings['general']['templates_path']['value']:
+    settings['general']['templates_path']['value'] = join(settings['general']['shoal_dir']['value'], 'templates')

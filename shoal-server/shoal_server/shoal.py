@@ -172,7 +172,7 @@ class WebpyServer(Thread):
     The consumer takes the json in message body, and tracks it in the dictionary `shoal`
 """
 class RabbitMQConsumer(Thread):
-    
+
     # sets defaults for RabbitMQ consumer
     QUEUE = socket.gethostname() + "-" + uuid.uuid1().hex
     EXCHANGE = config.amqp_exchange
@@ -188,14 +188,14 @@ class RabbitMQConsumer(Thread):
         self._connection = None
         self._channel = None
         self._closing = False
-        self._consumer_tag = None 
+        self._consumer_tag = None
 
     def connect(self):
     """establishes a connection to the AMQP server with SSL options"""
         # gets SSL options from config files
         failedConnectionAttempts = 0
         sslOptions = {}
-        try: 
+        try:
           if config.use_ssl:
             sslOptions["ca_certs"] = config.amqp_ca_cert
             sslOptions["certfile"] = config.amqp_client_cert
@@ -350,14 +350,14 @@ class RabbitMQConsumer(Thread):
         self._connection.ioloop.start()
 
     def on_message(self, unused_channel, basic_deliver, properties, body):
-    """Retreives information from data, and then updates each squid load in 
+    """Retreives information from data, and then updates each squid load in
        shoal if the public/private ip matches. Shoal's key will update with
        the load if there's a key in Shoal. geo_data will update or create a
        new SquidNode if the time since the last timestamp is less than the
        inactive time and a public/private ip exists"""
         external_ip = public_ip = private_ip = None
         curr = time()
-    
+
         # extracts information from data from body
         try:
             data = json.loads(body)
@@ -387,7 +387,7 @@ class RabbitMQConsumer(Thread):
             private_ip = data['private_ip']
         except KeyError:
             pass
-    
+
         # for each squid in shoal, if public or private ip matches,
         # load for the squid will update and send a acknowledgment message
         for squid in self.shoal.values():
@@ -395,7 +395,7 @@ class RabbitMQConsumer(Thread):
               squid.update(load)
               self.acknowledge_message(basic_deliver.delivery_tag)
               return
-    
+
         # if there's a key in shoal, shoal's key will update with the load
         if key in self.shoal:
             self.shoal[key].update(load)
