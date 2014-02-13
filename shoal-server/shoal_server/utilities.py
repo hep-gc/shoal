@@ -1,12 +1,10 @@
 import sys
 import os
-import subprocess
 import pygeoip
 import web
 import logging
-import operator
 import gzip
-from time import time, sleep
+from time import time
 from math import radians, cos, sin, asin, sqrt
 from urllib import urlretrieve
 
@@ -17,6 +15,8 @@ GEOLITE_URL = config.geolitecity_url
 GEOLITE_UPDATE = config.geolitecity_update
 
 logger = logging.getLogger('shoal_server')
+
+
 def get_geolocation(ip):
     """
         Given an IP return all its geographical information (using GeoLiteCity.dat)
@@ -28,14 +28,15 @@ def get_geolocation(ip):
         logger.error(e)
         return None
 
-def get_nearest_squids(ip, count=10):  
+
+def get_nearest_squids(ip, count=10):
     """
         Given an IP return a sorted list of nearest squids up to a given count
     """
     request_data = get_geolocation(ip)
     if not request_data:
         return None
-	
+
     try:
         r_lat = request_data['latitude']
         r_long = request_data['longitude']
@@ -45,19 +46,20 @@ def get_nearest_squids(ip, count=10):
         return None
 
     nearest_squids = []
-    
+
     ## computes the distance between each squid and the given ip address
     ## and sorts them in a list of squids
     for squid in web.shoal.values():
         s_lat = float(squid.geo_data['latitude'])
         s_long = float(squid.geo_data['longitude'])
 
-        distance = haversine(r_lat,r_long,s_lat,s_long)
+        distance = haversine(r_lat, r_long, s_lat, s_long)
 
-        nearest_squids.append((squid,distance))
+        nearest_squids.append((squid, distance))
 
     squids = sorted(nearest_squids, key=lambda k: (k[1], k[0].load))
     return squids[:count]
+
 
 def haversine(lat1,lon1,lat2,lon2):
     """
@@ -73,6 +75,7 @@ def haversine(lat1,lon1,lat2,lon2):
     c = 2 * asin(sqrt(a))
 
     return round((r * c),2)
+
 
 def check_geolitecity_need_update():
     """
@@ -90,6 +93,7 @@ def check_geolitecity_need_update():
     else:
         logger.warning('GeoLiteCity database needs updating.')
         return True
+
 
 def download_geolitecity():
     """
@@ -112,6 +116,7 @@ def download_geolitecity():
     if check_geolitecity_need_update():
         logger.error('GeoLiteCity database failed to update.')
 
+
 def generate_wpad(ip):
     """
         Parses the JSON of nearest squids and provides the data as a wpad
@@ -121,7 +126,7 @@ def generate_wpad(ip):
         proxy_str = ''
         for squid in squids:
             try:
-                proxy_str += "PROXY http://{0}:{1};".format(squid[0].hostname,squid[0].squid_port)
+                proxy_str += "PROXY http://{0}:{1};".format(squid[0].hostname, squid[0].squid_port)
             except TypeError as e:
                 continue
         return proxy_str
