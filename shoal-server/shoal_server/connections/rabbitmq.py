@@ -1,14 +1,20 @@
+import sys
 import pika
 import socket
 import urllib
 import uuid
+import logging
+import time
+import json
+import utilities
+from shoal_server.shoal import SquidNode
 
-"""
+
+class Consumer(object):
+    """
     Basic RabbitMQ async consumer. Consumes messages from a unique queue that is declared when Shoal server first starts.
     The consumer takes the json in message body, and tracks it in the dictionary `shoal`
-"""
-class Consumer(object):
-
+    """
     def __init__(self, settings, io_loop):
         """constructor for RabbitMQConsumer, uses values from settings file"""
         self.host = "{0}/{1}".format(settings['rabbitmq']['host'],
@@ -27,13 +33,13 @@ class Consumer(object):
     def connect(self):
         """establishes a connection to the AMQP server with SSL options"""
         # gets SSL options from settings files
-        failedConnectionAttempts = 0
-        sslOptions = {}
+        failed_connection_attempts = 0
+        ssl_options = {}
         try:
-            if settings['rabbitmq']['use_ssl']:
-                sslOptions["ca_certs"] = settings['rabbitmq']['ca_cert']
-                sslOptions["certfile"] = settings['rabbitmq']['client_cert']
-                sslOptions["keyfile"]  = settings['rabbitmq']['client_key']
+            if self.settings['rabbitmq']['use_ssl']:
+                ssl_options["ca_certs"] = self.settings['rabbitmq']['ca_cert']
+                ssl_options["certfile"] = self.settings['rabbitmq']['client_cert']
+                ssl_options["keyfile"] = self.settings['rabbitmq']['client_key']
         except Exception as e:
             logging.error("Could not read SSL files")
             logging.error(e)
@@ -42,23 +48,24 @@ class Consumer(object):
         # will retry a number of times before passing the exception up
         while True:
             try:
-                connection = pika.SelectConnection(pika.ConnectionParameters(
-                                                     host=settings['rabbitmq']['host'],
-                                                     port=settings['rabbitmq']['port'],
-                                                     ssl=settings['rabbitmq']['use_ssl'],
-                                                     ssl_options = sslOptions
-                                                   ),
-                                                   self.on_connection_open,
-                                                   stop_ioloop_on_close=False)
+                connection = pika.SelectConnection(
+                    pika.ConnectionParameters(
+                        host=self.settings['rabbitmq']['host'],
+                        port=self.settings['rabbitmq']['port'],
+                        ssl=self.settings['rabbitmq']['use_ssl'],
+                        ssl_options=ssl_options
+                    ),
+                    self.on_connection_open,
+                    stop_ioloop_on_close=False)
                 return connection
             except pika.exceptions.AMQPConnectionError as e:
-                failedConnectionAttempts += 1
-                if failedConnectionAttempts >= settings['error']['reconnect_attempts']:
-                    logging.error("Was not able to establish connection to AMQP server after {0} attempts.".format(failedConnectionAttempts))
+                failed_connection_attempts += 1
+                if failed_connection_attempts >= self.settings['error']['reconnect_attempts']:
+                    logging.error("Was not able to establish connection to AMQP server after {0} attempts.".format(failed_connection_attempts))
                     logging.error(e)
                     raise e
             logging.error("Could not connect to AMQP Server. Retrying in {0} seconds...".format(settings['error']['reconnect_time']))
-            sleep(settings['error']['reconnect_time'])
+            time.sleep(self.settings['error']['reconnect_time'])
 
     def close_connection(self):
         """closes connections with AMQP server"""
@@ -189,7 +196,7 @@ class Consumer(object):
            new SquidNode if the time since the last timestamp is less than the
            inactive time and a public/private ip exists"""
         external_ip = public_ip = private_ip = None
-        curr = time()
+        curr = time.time()
 
         # extracts information from data from body
         try:
@@ -224,10 +231,10 @@ class Consumer(object):
         # for each squid in shoal, if public or private ip matches,
         # load for the squid will update and send a acknowledgment message
         for squid in self.shoal.values():
-           if squid.public_ip == public_ip or squid.private_ip == private_ip:
-              squid.update(load)
-              self.acknowledge_message(basic_deliver.delivery_tag)
-              return
+            if squid.public_ip == public_ip or squid.private_ip == private_ip:
+                squid.update(load)
+                self.acknowledge_message(basic_deliver.delivery_tag)
+                return
 
         # if there's a key in shoal, shoal's key will update with the load
         if key in self.shoal:

@@ -8,11 +8,11 @@ from time import time
 from math import radians, cos, sin, asin, sqrt
 from urllib import urlretrieve
 
-import config
+from config import settings
 
-GEOLITE_DB = os.path.join(config.geolitecity_path,"GeoLiteCity.dat")
-GEOLITE_URL = config.geolitecity_url
-GEOLITE_UPDATE = config.geolitecity_update
+GEOLITE_DB = settings["general"]["geolitecity_path"]
+GEOLITE_URL = settings["general"]["geolitecity_url"]
+GEOLITE_UPDATE = settings["general"]["geolitecity_update"]
 
 logger = logging.getLogger('shoal_server')
 

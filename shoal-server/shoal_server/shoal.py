@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import sys
-import os
 import web
 import json
 import urllib
@@ -10,17 +9,20 @@ import socket
 import uuid
 from time import time, sleep
 from threading import Thread
+from config import settings
 
 from shoal_server import config
 from shoal_server import utilities
 
-"""
-    Basic class to store and update information about each squid server.
-"""
-class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, last_active=time()):
-    """constructor for SquidNode, time created is current time"""
+class SquidNode(object):
+    """
+    Basic class to store and update information about each squid server.
+    """
+
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data,
+                 last_active=time()):
+        """constructor for SquidNode, time created is current time"""
         self.key = key
         self.created = time()
         self.last_active = last_active
@@ -33,32 +35,33 @@ class SquidNode(object):
         self.load = load
 
     def update(self, load):
-    """updates SquidNode with current time and load"""
+        """updates SquidNode with current time and load"""
         self.last_active = time()
         self.load = load
 
     def jsonify(self):
-    """returns a dictionary with current Squid data"""
+        """returns a dictionary with current Squid data"""
         return dict({
-                  "created": self.created,
-                  "last_active": self.last_active,
-                  "hostname": self.hostname,
-                  "squid_port": self.squid_port,
-                  "public_ip": self.public_ip,
-                  "private_ip": self.private_ip,
-                  "external_ip": self.external_ip,
-                  "geo_data": self.geo_data,
-                  "load": self.load,
+                "created": self.created,
+                "last_active": self.last_active,
+                "hostname": self.hostname,
+                "squid_port": self.squid_port,
+                "public_ip": self.public_ip,
+                "private_ip": self.private_ip,
+                "external_ip": self.external_ip,
+                "geo_data": self.geo_data,
+                "load": self.load,
                 },
-               )
+            )
 
-"""
-    Main application that will monitor RabbitMQ and ShoalUpdate threads.
-"""
+
 class ThreadMonitor(Thread):
+    """
+    Main application that will monitor RabbitMQ and ShoalUpdate threads.
+    """
 
     def __init__(self, shoal):
-    """constructor for ThreadMonitor, sets up and threads together RabbitMQConsumer and ShoalUpdate threads, also checks and downloads update as needed"""
+        """constructor for ThreadMonitor, sets up and threads together RabbitMQConsumer and ShoalUpdate threads, also checks and downloads update as needed"""
         # check if geolitecity database needs updating
         if utilities.check_geolitecity_need_update():
             utilities.download_geolitecity()
@@ -77,7 +80,7 @@ class ThreadMonitor(Thread):
         self.threads.append(update_thread)
 
     def run(self):
-    """runs ThreadMonitor threads"""
+        """runs ThreadMonitor threads"""
         for thread in self.threads:
             logging.info("starting", thread)
             thread.start()
@@ -89,7 +92,7 @@ class ThreadMonitor(Thread):
             sleep(1)
 
     def stop(self):
-    """stops ThreadMonitor threads"""
+        """stops ThreadMonitor threads"""
         logging.info("Shutting down Shoal-Server... Please wait.")
         try:
             self.rabbitmq.stop()
@@ -101,45 +104,47 @@ class ThreadMonitor(Thread):
             sleep(2)
         sys.exit()
 
-"""
-    ShoalUpdate is used for trimming inactive squids every set interval.
-"""
-class ShoalUpdate(Thread):
 
-    INTERVAL = config.squid_cleanse_interval
-    INACTIVE = config.squid_inactive_time
+class ShoalUpdate(Thread):
+    """
+    ShoalUpdate is used for trimming inactive squids every set interval.
+    """
+
+    INTERVAL = settings["squid"]["cleanse_interval"]
+    INACTIVE = settings["squid"]["inactive_time"]
 
     def __init__(self, shoal):
-    """constructor for ShoalUpdate, uses parent Thread constructor as well"""
+        """constructor for ShoalUpdate, uses parent Thread constructor as well"""
         Thread.__init__(self)
         self.shoal = shoal
         self.running = False
 
     def run(self):
-    """runs ShoalUpdate"""
+        """runs ShoalUpdate"""
         self.running = True
         while self.running:
             sleep(self.INTERVAL)
             self.update()
 
     def update(self):
-    """updates and pops squid from shoal if it's inactive"""
+        """updates and pops squid from shoal if it's inactive"""
         curr = time()
         for squid in self.shoal.values():
             if curr - squid.last_active > self.INACTIVE:
                 self.shoal.pop(squid.key)
 
     def stop(self):
-    """stops ShoalUpdate"""
+        """stops ShoalUpdate"""
         self.running = False
 
-"""
-    Webpy webserver used to serve up active squid lists and API calls. Can run as either the development server or under mod_wsgi.
-"""
+
 class WebpyServer(Thread):
+    """
+    Webpy webserver used to serve up active squid lists and API calls. Can run as either the development server or under mod_wsgi.
+    """
 
     def __init__(self, shoal):
-    """constructor for WebpyServer, uses parent Thread constructor as well, and uses values from config file and web"""
+        """constructor for WebpyServer, uses parent Thread constructor as well, and uses values from config file and web"""
         Thread.__init__(self)
         web.shoal = shoal
         web.config.debug = False
@@ -151,7 +156,7 @@ class WebpyServer(Thread):
         )
 
     def run(self):
-    """runs web application"""
+        """runs web application"""
         try:
             self.app = web.application(self.urls, globals())
             self.app.run()
@@ -160,30 +165,31 @@ class WebpyServer(Thread):
             sys.exit(1)
 
     def wsgi(self):
-    """returns Web Server Gateway Interface for application"""
+        """returns Web Server Gateway Interface for application"""
         return web.application(self.urls, globals()).wsgifunc()
 
     def stop(self):
-    """stops web application"""
+        """stops web application"""
         self.app.stop()
 
-"""
+
+class RabbitMQConsumer(Thread):
+    """
     Basic RabbitMQ async consumer. Consumes messages from a unique queue that is declared when Shoal server first starts.
     The consumer takes the json in message body, and tracks it in the dictionary `shoal`
-"""
-class RabbitMQConsumer(Thread):
+    """
 
     # sets defaults for RabbitMQ consumer
     QUEUE = socket.gethostname() + "-" + uuid.uuid1().hex
-    EXCHANGE = config.amqp_exchange
-    EXCHANGE_TYPE = config.amqp_exchange_type
+    EXCHANGE = settings["rabbitmq"]["amqp_exchange"]
+    EXCHANGE_TYPE = settings["rabbitmq"]["amqp_exchange_type"]
     ROUTING_KEY = '#'
-    INACTIVE = config.squid_inactive_time
+    INACTIVE = settings["squid"]["inactive_time"]
 
     def __init__(self, shoal):
-    """constructor for RabbitMQConsumer, uses parent Thread constructor as well, and uses values from config file"""
+        """constructor for RabbitMQConsumer, uses parent Thread constructor as well, and uses values from config file"""
         Thread.__init__(self)
-        self.host = "{0}/{1}".format(config.amqp_server_url, urllib.quote_plus(config.amqp_virtual_host))
+        self.host = "{0}/{1}".format(settings["rabbitmq"]["host"], urllib.quote_plus(settings["rabbitmq"]["virtual_host"]))
         self.shoal = shoal
         self._connection = None
         self._channel = None
@@ -191,15 +197,15 @@ class RabbitMQConsumer(Thread):
         self._consumer_tag = None
 
     def connect(self):
-    """establishes a connection to the AMQP server with SSL options"""
+        """establishes a connection to the AMQP server with SSL options"""
         # gets SSL options from config files
-        failedConnectionAttempts = 0
-        sslOptions = {}
+        failed_connection_attempts = 0
+        ssl_options = {}
         try:
-          if config.use_ssl:
-            sslOptions["ca_certs"] = config.amqp_ca_cert
-            sslOptions["certfile"] = config.amqp_client_cert
-            sslOptions["keyfile"]  = config.amqp_client_key
+            if settings["rabbitmq"]["use_ssl"]:
+                ssl_options["ca_certs"] = settings["rabbitmq"]["ca_cert"]
+                ssl_options["certfile"] = settings["rabbitmq"]["client_cert"]
+                ssl_options["keyfile"] = settings["rabbitmq"]["client_key"]
         except Exception as e:
             logging.error("Could not read SSL files")
             logging.error(e)
@@ -207,36 +213,38 @@ class RabbitMQConsumer(Thread):
         # tries to establish a connection with AMQP server
         # will retry a number of times before passing the exception up
         while True:
-          try:
-            connection = pika.SelectConnection(pika.ConnectionParameters(
-                                                 host=config.amqp_server_url,
-                                                 port=config.amqp_port,
-                                                 ssl=config.use_ssl,
-                                                 ssl_options = sslOptions
-                                               ),
-                                               self.on_connection_open,
-                                               stop_ioloop_on_close=False)
-            return connection
-          except pika.exceptions.AMQPConnectionError as e:
-            failedConnectionAttempts += 1
-            if failedConnectionAttempts >= config.error_reconnect_attempts:
-              logging.error("Was not able to establish connection to AMQP server after {0} attempts.".format(failedConnectionAttempts))
-              logging.error(e)
-              raise e
-            logging.error("Could not connect to AMQP Server. Retrying in {0} seconds...".format(config.error_reconnect_time))
-            sleep(config.error_reconnect_time)
-            continue
+            try:
+                connection = pika.SelectConnection(
+                    pika.ConnectionParameters(
+                        host=settings["rabbitmq"]["host"],
+                        port=settings["rabbitmq"]["port"],
+                        ssl=settings["rabbitmq"]["use_ssl"],
+                        ssl_options=ssl_options
+                    ),
+                    self.on_connection_open,
+                    stop_ioloop_on_close=False)
+                return connection
+            except pika.exceptions.AMQPConnectionError as e:
+                failed_connection_attempts += 1
+                if failed_connection_attempts >= settings["error"]["reconnect_attempts"]:
+                    logging.error("Was not able to establish connection to AMQP server after {0} attempts.".format(failed_connection_attempts))
+                    logging.error(e)
+                    raise e
+                logging.error("Could not connect to AMQP Server. Retrying in {0} seconds..."
+                              .format(settings["error"]["reconnect_time"]))
+                sleep(settings["error"]["reconnect_time"])
+                continue
 
     def close_connection(self):
-    """closes connections with AMQP server"""
+        """closes connections with AMQP server"""
         self._connection.close()
 
     def add_on_connection_close_callback(self):
-    """adds a connection and closes callback"""
+        """adds a connection and closes callback"""
         self._connection.add_on_close_callback(self.on_connection_closed)
 
     def on_connection_closed(self, connection, reply_code, reply_text):
-    """stops IO connection loop"""
+        """stops IO connection loop"""
         self._channel = None
         if self._closing:
             self._connection.ioloop.stop()
@@ -246,12 +254,12 @@ class RabbitMQConsumer(Thread):
             self._connection.add_timeout(5, self.reconnect)
 
     def on_connection_open(self, unused_connection):
-    """opens channel and connection"""
+        """opens channel and connection"""
         self.add_on_connection_close_callback()
         self.open_channel()
 
     def reconnect(self):
-    """stops current IO loop and then reconnects"""
+        """stops current IO loop and then reconnects"""
         # This is the old connection IOLoop instance, stop its ioloop
         self._connection.ioloop.stop()
         if not self._closing:
@@ -261,81 +269,81 @@ class RabbitMQConsumer(Thread):
             self._connection.ioloop.start()
 
     def add_on_channel_close_callback(self):
-    """adds a channel and closes callback"""
+        """adds a channel and closes callback"""
         self._channel.add_on_close_callback(self.on_channel_closed)
 
     def on_channel_closed(self, channel, reply_code, reply_text):
-    """closes connection on channel"""
+        """closes connection on channel"""
         logging.warning('Channel was closed: (%s) %s', reply_code, reply_text)
         self._connection.close()
 
     def on_channel_open(self, channel):
-    """opens connection on channel"""
+        """opens connection on channel"""
         self._channel = channel
         self.add_on_channel_close_callback()
         self.setup_exchange(self.EXCHANGE)
 
     def setup_exchange(self, exchange_name):
-    """establishes exchange"""
+        """establishes exchange"""
         self._channel.exchange_declare(self.on_exchange_declareok,
                                        exchange_name,
                                        self.EXCHANGE_TYPE)
 
     def on_exchange_declareok(self, unused_frame):
-    """callback for exchange"""
+        """callback for exchange"""
         self.setup_queue(self.QUEUE)
 
     def setup_queue(self, queue_name):
-    """establishes queue, automatically deletes after disconnecting"""
+        """establishes queue, automatically deletes after disconnecting"""
         self._channel.queue_declare(self.on_queue_declareok, queue_name, auto_delete=True)
 
     def on_queue_declareok(self, method_frame):
-    """callback for queue"""
+        """callback for queue"""
         self._channel.queue_bind(self.on_bindok, self.QUEUE,
                                  self.EXCHANGE, self.ROUTING_KEY)
 
     def add_on_cancel_callback(self):
-    """cancels callback"""
+        """cancels callback"""
         self._channel.add_on_cancel_callback(self.on_consumer_cancelled)
 
     def on_consumer_cancelled(self, method_frame):
-    """closes channel on consumer"""
+        """closes channel on consumer"""
         if self._channel:
             self._channel.close()
 
     def acknowledge_message(self, delivery_tag):
-    """acknowledges that consumer has received the message"""
+        """acknowledges that consumer has received the message"""
         self._channel.basic_ack(delivery_tag)
 
     def on_cancelok(self, unused_frame):
-    """calls close channel"""
+        """calls close channel"""
         self.close_channel()
 
     def stop_consuming(self):
-    """stops consuming, exits out of basic consume"""
+        """stops consuming, exits out of basic consume"""
         if self._channel:
             self._channel.basic_cancel(self.on_cancelok, self._consumer_tag)
 
     def start_consuming(self):
-    """starts consuming registered callbacks"""
+        """starts consuming registered callbacks"""
         self.add_on_cancel_callback()
         self._consumer_tag = self._channel.basic_consume(self.on_message,
                                                          self.QUEUE)
 
     def on_bindok(self, unused_frame):
-    """callback for bind"""
+        """callback for bind"""
         self.start_consuming()
 
     def close_channel(self):
-    """closes channel"""
+        """closes channel"""
         self._channel.close()
 
     def open_channel(self):
-    """opens channel"""
+        """opens channel"""
         self._connection.channel(on_open_callback=self.on_channel_open)
 
     def run(self):
-    """sets up connection and starts IO loop"""
+        """sets up connection and starts IO loop"""
         try:
             self._connection = self.connect()
         except Exception as e:
@@ -344,13 +352,13 @@ class RabbitMQConsumer(Thread):
         self._connection.ioloop.start()
 
     def stop(self):
-    """stops consuming and closes IO loop"""
+        """stops consuming and closes IO loop"""
         self._closing = True
         self.stop_consuming()
         self._connection.ioloop.start()
 
     def on_message(self, unused_channel, basic_deliver, properties, body):
-    """Retreives information from data, and then updates each squid load in
+        """Retreives information from data, and then updates each squid load in
        shoal if the public/private ip matches. Shoal's key will update with
        the load if there's a key in Shoal. geo_data will update or create a
        new SquidNode if the time since the last timestamp is less than the
