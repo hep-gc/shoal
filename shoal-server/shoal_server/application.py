@@ -22,7 +22,7 @@ class Application(tornado.web.Application):
         # setup rabbitmq connection
         self.rabbitmq = connections.setup_rabbitmq(self.global_settings, self.shoal)
 
-        # setup periodic squid cleanse (5 seconds).
+        # setup periodic squid cleanse (configurable).
         tornado.ioloop.PeriodicCallback(self.cleanse,
                 self.global_settings["squid"]["cleanse_interval"]*1000,
                 io_loop=io_loop).start()
