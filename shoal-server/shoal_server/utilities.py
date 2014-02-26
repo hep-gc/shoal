@@ -2,7 +2,6 @@ import sys
 import os
 import subprocess
 import pygeoip
-import web
 import logging
 import operator
 import gzip
@@ -10,11 +9,12 @@ from time import time, sleep
 from math import radians, cos, sin, asin, sqrt
 from urllib import urlretrieve
 
-import config
+from config import settings as config
 
-GEOLITE_DB = os.path.join(config.geolitecity_path,"GeoLiteCity.dat")
-GEOLITE_URL = config.geolitecity_url
-GEOLITE_UPDATE = config.geolitecity_update
+
+GEOLITE_DB = os.path.join(config['general']['geolitecity_path'] ,"GeoLiteCity.dat")
+GEOLITE_URL = config['general']['geolitecity_url']
+GEOLITE_UPDATE = config["general"]['geolitecity_update']
 
 logger = logging.getLogger('shoal_server')
 def get_geolocation(ip):
@@ -28,14 +28,14 @@ def get_geolocation(ip):
         logger.error(e)
         return None
 
-def get_nearest_squids(ip, count=10):  
+def get_nearest_squids(ip, shoal, count=10):
     """
         Given an IP return a sorted list of nearest squids up to a given count
     """
     request_data = get_geolocation(ip)
     if not request_data:
         return None
-	
+
     try:
         r_lat = request_data['latitude']
         r_long = request_data['longitude']
@@ -45,10 +45,10 @@ def get_nearest_squids(ip, count=10):
         return None
 
     nearest_squids = []
-    
+
     ## computes the distance between each squid and the given ip address
     ## and sorts them in a list of squids
-    for squid in web.shoal.values():
+    for squid in shoal.values():
         s_lat = float(squid.geo_data['latitude'])
         s_long = float(squid.geo_data['longitude'])
 
