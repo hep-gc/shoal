@@ -22,7 +22,21 @@ class Application(tornado.web.Application):
         # setup rabbitmq connection
         self.rabbitmq = connections.setup_rabbitmq(self.global_settings, self.shoal)
 
+        # setup periodic squid cleanse (configurable).
+        tornado.ioloop.PeriodicCallback(self.cleanse,
+                self.global_settings["squid"]["cleanse_interval"]*1000,
+                io_loop=io_loop).start()
+
         tornado.web.Application.__init__(self, handlers, **config.settings['general'])
+
+    # Cleans up the inactive squids. Runs periodically.
+    def cleanse(self):
+        """updates and pops squid from shoal if it's inactive"""
+        curr = time.time()
+        print "cleaning your squeeds"
+        for squid in self.shoal.values():
+            if curr - squid["last_active"] > self.global_settings["squid"]["inactive_time"]:
+                self.shoal.pop(squid.key)
 
 
 def run():
@@ -30,7 +44,10 @@ def run():
 
     # pass io_loop so connections(pika) can hook into it.
     app = Application(io_loop)
+
+    # Hook RabbitMQ consumer into Tornado IOLoop
     io_loop.add_timeout(time.time() + .1, app.rabbitmq.run)
+
     app.listen(config.settings['general']['port'])
 
     io_loop.start()

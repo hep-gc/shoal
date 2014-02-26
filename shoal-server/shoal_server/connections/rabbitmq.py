@@ -206,8 +206,8 @@ class Consumer(object):
         # for each squid in shoal, if public or private ip matches,
         # load for the squid will update and send a acknowledgment message
         for squid in self.shoal.values():
-           if squid.public_ip == public_ip or squid.private_ip == private_ip:
-              squid.update(load)
+           if squid["public_ip"] == public_ip or squid["private_ip"] == private_ip:
+              squid.update({"load": data["load"]})
               self.acknowledge_message(basic_deliver.delivery_tag)
               return
 
@@ -218,13 +218,15 @@ class Consumer(object):
         # and there exists a public or private ip, then the geo_data will update its location
         # or create a new SquidNode for shoal if the geo_data doesn't exist
         elif (curr - time_sent < self.inactive) and (public_ip or private_ip):
-            geo_data = utilities.get_geolocation(public_ip)
-            if not geo_data:
-                geo_data = utilities.get_geolocation(external_ip)
-            if not geo_data:
-                logging.error("Unable to generate geo location data, discarding message")
-            else:
-                new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, time_sent)
-                self.shoal[key] = new_squid
+            """DISABLED DUE TO MAXMIND DATABASE API UPDATE"""
+            #geo_data = utilities.get_geolocation(public_ip)
+            #if not geo_data:
+            #    geo_data = utilities.get_geolocation(external_ip)
+            #if not geo_data:
+            #    logging.error("Unable to generate geo location data, discarding message")
+            #else:
+            """END DISABLE"""
+            data["last_active"] = time()
+            self.shoal[key] = data
 
         self.acknowledge_message(basic_deliver.delivery_tag)
