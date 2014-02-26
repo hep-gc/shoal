@@ -1,6 +1,7 @@
 import config
 import connections
 import logging
+import time
 import tornado.web
 import tornado.ioloop
 
@@ -14,8 +15,12 @@ class Application(tornado.web.Application):
             (r"/nearest", NearestHandler),
         ]
         self.global_settings = config.settings
-        # Setup connections, pass io_loop and config
-        self.conn = connections.setup(config.settings, io_loop)
+        self.shoal = {}
+        # Setup Redis Connection
+        self.redis = connections.setup_redis(self.global_settings)
+
+        # setup rabbitmq connection
+        self.rabbitmq = connections.setup_rabbitmq(self.global_settings, self.shoal)
 
         tornado.web.Application.__init__(self, handlers, **config.settings['general'])
 
@@ -25,6 +30,7 @@ def run():
 
     # pass io_loop so connections(pika) can hook into it.
     app = Application(io_loop)
+    io_loop.add_timeout(time.time() + .1, app.rabbitmq.run)
     app.listen(config.settings['general']['port'])
 
     io_loop.start()

@@ -8,12 +8,5 @@ def setup_redis(settings):
                                    db=settings['redis']['db'])
 
 
-def setup_rabbitmq(settings, io_loop):
-    return rabbitmq.Consumer(settings, io_loop)
-
-
-def setup(settings, io_loop):
-    conn = dict()
-    conn['redis'] = setup_redis(settings)
-    conn['rabbitmq'] = setup_rabbitmq(settings, io_loop)
-    return conn
+def setup_rabbitmq(settings, shoal):
+    return rabbitmq.Consumer(settings, shoal)
