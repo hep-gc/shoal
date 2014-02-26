@@ -35,8 +35,9 @@ class Application(tornado.web.Application):
         curr = time.time()
         print "cleaning your squeeds"
         for squid in self.shoal.values():
-            if curr - squid.last_active > self.INACTIVE:
+            if curr - squid["last_active"] > self.global_settings["squid"]["inactive_time"]:
                 self.shoal.pop(squid.key)
+
 
 def run():
     io_loop = tornado.ioloop.IOLoop.instance()
