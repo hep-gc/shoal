@@ -49,7 +49,7 @@ def amqp_send(data, topics=['info']):
         logging.error("Could not read SSL files:")
         logging.error(e)
         raise e
-  
+ 
     connection = pika.BlockingConnection(pika.ConnectionParameters
                                          (
                                           host=config.amqp_server_url,
@@ -184,6 +184,7 @@ def main():
             data['load'] = get_load_data(interface)
             try:
                 amqp_send(json.dumps(data))
+                print "SENT"
                 logging.debug("heartbeat sent to shoal-server sucessfully")
             except Exception as e:
                 logging.error("Could not connect to AMQP Server. Attempting to connect in {0}s...".format(INTERVAL))          
