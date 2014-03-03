@@ -1,14 +1,14 @@
-#Shoal Agent v0.6.X README
+#Shoal Agent v0.8.X README
 
 ##Basic Commands
 With the basic `shoal_agent` init script you can do the following:
 
 ```
-service shoal_agent start
-service shoal_agent stop
-service shoal_agent reload 
-service shoal_agent status
-service shoal_agent force-restart
+service shoal-agent start
+service shoal-agent stop
+service shoal-agent reload 
+service shoal-agent status
+service shoal-agent force-restart
 ```
 
 ##Installation
@@ -41,12 +41,8 @@ Install the agent:
 
 Configure the agent and start it:
 
-    vim /etc/shoal/shoal_agent.conf`
-    touch /var/log/shoal_agent.log
-    chown nobody:nobody /var/log/shoal_agent.log
-    sudo service shoal_agent start
-    sudo /sbin/chkconfig --add shoal_agent
-
+    vim /etc/shoal/shoal_agent.conf
+    service shoal-agent start
 
 ###Other Methods
 1. [Install EPEL](http://fedoraproject.org/wiki/EPEL)
