@@ -468,10 +468,12 @@ class RabbitMQConsumer(Thread):
         except KeyError:
             pass
     
-        # for each squid in shoal, if public or private ip matches,
+        # for each squid in shoal, if public ip matches,
         # load for the squid will update and send a acknowledgment message
+        # TODO: check to see if this is problem for natted squids. This loop may 
+        # not be necessary
         for squid in self.shoal.values():
-           if squid.public_ip == public_ip or squid.private_ip == private_ip:
+           if squid.public_ip == public_ip:
               squid.update(load)
               self.acknowledge_message(basic_deliver.delivery_tag)
               return
