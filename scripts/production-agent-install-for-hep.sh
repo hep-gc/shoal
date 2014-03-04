@@ -5,13 +5,18 @@
 # it to connect to the production shoal instance used 
 # by the ATLAS Cloud group.
 #
+# Author Ian Gable <igable@uvic.ca>
 #
 
 curl http://shoal.heprc.uvic.ca/repo/shoal.repo -o /etc/yum.repos.d/shoal.repo
 
+# importing RPM signing key for Shoal RPMs
+rpm --import http://hepnetcanada.ca/pubkeys/igable.asc
+
 echo -e "\nAttempting install of EPEL repository\n"
 echo "The following could fail without a problem on the SLC varient and if you"
-echo "have EPEL installed already"
+echo "have EPEL installed already\n"
+
 yum install -y yum-conf-epel
 
 # install the agent
