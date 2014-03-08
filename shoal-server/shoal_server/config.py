@@ -1,6 +1,7 @@
 from os.path import join, expanduser, exists, abspath
 import sys
 import ConfigParser
+import logging
 
 """Setup shoal using config file.
    setup will look for a configuration file specified in the following order:
@@ -10,25 +11,32 @@ import ConfigParser
    The first one found will be used.
 """
 
+SHOAL_DIR = '/var/shoal/'
+
 # set default values dictionary,
 # add new keys here, and they will automatically be populated
 settings = {
-    # General Section
-    'general': {
-        'shoal_dir':          { 'default_value': '/var/shoal/',
+    # Tornado Specific Section
+    'tornado': {
+        'shoal_dir':          { 'default_value': SHOAL_DIR,
                                 'type': 'string' },
-        'static_path':        { 'default_value': '',
+        'static_path':        { 'default_value': join(SHOAL_DIR, 'static'),
                                 'type': 'string' },
-        'template_path':     { 'default_value': '',
+        'template_path':     { 'default_value': join(SHOAL_DIR, 'templates'),
                                 'type': 'string' },
         'port':               { 'default_value': 80,
                                 'type': 'int' },
-        'geolitecity_path':   { 'default_value': '',
+    },
+    # General Section
+    'general': {
+        'geolitecity_path':   { 'default_value': join(SHOAL_DIR, 'bin'),
                                 'type': 'string' },
         'geolitecity_url':    { 'default_value': 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz',
                                 'type': 'string' },
         'geolitecity_update': { 'default_value':2592000,
                                 'type': 'int' },
+        'debug':              { 'default_value': False,
+                                'type': 'bool' },
     },
     # Squid Section
     'squid': {
@@ -65,83 +73,80 @@ settings = {
         'client_cert':   { 'default_value': '',
                            'type': 'string' },
         'client_key':    { 'default_value': '',
-                                'type': 'string' },
+                           'type': 'string' },
+        'reconnection_attempts': { 'default_value': 10,
+                                   'type': 'int' },
     },
     # Logging Section
     'logging': {
         'log_file': { 'default_value': '/var/log/shoal_server.log',
                       'type': 'string' },
-    },
-    # Error Section
-    'error': {
-        'reconnect_time':     { 'default_value': 30,
-                                'type': 'int' },
-        'reconnect_attempts': { 'default_value': 10,
-                                'type': 'int' },
+    'log_level': { 'default_value': logging.ERROR,
+                        'type': 'string' },
     },
 }
 
-homedir = expanduser('~')
+def setup():
+    homedir = expanduser('~')
 
-# find config file by checking the directory of the calling script and sets path
-if  exists(abspath(sys.path[0]+"/shoal_server.conf")):
-    path = abspath(sys.path[0]+"/shoal_server.conf")
-elif exists("/etc/shoal/shoal_server.conf"):
-    path = "/etc/shoal/shoal_server.conf"
-elif exists(abspath(homedir + "/.shoal/shoal_server.conf")):
-    path = abspath(homedir + "/.shoal/shoal_server.conf")
-else:
-    print >> sys.stderr, "Configuration file problem: There doesn't " \
-                         "seem to be a configuration file. " \
-                         "You can specify one in /etc/shoal/shoal_server.conf"
-    sys.exit(1)
+    # find config file by checking the directory of the calling script and sets path
+    if  exists(abspath(sys.path[0]+"/shoal_server.conf")):
+        path = abspath(sys.path[0]+"/shoal_server.conf")
+    elif exists("/etc/shoal/shoal_server.conf"):
+        path = "/etc/shoal/shoal_server.conf"
+    elif exists(abspath(homedir + "/.shoal/shoal_server.conf")):
+        path = abspath(homedir + "/.shoal/shoal_server.conf")
+    else:
+        print >> sys.stderr, "Configuration file problem: There doesn't " \
+                             "seem to be a configuration file. " \
+                             "You can specify one in /etc/shoal/shoal_server.conf"
+        sys.exit(1)
 
-# Read config file from the given path above
-config_file = ConfigParser.ConfigParser()
-try:
-    config_file.read(path)
-except IOError:
-    print >> sys.stderr, "Configuration file problem: There was a " \
-                         "problem reading %s. Check that it is readable," \
-                         "and that it exists. " % path
-    raise
-except ConfigParser.ParsingError:
-    print >> sys.stderr, "Configuration file problem: Couldn't " \
-                         "parse your file. Check for spaces before or after variables."
-    raise
-except:
-    print "Configuration file problem: There is something wrong with " \
-          "your config file."
-    raise
+    # Read config file from the given path above
+    config_file = ConfigParser.ConfigParser()
+    try:
+        config_file.read(path)
+    except IOError:
+        print >> sys.stderr, "Configuration file problem: There was a " \
+                             "problem reading %s. Check that it is readable," \
+                             "and that it exists. " % path
+        raise
+    except ConfigParser.ParsingError:
+        print >> sys.stderr, "Configuration file problem: Couldn't " \
+                             "parse your file. Check for spaces before or after variables."
+        raise
+    except:
+        print "Configuration file problem: There is something wrong with " \
+              "your config file."
+        raise
 
-
-# Get values set in config file and update settings dictionary
-for section in settings.keys():
-    for key in settings[section]:
-        try:
-            if config_file.has_option(section, key):
-                if settings[section][key]['type'] == 'int':
-                    try:
-                        settings[section][key] = config_file.getint(section, key)
-                    except ValueError:
-                        print "Configuration file problem: %s must be an " \
-                                "int value." % key
-                        exit(1)
-                elif settings[section][key]['type'] == 'bool':
-                    try:
-                        settings[section][key] = config_file.getboolean(section, key)
-                    except ValueError:
-                        print "Configuration file problem: %s must be an " \
-                                "boolean value." % key
-                        exit(1)
+    # Get values set in config file and update settings dictionary
+    for section in settings.keys():
+        for key in settings[section]:
+            try:
+                if config_file.has_option(section, key):
+                    if settings[section][key]['type'] == 'int':
+                        try:
+                            settings[section][key] = config_file.getint(section, key)
+                        except ValueError:
+                            print "Configuration file problem: %s must be an " \
+                                    "int value." % key
+                            exit(1)
+                    elif settings[section][key]['type'] == 'bool':
+                        try:
+                            settings[section][key] = config_file.getboolean(section, key)
+                        except ValueError:
+                            print "Configuration file problem: %s must be an " \
+                                    "boolean value." % key
+                            exit(1)
+                    else:
+                        settings[section][key] = config_file.get(section, key)
                 else:
-                    settings[section][key] = config_file.get(section, key)
-            else:
-                settings[section][key] = settings[section][key]['default_value']
-        except Exception as e:
-            pass
+                    settings[section][key] = settings[section][key]['default_value']
+            except Exception as e:
+                pass
 
-if settings['rabbitmq']['use_ssl']:
+def setup_ssl():
     try:
         settings['rabbitmq']['ca_cert'] = abspath(config_file.get("rabbitmq", "ca_cert"))
         settings['rabbitmq']['client_cert'] = abspath(config_file.get("rabbitmq", "client_cert"))
@@ -151,9 +156,33 @@ if settings['rabbitmq']['use_ssl']:
         print e
         sys.exit(1)
 
-if not settings['general']['static_path']:
-    settings['general']['static_path'] = join(settings['general']['shoal_dir'], 'static')
-if not settings['general']['template_path']:
-    settings['general']['template_path'] = join(settings['general']['shoal_dir'], 'templates')
-if not settings['general']['geolitecity_path']:
-    settings['general']['geolitecity_path'] = join(settings['general']['shoal_dir'], 'bin')
+def setup_logging():
+    if type(settings['logging']['log_level']) != int:
+        try:
+            settings['logging']['log_level'] = getattr(logging, settings['logging']['log_level'].upper())
+        except Excetpion as e:
+            print e
+
+    # setup logging.
+    log_format = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
+    # set up logging to file - see previous section for more details
+    logging.basicConfig(level=logging.DEBUG,
+                        format=log_format,
+                        datefmt='%m-%d %H:%M',
+                        filename=settings['logging']['log_file'])
+    # define a Handler which writes INFO messages or higher to the sys.stderr
+    if settings['general']['debug']:
+        console = logging.StreamHandler()
+        console.setLevel(logging.INFO)
+        # set a format which is simpler for console use
+        formatter = logging.Formatter(log_format)
+        # tell the handler to use this format
+        console.setFormatter(formatter)
+        # add the handler to the root logger
+        logging.getLogger('').addHandler(console)
+
+setup()
+setup_logging()
+if settings['rabbitmq']['use_ssl']:
+    setup_ssl()
+
