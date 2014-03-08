@@ -1,60 +1,10 @@
 #!/usr/bin/env python
 import os
 import sys
-import logging
-
-from threading import Thread
-from time import sleep
-from shoal_server import config
-from shoal_server.shoal import ThreadMonitor, WebpyServer
+import shoal_server
 
 def main():
-
-    shoal_list = {}
-    threads = []
-
-    # establishes ThreadMonitor and its thread
-    monitor_thread = ThreadMonitor(shoal_list)
-    monitor_thread.daemon = True
-    threads.append(monitor_thread)
-
-    # establishes WebpyServer and its thread
-    webpy_thread = WebpyServer(shoal_list)
-    webpy_thread.daemon = True
-    threads.append(webpy_thread)
-
-    # starts running threads
-    for thread in threads:
-        print "starting", thread
-        thread.start()
-
-    # keep running threads until KeyboardInterrupt
-    try:
-        while True:
-            for thread in threads:
-                if not thread.is_alive():
-                    logging.error('{0} died.'.format(thread))
-                    sys.exit()
-            sleep(1)
-    except KeyboardInterrupt:
-        sys.exit()
+    shoal_server.run()
 
 if __name__ == '__main__':
-    # sets up logging file
-    shoal_dir = config.shoal_dir
-    log_file = config.log_file
-    log_format = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
-
-    try:
-        logging.basicConfig(level=logging.ERROR, format=log_format, filename=log_file)
-    except IOError as e:
-        print "Could not set logger.", e
-        sys.exit(1)
-
-    # change working directory so webpy static files load correctly.
-    try:
-        os.chdir(shoal_dir)
-    except OSError as e:
-        print "{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server config file to the location of the shoal-server static files.".format(shoal_dir)
-        sys.exit(1)
     main()
