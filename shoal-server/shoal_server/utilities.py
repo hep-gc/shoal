@@ -9,26 +9,19 @@ from time import time, sleep
 from math import radians, cos, sin, asin, sqrt
 from urllib import urlretrieve
 
-from config import settings as config
 
-
-GEOLITE_DB = os.path.join(config['general']['geolitecity_path'] ,"GeoLiteCity.dat")
-GEOLITE_URL = config['general']['geolitecity_url']
-GEOLITE_UPDATE = config["general"]['geolitecity_update']
-
-logger = logging.getLogger('shoal_server')
-def get_geolocation(ip):
+def get_geolocation(db_path, ip):
     """
         Given an IP return all its geographical information (using GeoLiteCity.dat)
     """
     try:
-        gi = pygeoip.GeoIP(GEOLITE_DB)
+        gi = pygeoip.GeoIP(db_path)
         return gi.record_by_addr(ip)
     except Exception as e:
-        logger.error(e)
+        logging.error(e)
         return None
 
-def get_nearest_squids(ip, shoal, count=10):
+def get_nearest_squids(shoal, ip, count=10):
     """
         Given an IP return a sorted list of nearest squids up to a given count
     """
@@ -40,8 +33,8 @@ def get_nearest_squids(ip, shoal, count=10):
         r_lat = request_data['latitude']
         r_long = request_data['longitude']
     except KeyError as e:
-        logger.error("Could not read request data:")
-        logger.error(e)
+        logging.error("Could not read request data:")
+        logging.error(e)
         return None
 
     nearest_squids = []
@@ -74,49 +67,49 @@ def haversine(lat1,lon1,lat2,lon2):
 
     return round((r * c),2)
 
-def check_geolitecity_need_update():
+def check_geolitecity_need_update(db_path, db_update):
     """
         Checks if the geolite database is outdated
     """
     curr = time()
 
-    if os.path.exists(GEOLITE_DB):
-        if curr - os.path.getmtime(GEOLITE_DB) < GEOLITE_UPDATE:
-            logger.info('GeoLiteCity is up-to-date')
+    if os.path.exists(db_path):
+        if curr - os.path.getmtime(db_path) < db_update:
+            logging.info('GeoLiteCity is up-to-date')
             return False
         else:
-            logger.warning('GeoLiteCity database needs updating.')
+            logging.warning('GeoLiteCity database needs updating.')
             return True
     else:
-        logger.warning('GeoLiteCity database needs updating.')
+        logging.warning('GeoLiteCity database needs updating.')
         return True
 
-def download_geolitecity():
+def download_geolitecity(db_url, db_path, db_update):
     """
         Downloads a new geolite database
     """
     try:
-        urlretrieve(GEOLITE_URL,GEOLITE_DB + '.gz')
+        urlretrieve(db_url, db_path + '.gz')
     except Exception as e:
-        logger.error("Could not download the database. - {0}".format(e))
+        logging.error("Could not download the database. - {0}".format(e))
         sys.exit(1)
     try:
-        content = gzip.open(GEOLITE_DB + '.gz').read()
+        content = gzip.open(db_path + '.gz').read()
     except Exception as e:
-        logger.error("GeoLiteCity.dat file was not properly downloaded. Check contents of {0} for possible errors.".format(GEOLITE_DB + '.gz'))
+        logging.error("GeoLiteCity.dat file was not properly downloaded. Check contents of {0} for possible errors.".format(db_path + '.gz'))
         sys.exit(1)
 
-    with open(GEOLITE_DB,'w') as f:
+    with open(db_path,'w') as f:
         f.write(content)
 
-    if check_geolitecity_need_update():
-        logger.error('GeoLiteCity database failed to update.')
+    if check_geolitecity_need_update(db_url, db_update):
+        logging.error('GeoLiteCity database failed to update.')
 
-def generate_wpad(ip):
+def generate_wpad(shoal, ip):
     """
         Parses the JSON of nearest squids and provides the data as a wpad
     """
-    squids = get_nearest_squids(ip)
+    squids = get_nearest_squids(ip, shoal)
     if squids:
         proxy_str = ''
         for squid in squids:

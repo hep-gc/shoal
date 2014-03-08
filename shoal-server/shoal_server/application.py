@@ -3,6 +3,7 @@ import logging
 import time
 import tornado.web
 import tornado.ioloop
+import utilities
 
 from handlers import IndexHandler, NearestHandler
 from os.path import join
@@ -35,6 +36,12 @@ class Application(tornado.web.Application):
                 settings["squid"]["cleanse_interval"]*1000,
                 io_loop=io_loop).start()
         logging.info("complete.")
+
+        # GeoIP database initialize
+        if utilities.check_geolitecity_need_update(settings['general']['geolitecity_path'],
+                settings['general']['geolitecity_update']):
+            utilities.download_geolitecity(settings['general']['geolitecity_url'],
+                settings['general']['geolitecity_path'], settings['general']['geolitecity_update'])
 
         tornado.web.Application.__init__(self, handlers, **self.global_settings['tornado'])
 
