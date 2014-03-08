@@ -77,12 +77,9 @@ settings = {
         'reconnection_attempts': { 'default_value': 10,
                                    'type': 'int' },
     },
-    # Logging Section
     'logging': {
-        'log_file': { 'default_value': '/var/log/shoal_server.log',
-                      'type': 'string' },
-    'log_level': { 'default_value': logging.ERROR,
-                        'type': 'string' },
+        'config_file': { 'default_value': 'logging.conf',
+                         'type': 'string' }
     },
 }
 
@@ -157,29 +154,19 @@ def setup_ssl():
         sys.exit(1)
 
 def setup_logging():
-    if type(settings['logging']['log_level']) != int:
-        try:
-            settings['logging']['log_level'] = getattr(logging, settings['logging']['log_level'].upper())
-        except Excetpion as e:
-            print e
+    import logging.config
+    import json
+    path = settings['logging']['config_file']
 
-    # setup logging.
-    log_format = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
-    # set up logging to file - see previous section for more details
-    logging.basicConfig(level=logging.DEBUG,
-                        format=log_format,
-                        datefmt='%m-%d %H:%M',
-                        filename=settings['logging']['log_file'])
-    # define a Handler which writes INFO messages or higher to the sys.stderr
-    if settings['general']['debug']:
-        console = logging.StreamHandler()
-        console.setLevel(logging.INFO)
-        # set a format which is simpler for console use
-        formatter = logging.Formatter(log_format)
-        # tell the handler to use this format
-        console.setFormatter(formatter)
-        # add the handler to the root logger
-        logging.getLogger('').addHandler(console)
+    try:
+        with open(path, 'rt') as f:
+            conf = json.loads(f.read())
+    except IOError as e:
+        logging.error("Unable to open logging configuration file, please specify in configuration file.")
+        sys.exit(1)
+
+    logging.config.dictConfig(conf)
+
 
 setup()
 setup_logging()
