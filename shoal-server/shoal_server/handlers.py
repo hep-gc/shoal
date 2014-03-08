@@ -1,5 +1,4 @@
 import tornado.web
-import config
 
 
 class IndexHandler(tornado.web.RequestHandler):
