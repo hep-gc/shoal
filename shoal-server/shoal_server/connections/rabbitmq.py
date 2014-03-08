@@ -2,6 +2,7 @@ import json
 import logging
 import pika
 import socket
+import sys
 import urllib
 import uuid
 import utilities
@@ -54,7 +55,8 @@ class Consumer(object):
                                              host=self._settings['rabbitmq']['host'],
                                              port=self._settings['rabbitmq']['port'],
                                              ssl=self._settings['rabbitmq']['use_ssl'],
-                                             ssl_options = ssl_options
+                                             ssl_options = ssl_options,
+                                             connection_attempts=self._settings['rabbitmq']['reconnection_attempts'],
                                            ),
                                            self.on_connection_open,
                                            stop_ioloop_on_close=False)
@@ -168,7 +170,7 @@ class Consumer(object):
            the load if there's a key in Shoal. geo_data will update or create a
            new SquidNode if the time since the last timestamp is less than the
            inactive time and a public/private ip exists"""
-        print "GOT A MESSAGE"
+        logging.debug("Received message: %s", body)
         external_ip = public_ip = private_ip = None
         curr = time()
 
