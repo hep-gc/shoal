@@ -1,4 +1,3 @@
-import config
 import connections
 import logging
 import time
@@ -10,12 +9,12 @@ from os.path import join
 
 
 class Application(tornado.web.Application):
-    def __init__(self, io_loop):
+    def __init__(self, settings, io_loop):
         handlers = [
             (r"/", IndexHandler),
             (r"/nearest", NearestHandler),
         ]
-        self.global_settings = config.settings
+        self.global_settings = settings
         self.shoal = {}
 
         # Setup Redis Connection
@@ -30,14 +29,14 @@ class Application(tornado.web.Application):
 
         # setup periodic squid cleanse (configurable).
         logging.info("Setting up Periodic Callback to remove inactive Squids ( %ds ) every %ds...",
-            self.global_settings["squid"]["inactive_time"],
-            self.global_settings["squid"]["cleanse_interval"])
+            settings["squid"]["inactive_time"],
+            settings["squid"]["cleanse_interval"])
         tornado.ioloop.PeriodicCallback(self.cleanse,
-                self.global_settings["squid"]["cleanse_interval"]*1000,
+                settings["squid"]["cleanse_interval"]*1000,
                 io_loop=io_loop).start()
         logging.info("complete.")
 
-        tornado.web.Application.__init__(self, handlers, **config.settings['tornado'])
+        tornado.web.Application.__init__(self, handlers, **self.global_settings['tornado'])
 
     # Cleans up the inactive squids. Runs periodically.
     def cleanse(self):
@@ -47,22 +46,3 @@ class Application(tornado.web.Application):
             if curr - squid["last_active"] > self.global_settings["squid"]["inactive_time"]:
                 logging.info("Removing inactive squid (%s) %s from shoal.", squid["uuid"], squid["hostname"])
                 self.shoal.pop(squid["uuid"])
-
-
-def run():
-    io_loop = tornado.ioloop.IOLoop.instance()
-
-    # pass io_loop so connections(pika) can hook into it.
-    app = Application(io_loop)
-
-    # Hook RabbitMQ consumer into Tornado IOLoop
-    logging.info("Hooking RabbitMQ Consumer into IOLoop...")
-    io_loop.add_timeout(time.time() + .1, app.rabbitmq.run)
-    logging.info("complete.")
-
-    logging.info("Starting Tornado on Port %s", config.settings['tornado']['port'])
-    app.listen(config.settings['tornado']['port'])
-
-    io_loop.start()
-
-run()
