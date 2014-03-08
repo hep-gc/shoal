@@ -5,7 +5,6 @@ import socket
 import sys
 import urllib
 import uuid
-import utilities
 
 from time import time
 from pika import adapters
