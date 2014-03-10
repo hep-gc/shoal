@@ -3,3 +3,4 @@ recursive-include templates *
 recursive-include scripts *
 recursive-include shoal_server/connections *
 include shoal_server.conf
+include shoal_server_logging.conf
