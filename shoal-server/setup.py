@@ -22,6 +22,7 @@ static_files_dir = "static/"
 script_files_dir = "scripts/"
 template_files_dir = "templates/"
 config_file = "shoal_server.conf"
+logging_config = "shoal_server_logging.conf"
 
 # Recursively include all files in src, and create them in dst if they don't exist
 def include_files(src, dst):
@@ -39,6 +40,8 @@ def include_files(src, dst):
 # check for preexisting config files
 if not isfile(join(config_files_dir, config_file)):
     data_files += [(config_files_dir, [config_file])]
+if not isfile(join(config_files_dir, logging_config)):
+    data_files += [(config_files_dir, [logging_config])]
 # add all files in static/
 data_files += include_files(static_files_dir, shoal_server_dir)
 # add all files in templates/

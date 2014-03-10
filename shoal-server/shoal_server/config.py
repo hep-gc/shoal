@@ -18,8 +18,6 @@ SHOAL_DIR = '/var/shoal/'
 settings = {
     # Tornado Specific Section
     'tornado': {
-        'shoal_dir':          { 'default_value': SHOAL_DIR,
-                                'type': 'string' },
         'static_path':        { 'default_value': join(SHOAL_DIR, 'static'),
                                 'type': 'string' },
         'template_path':     { 'default_value': join(SHOAL_DIR, 'templates'),
@@ -35,8 +33,6 @@ settings = {
                                 'type': 'string' },
         'geolitecity_update': { 'default_value':2592000,
                                 'type': 'int' },
-        'debug':              { 'default_value': False,
-                                'type': 'bool' },
     },
     # Squid Section
     'squid': {
