@@ -3,15 +3,11 @@ from os.path import join, isfile, expanduser
 import os.path
 import sys
 try:
-    from setuptools import setup
+    from setuptools import setup, find_packages
 except:
-    try:
-        from distutils.core import setup
-    except:
-        print "Couldn't use either setuputils or distutils. Install one of those."
-        sys.exit(1)
+    print "Couldn't use either setuputils. Install Setuptools."
+    sys.exit(1)
 
-from shoal_server.__version__ import version
 
 data_files = []
 
@@ -51,18 +47,20 @@ data_files += include_files(template_files_dir, shoal_server_dir)
 data_files += include_files(script_files_dir, shoal_server_dir)
 
 setup(name='shoal-server',
-      version=version,
+      version=0.8,
       license="'GPL3' or 'Apache 2'",
       install_requires=[
           'pygeoip>=0.2.5',
           'pika>=0.9.11',
-          'web.py>=0.3',
+          'tornado>=3.0',
+          'redis',
       ],
       description='A squid cache publishing and advertising tool designed to work in fast changing environments',
       author='Mike Chester',
       author_email='mchester@uvic.ca',
       url='http://github.com/hep-gc/shoal',
-      packages=['shoal_server'],
+      packages=find_packages(),
       scripts=["shoal-server"],
       data_files=data_files,
+      include_package_data=True,
 )

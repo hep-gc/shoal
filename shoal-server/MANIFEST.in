@@ -1,4 +1,5 @@
 recursive-include static *
 recursive-include templates *
 recursive-include scripts *
+recursive-include shoal_server/connections *
 include shoal_server.conf
