@@ -213,7 +213,7 @@ class Consumer(object):
                                     "last_active": time()})
         # if the difference in time since the last timestamp is less than the inactive time
         # and there exists a public or private ip, then add the geo_data of its location
-        if (curr - time_sent < self.inactive) and (public_ip or private_ip):
+        elif (curr - time_sent < self.inactive) and (public_ip or private_ip):
             geo_data = utilities.get_geolocation(self._settings['general']['geolitecity_path'], public_ip)
             if not geo_data:
                 geo_data = utilities.get_geolocation(self._settings['general']['geolitecity_path'], external_ip)
