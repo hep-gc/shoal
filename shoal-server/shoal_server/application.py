@@ -5,7 +5,7 @@ import tornado.web
 import tornado.ioloop
 import utilities
 
-from handlers import IndexHandler, NearestHandler
+from handlers import IndexHandler, NearestHandler, AllSquidHandler
 from os.path import join
 
 
@@ -14,6 +14,8 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/", IndexHandler),
             (r"/nearest", NearestHandler),
+            (r"/nearest/?(\d+)?/?", NearestHandler),
+            (r"/all", AllSquidHandler),
         ]
         self.global_settings = settings
         self.shoal = {}
@@ -42,7 +44,6 @@ class Application(tornado.web.Application):
                 settings['general']['geolitecity_update']):
             utilities.download_geolitecity(settings['general']['geolitecity_url'],
                 settings['general']['geolitecity_path'], settings['general']['geolitecity_update'])
-
         tornado.web.Application.__init__(self, handlers, **self.global_settings['tornado'])
 
     # Cleans up the inactive squids. Runs periodically.
