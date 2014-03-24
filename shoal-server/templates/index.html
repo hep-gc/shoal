@@ -1,65 +1,203 @@
 {% extends base.html %}
 
+{% block head %}
+<style>
+table.table thead .sorting, table.table thead .sorting_asc, table.table thead .sorting_desc {
+    cursor: pointer;
+    *cursor: hand;
+}
+table.table thead .sorting {
+    background: url('http://www.datatables.net/media/blog/bootstrap_2/images/sort_both.png') no-repeat center right;
+}
+table.table thead .sorting_asc {
+    background: url('http://www.datatables.net/media/blog/bootstrap_2/images/sort_asc.png') no-repeat center right;
+}
+table.table thead .sorting_desc {
+    background: url('http://www.datatables.net/media/blog/bootstrap_2/images/sort_desc.png') no-repeat center right;
+}
+table.table thead .sorting_asc_disabled {
+    background: url('http://www.datatables.net/media/blog/bootstrap_2/images/sort_asc_disabled.png') no-repeat center right;
+}
+table.table thead .sorting_desc_disabled {
+    background: url('http://www.datatables.net/media/blog/bootstrap_2/images/sort_desc_disabled.png') no-repeat center right;
+}
+</style>
+<script>
+$.fn.dataTableExt.oApi.fnReloadAjax = function ( oSettings, sNewSource, fnCallback, bStandingRedraw )
+{
+    // DataTables 1.10 compatibility - if 1.10 then versionCheck exists.
+    // 1.10s API has ajax reloading built in, so we use those abilities
+    // directly.
+    if ( $.fn.dataTable.versionCheck ) {
+        var api = new $.fn.dataTable.Api( oSettings );
+ 
+        if ( sNewSource ) {
+            api.ajax.url( sNewSource ).load( fnCallback, !bStandingRedraw );
+        }
+        else {
+            api.ajax.reload( fnCallback, !bStandingRedraw );
+        }
+        return;
+    }
+ 
+    if ( sNewSource !== undefined && sNewSource !== null ) {
+        oSettings.sAjaxSource = sNewSource;
+    }
+ 
+    // Server-side processing should just call fnDraw
+    if ( oSettings.oFeatures.bServerSide ) {
+        this.fnDraw();
+        return;
+    }
+ 
+    this.oApi._fnProcessingDisplay( oSettings, true );
+    var that = this;
+    var iStart = oSettings._iDisplayStart;
+    var aData = [];
+ 
+    this.oApi._fnServerParams( oSettings, aData );
+ 
+    oSettings.fnServerData.call( oSettings.oInstance, oSettings.sAjaxSource, aData, function(json) {
+        /* Clear the old information from the table */
+        that.oApi._fnClearTable( oSettings );
+ 
+        /* Got the data - add it to the table */
+        var aData =  (oSettings.sAjaxDataProp !== "") ?
+            that.oApi._fnGetObjectDataFn( oSettings.sAjaxDataProp )( json ) : json;
+ 
+        for ( var i=0 ; i<aData.length ; i++ )
+        {
+            that.oApi._fnAddData( oSettings, aData[i] );
+        }
+         
+        oSettings.aiDisplay = oSettings.aiDisplayMaster.slice();
+ 
+        that.fnDraw();
+ 
+        if ( bStandingRedraw === true )
+        {
+            oSettings._iDisplayStart = iStart;
+            that.oApi._fnCalculateEnd( oSettings );
+            that.fnDraw( false );
+        }
+ 
+        that.oApi._fnProcessingDisplay( oSettings, false );
+ 
+        /* Callback user function - for event handlers etc */
+        if ( typeof fnCallback == 'function' && fnCallback !== null )
+        {
+            fnCallback( oSettings );
+        }
+    }, oSettings );
+};
+
+function updateActive() {
+    var total = $("#squid_table").dataTable().fnGetData().length
+    var e = document.getElementById("count");
+    if(total > 0) {
+        e.innerHTML = total;
+    }
+    else {
+        e.innerHTML = "None";
+    }
+}
+
+function initDataTable() {
+    oTable = $("#squid_table").dataTable( {
+        "bProcessing": false,
+        "sAjaxSource": "/all",
+        "sAjaxDataProp": "",
+        "fnDrawCallback": function ( oSettings ) {
+            if ( oSettings.bSorted || oSettings.bFiltered )
+            {
+                for ( var i=0, iLen=oSettings.aiDisplay.length ; i<iLen ; i++ )
+                {
+                    $('td:eq(0)', oSettings.aoData[ oSettings.aiDisplay[i] ].nTr ).html( i+1 );
+                }
+            }
+            updateActive();
+        },
+        "aoColumns": [
+            { "mDataProp": null, "mData": null },
+            { "mDataProp": "hostname" },
+            { "mDataProp": "public_ip" },
+            { "mDataProp": "private_ip" },
+            { "mDataProp": "load", "mRender": function(data, type, full) { 
+                    return data + " kBps";
+                }
+            },
+            { "mDataProp": "geo_data.city" },
+            { "mDataProp": "geo_data.region_code" },
+            { "mDataProp": "geo_data.country_name" },
+            { "mDataProp": "geo_data.latitude", "mRender": function(data, type, full) {
+                    return data.toFixed(2);
+                }
+            },
+            { "mDataProp": "geo_data.longitude", "mRender": function(data, type, full) {
+                    return data.toFixed(2);
+                }
+            },
+            { "mDataProp": "last_active", "mRender": function(data, type, full) {
+                    return parseInt(new Date().getTime() / 1000 - data) + 's';
+                } 
+            },
+            { "mDataProp": "timestamp", "sTitle": "Alive", "mRender": function(data, type, full) {
+                    return parseInt(new Date().getTime() / 1000 - data) + 's';
+                }
+            }
+        ],
+        "aoColumnDefs": [
+            { "bSortable": false, "aTargets": [ 0 ] }
+        ],
+        "aaSorting": [[ 1, 'asc' ]],
+        "oLanguage": { "sSearch": '<span class="icon-search"></span>' },
+        "sDom": "<'row-fluid'<'span6'f><'span6'<'pull-left'T>>r>t",
+        "oTableTools": {
+            "sSwfPath": "http://datatables.net/release-datatables/extras/TableTools/media/swf/copy_csv_xls_pdf.swf"
+        }
+    });
+    $('.dataTables_filter input').addClass('span6 form-control');
+    $('.dataTables_filter input').attr("placeholder", "Search");
+    $('.DTTT_container').addClass('btn-group');
+    $('div.dataTables_paginate a, a.DTTT_button').addClass('btn btn-default');
+    setInterval(function() { oTable.fnReloadAjax();  }, 5000 );
+};
+$(document).ready(function() {
+    initDataTable();
+});
+</script>
+{% end %}
+
 {% block body %}
 <div class="row-fluid">
     <div class="span6 offset3" style="text-align:center">
         <h2>List of Active Squids</h2>
         {% if len(shoal) > 0 %}
-            <h5 class="text-success">{{len(shoal)}} active in the last {{inactive_time}} seconds</h5>
+            <h5 class="text-success"><i id="count">{{len(shoal)}}</i> active in the last {{inactive_time}} seconds</h5>
         {% else %}
-            <h5 class="text-info">None active in the last {{inactive_time}} seconds</h5>
+            <h5 class="text-info"><i id="count">None</i> active in the last {{inactive_time}} seconds</h5>
         {% end %}
         </div>
 <div class="row-fluid">
   <div class='span12'>
-    <table class="table table-condensed table-hover">
+    <table id="squid_table" class="table table-condensed table-hover">
       <thead>
         <tr>
           <th>#</th>
           <th>Hostname</th>
-          <th class="hidden-phone">Public IP</th>
-          <th class="hidden-phone">Private IP</th>
+          <th>Public IP</th>
+          <th>Private IP</th>
           <th>Bytes Out</th>
           <th>City</th>
           <th>Region</th>
-          <th class="hidden-phone">Country</th>
-          <th class="hidden-phone">Latitude</th>
-          <th class="hidden-phone">Longitude</th>
-          <th class="hidden-phone">Last Received</th>
+          <th>Country</th>
+          <th>Latitude</th>
+          <th>Longitude</th>
+          <th>Last Received</th>
           <th>Alive</th>
         </tr>
       </thead>
       <tbody>
-        {% for squid in xrange(len(shoal)) %}
-            {% set last_msg = int(int(now) - shoal[squid]['last_active']) %}
-            {% set alive_time = int(now - shoal[squid]['timestamp']) %}
-            {% set hour = int(alive_time/60/60) %}
-            {% set minute = (alive_time - hour*60*60) / 60 %}
-            {% set second = alive_time - hour*60*60 - minute*60 %}
-            {% set status = 'success' %}
-            {% if last_msg < inactive_time/3 %}
-                {% set state = 'success' %}
-            {% elif last_msg >= inactive_time/3 and last_msg < inactive_time*2/3 %}
-                {% set state = 'warning' %}
-            {% else %}
-                {% set state = 'error' %}
-            {% end %}
-
-            <tr class='{{(state)}}'>
-                <td><span class="badge badge-{{(state)}}">{{(squid+1)}}</td>
-                <td>{{shoal[squid]['hostname']}}</td>
-                <td class="hidden-phone">{{shoal[squid]['public_ip']}}</td>
-                <td class="hidden-phone">{{shoal[squid]['private_ip']}}</td>
-                <td>{{shoal[squid]['load']}} kB/s</td>
-                <td>{{shoal[squid]['geo_data']['city']}}</td>
-                <td class="hidden-phone">{{shoal[squid]['geo_data']['country_code3']}}</td>
-                <td>{{shoal[squid]['geo_data']['region_code']}}</td>
-                <td class="hidden-phone">{{shoal[squid]['geo_data']['latitude']}}</td>
-                <td class="hidden-phone">{{shoal[squid]['geo_data']['longitude']}}</td>
-                <td class="hidden-phone">{{(last_msg)}}s</td>
-                <td>{{(hour)}}h {{(minute)}}m {{(second)}}s</td>
-            </tr>
-        {% end %}
       </tbody>
     </table>
   </div>
