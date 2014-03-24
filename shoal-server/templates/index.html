@@ -104,7 +104,7 @@ function updateActive() {
 
 function initDataTable() {
     oTable = $("#squid_table").dataTable( {
-        "bProcessing": true,
+        "bProcessing": false,
         "sAjaxSource": "/all",
         "sAjaxDataProp": "",
         "fnDrawCallback": function ( oSettings ) {
