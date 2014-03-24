@@ -1,6 +1,27 @@
 {% extends base.html %}
 
 {% block head %}
+<style>
+table.table thead .sorting, table.table thead .sorting_asc, table.table thead .sorting_desc {
+    cursor: pointer;
+    *cursor: hand;
+}
+table.table thead .sorting {
+    background: url('http://www.datatables.net/media/blog/bootstrap_2/images/sort_both.png') no-repeat center right;
+}
+table.table thead .sorting_asc {
+    background: url('http://www.datatables.net/media/blog/bootstrap_2/images/sort_asc.png') no-repeat center right;
+}
+table.table thead .sorting_desc {
+    background: url('http://www.datatables.net/media/blog/bootstrap_2/images/sort_desc.png') no-repeat center right;
+}
+table.table thead .sorting_asc_disabled {
+    background: url('http://www.datatables.net/media/blog/bootstrap_2/images/sort_asc_disabled.png') no-repeat center right;
+}
+table.table thead .sorting_desc_disabled {
+    background: url('http://www.datatables.net/media/blog/bootstrap_2/images/sort_desc_disabled.png') no-repeat center right;
+}
+</style>
 <script>
 $.fn.dataTableExt.oApi.fnReloadAjax = function ( oSettings, sNewSource, fnCallback, bStandingRedraw )
 {
@@ -128,8 +149,17 @@ function initDataTable() {
         "aoColumnDefs": [
             { "bSortable": false, "aTargets": [ 0 ] }
         ],
-        "aaSorting": [[ 1, 'asc' ]]
+        "aaSorting": [[ 1, 'asc' ]],
+        "oLanguage": { "sSearch": '<span class="icon-search"></span>' },
+        "sDom": "<'row-fluid'<'span6'f><'span6'<'pull-left'T>>r>t",
+        "oTableTools": {
+            "sSwfPath": "http://datatables.net/release-datatables/extras/TableTools/media/swf/copy_csv_xls_pdf.swf"
+        }
     });
+    $('.dataTables_filter input').addClass('span6 form-control');
+    $('.dataTables_filter input').attr("placeholder", "Search");
+    $('.DTTT_container').addClass('btn-group');
+    $('div.dataTables_paginate a, a.DTTT_button').addClass('btn btn-default');
     setInterval(function() { oTable.fnReloadAjax();  }, 5000 );
 };
 $(document).ready(function() {
