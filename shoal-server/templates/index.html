@@ -105,8 +105,11 @@ function updateActive() {
 function initDataTable() {
     oTable = $("#squid_table").dataTable( {
         "bProcessing": false,
+	"sPaginationType": "full_numbers",
         "sAjaxSource": "/all",
         "sAjaxDataProp": "",
+        "bJQueryUI"      : true,
+        "iDisplayLength" : 5,
         "fnDrawCallback": function ( oSettings ) {
             if ( oSettings.bSorted || oSettings.bFiltered )
             {
@@ -151,19 +154,30 @@ function initDataTable() {
         ],
         "aaSorting": [[ 1, 'asc' ]],
         "oLanguage": { "sSearch": '<span class="icon-search"></span>' },
-        "sDom": "<'row-fluid'<'span6'f><'span6'<'pull-left'T>>r>t",
+        "sDom": "<'row-fluid'<'span6'f><'span6'<'pull-left'T>>r><t>ip>",
         "oTableTools": {
             "sSwfPath": "http://datatables.net/release-datatables/extras/TableTools/media/swf/copy_csv_xls_pdf.swf"
         }
     });
-    $('.dataTables_filter input').addClass('span6 form-control');
-    $('.dataTables_filter input').attr("placeholder", "Search");
     $('.DTTT_container').addClass('btn-group');
     $('div.dataTables_paginate a, a.DTTT_button').addClass('btn btn-default');
     setInterval(function() { oTable.fnReloadAjax();  }, 5000 );
 };
 $(document).ready(function() {
     initDataTable();
+    $('.datatable').each(function(){
+    	var datatable = $(this);
+    	// SEARCH - Add the placeholder for Search and Turn this into in-line form control
+    	var search_input = datatable.closest('.dataTables_wrapper').find('div[id$=_filter] input');
+    	search_input.attr('placeholder', 'Search');
+    	search_input.addClass('form-control input-sm');
+    	// LENGTH - Inline-Form control
+    	var length_sel = datatable.closest('.dataTables_wrapper').find('div[id$=_length] select');
+    	length_sel.addClass('form-control input-sm');
+        datatable.bind('page', function(e){
+            window.console && console.log('pagination event:', e) //this event must be fired whenever you paginate
+        });
+    });
 });
 </script>
 {% end %}
@@ -180,7 +194,7 @@ $(document).ready(function() {
         </div>
 <div class="row-fluid">
   <div class='span12'>
-    <table id="squid_table" class="table table-condensed table-hover">
+    <table id="squid_table" class="datatable table table-condensed table-hover">
       <thead>
         <tr>
           <th>#</th>
