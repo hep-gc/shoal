@@ -31,11 +31,11 @@
 	  font: 10px sans-serif;
 	}
 
-	.stations circle {
-	  fill: brown;
+	.stations circle{
 	  stroke: black;
 	  stroke-width: 1.5px;
 	}
+	
 	</style>
 
     <!-- Le styles -->
@@ -45,17 +45,16 @@
       }
     </style>
 
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <link href="{{ static_url('css/dataTables.bootstrap.css') }}" rel="stylesheet">
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+    <script src="{{ static_url('js/dataTables.bootstrap.js') }}"></script>
+    <script src="http://datatables.net/release-datatables/extras/TableTools/media/js/TableTools.js"></script>
+    <script src="http://datatables.net/release-datatables/extras/TableTools/media/js/ZeroClipboard.js"></script>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" rel="stylesheet">
     <link href="{{ static_url("img/icons/favicon.ico") }}" rel="shortcut icon" type="image/x-icon">
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
-    <script src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/datatables/1.9.4/jquery.dataTables.min.js"></script>
-    <script src="http://datatables.net/release-datatables/extras/TableTools/media/js/ZeroClipboard.js"></script>
-    <script src="http://datatables.net/release-datatables/extras/TableTools/media/js/TableTools.js"></script>
-    <link href="{{ static_url('js/dataTables.bootstrap.js') }}">
   {% block head %}
   {% end %}
   </head>
@@ -102,7 +101,7 @@
 		});
 
 		// Load the station data. When the data comes back, create an overlay.
-		d3.json("nearest/1000", function(data) {
+		d3.json("all", function(data) {
 		  var overlay = new google.maps.OverlayView();
 
 		  // Add the container when the overlay is added to the map.
@@ -113,41 +112,71 @@
 			// Draw each marker as a separate SVG element.
 			// We could use a single SVG, but what size would it have?
 			overlay.draw = function() {
-			  var projection = this.getProjection(),
-				  padding = 10;
-
-			  var marker = layer.selectAll("svg")
-				  .data(d3.entries(data))
-				  .each(transform) // update existing markers
-				.enter().append("svg:svg")
-				  .each(transform)
-				  .attr("class", "marker");
-
-			  // Add a circle.
-			  marker.append("svg:circle")
-				  .attr("r", 4.5)
-				  .attr("cx", padding)
-				  .attr("cy", padding);
-
-			  // Add a label.
-			  marker.append("svg:text")
-				  .attr("x", padding + 7)
-				  .attr("y", padding)
-				  .attr("dy", ".31em")
-				  .text(function(d) { return d.key; });
-
-			  function transform(d) {
+				var projection = this.getProjection(),
+					padding = 10;
+				var marker = layer.selectAll("svg")
+					.data(d3.entries(data))
+					.each(transform) // update existing markers
+					.enter().append("svg:svg")
+					.each(transform)
+					.attr("class", "marker");
+					
+			//Give the different objects a color based on their load and return the new object array
+			var coloredObjects = colorAssignByLoad(data);
+			//check the color of each point and then draw the appropriate circle
+			marker.append("svg:circle")
+				.style("fill", function(coloredObjects) {
+                    return (whichColor(coloredObjects) ? "red" : "green") })
+				.attr("r", 4.5)
+				.attr("cx", padding)
+				.attr("cy", padding);
+			
+			// Add a label.
+			marker.append("svg:text")
+			  .attr("x", padding + 7)
+			  .attr("y", padding)
+			  .attr("dy", ".31em")
+			  .text(function(coloredObjects) { return (checkCity(coloredObjects) ? coloredObjects.value.geo_data.city : coloredObjects.value.geo_data.country_name) });
+			  
+			function colorAssignByLoad(d) {
+				var json = d;
+				for (var i = 0; i < json.length; i ++) {
+					if (json[i].load > 500000) { //if the load is greater than 500K, assign the color red, else assign green
+						json[i].color = "red";
+					} else { json[i].color = "green"; }
+				}
+				return json;
+			}
+			
+			function whichColor(d){
+				if (d.value.color == "red"){ //if the point's color is red, return true else false 
+					return 1;
+				} else { 
+					return 0;
+				}
+				
+			}
+			
+			function checkCity(d){
+				if (d.value.geo_data.city) {
+					return 1;
+				} else { 
+					return 0;
+				}
+			}
+			
+			function transform(d) {
 				// parse the json object
-				var geoData = d.value[0].geo_data;
+				var geoData = d.value.geo_data;
 				d = new google.maps.LatLng(geoData.latitude, geoData.longitude);
 				d = projection.fromLatLngToDivPixel(d);
 				return d3.select(this)
 					.style("left", (d.x - padding) + "px")
 					.style("top", (d.y - padding) + "px");
-			  }
+				
+			  }	
 			};
 		  };
-
 		  // Bind our overlay to the map
 		  overlay.setMap(map);
 		});
