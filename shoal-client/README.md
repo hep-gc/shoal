@@ -1,22 +1,65 @@
-#Shoal Client v0.4.X README
+#Shoal Client v0.5.X README
 
-##Basic Usage
+shoal-client will configure cvmfs to use the closest squid server to you by contacting the shoal server
+and then editing your local cvmfs config file, typically `/etc/cvmfs/default.local`.
 
-- After installing and before deploying Shoal Client, confirm the output will be what you expect. It should look like the following formatted text. `shoal-client --dump` will print the contents of `default.local` to stdout.
-
-    <pre>
-VMFS_REPOSITORIES=atlas.cern.ch,atlas-condb.cern.ch,grid.cern.ch
-CVMFS_QUOTA_LIMIT=3500
-CVMFS_HTTP_PROXY="[[DYNAMIC SQUID HOSTNAMES APPENDED HERE]];http://chrysaor.westgrid.ca:3128;http://cernvm-webfs.atlas-canada.ca:3128;DIRECT"
-    </pre>
-
-- Because of how CVMFS operates at the current time of this writing, it is necessary to update the default.local file before accessing CVMFS files. It is recommended to run Shoal Client on boot.
+shoal-client is a simple python script typically configured to run with cron to check for new squids 
+periodically. Before setting the cronjob in place make sure that shoal-client is
+configured correctly (see Usage below).
 
 ##Installation
 
- _**Note**: Requires Python 2.4+_
+**Note**: Requires Python 2.4+
 
-_**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if sudo was used_
+**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if installed 
+root permissions.
+
+###Recommended Instalation Method: Use yum
+
+First install [EPEL](http://fedoraproject.org/wiki/EPEL)
+
+    sudo yum install yum-conf-epel
+    sudo yum update
+
+Get the Shoal yum repository:
+
+    sudo curl http://shoal.heprc.uvic.ca/repo/shoal.repo -o /etc/yum.repos.d/shoal.repo
+   
+Install the agent:
+
+    sudo yum install shoal-client
+
+Configure the client to use a shoal server:
+
+    vim /etc/shoal/shoal_client.conf
+    
+##Usage
+
+Confirm the that you configured shoal-client as expected by checking the output of `shoal-client --dump`
+This is what will be written to `/etc/cvmfs/default.local` when you run `shoal-client`. For example you will see 
+something like the following:
+
+<pre>
+CVMFS_REPOSITORIES=atlas.cern.ch,atlas-condb.cern.ch,grid.cern.ch
+CVMFS_QUOTA_LIMIT=3500
+CVMFS_HTTP_PROXY="[[DYNAMIC SQUID HOSTNAMES APPENDED HERE]];http://chrysaor.westgrid.ca:3128;http://cernvm-webfs.atlas-canada.ca:3128;DIRECT"
+</pre>
+
+If the output looks resonable now set a crontab entry to run shoal say every 30 minutes:
+
+    crontab -e
+    0,30 * * * * /usr/bin/shoal-client
+
+
+
+### Hint for the ATLAS Experiment Users:
+
+A complete shoal_client.conf file for ATLAS can be obtained by:
+
+    sudo curl http://shoal.heprc.uvic.ca/repo/shoal_client.conf -o /etc/shoal/shoal_client.conf
+
+
+## Other Installation Methods
 
 ###Using Pip
 
@@ -28,3 +71,4 @@ _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/sho
 2. `cd shoal/shoal-client/`
 3. `python setup.py install`
 4. Check settings in `shoal_client.conf` update as needed
+
