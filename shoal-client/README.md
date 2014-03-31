@@ -40,8 +40,8 @@ This is what will be written to `/etc/cvmfs/default.local` when you run `shoal-c
 something like the following:
 
 <pre>
-CVMFS_REPOSITORIES=atlas.cern.ch,atlas-condb.cern.ch,grid.cern.ch
-CVMFS_QUOTA_LIMIT=3500
+CVMFS_REPOSITORIES=atlas.cern.ch,atlas-condb.cern.ch,atlas-nightlies.cern.ch,sft.cern.ch
+CVMFS_QUOTA_LIMIT=10000
 CVMFS_HTTP_PROXY="[[DYNAMIC SQUID HOSTNAMES APPENDED HERE]];http://chrysaor.westgrid.ca:3128;http://cernvm-webfs.atlas-canada.ca:3128;DIRECT"
 </pre>
 
