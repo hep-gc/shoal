@@ -12,7 +12,7 @@ EXECUTABLEPATH="shoal-agent"
 # Non-default python.
 PYTHON=""
 
-USER=nobody
+USR=nobody
 SERVICE=shoal_agent
 LOG=/var/log/${SERVICE}.log
 PIDFILE=/var/run/$SERVICE.pid

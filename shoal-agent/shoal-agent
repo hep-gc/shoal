@@ -126,7 +126,9 @@ def main():
     data = {
             'uuid': uuid.uuid1().hex,
             'hostname': socket.gethostname(),
-            'squid_port': config.squid_port
+            'squid_port': config.squid_port,
+            'verification': config.verification,
+            'max_load': config.max_load
            }
 
     public_ip, private_ip = get_ip_addresses()
@@ -166,7 +168,7 @@ def main():
         logging.error("Unable to automatically detect interface to monitor, please set the interface to monitor in configuration file.")
         sys.exit(1)
 
-    # enable the sigterm signal handler to log before exit
+    # enable the sigterm signal handler to log befor exit
     signal.signal(signal.SIGTERM, SIGTERM_handler)
 
     logging.info("shoal-agent configured, starting up")

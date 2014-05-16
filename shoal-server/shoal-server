@@ -20,7 +20,7 @@ def main():
 
     # establishes WebpyServer and its thread
     webpy_thread = WebpyServer(shoal_list)
-    webpy_thread.daemon = True
+    webpy_thread.daemon = True 
     threads.append(webpy_thread)
 
     # starts running threads

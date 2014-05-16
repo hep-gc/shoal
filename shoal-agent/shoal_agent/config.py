@@ -31,6 +31,10 @@ cloud = ''
 squid_port = 3128
 log_file = '/var/log/shoal_agent.log'
 logging_level = logging.ERROR
+#this value should be Unverified, unless it is one of the special cases No outside Access, or Same Domain
+verification = 'No Outside Access'
+#this is the max load of the server in terms of kb/s
+max_load = 1048576
 
 homedir = expanduser('~')
 

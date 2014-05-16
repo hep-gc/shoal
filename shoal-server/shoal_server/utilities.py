@@ -28,14 +28,18 @@ def get_geolocation(ip):
         logger.error(e)
         return None
 
-def get_nearest_squids(ip, count=10):  
+def get_nearest_squids(ip,verification,count=10):  
     """
         Given an IP return a sorted list of nearest squids up to a given count
     """
+    #This is for testing locally, it cant find the location of a 0.0.0 ip
+    if ip=="127.0.0.1":
+        ip="206.12.154.45"
     request_data = get_geolocation(ip)
     if not request_data:
+	print "no geolocation"
         return None
-	
+    
     try:
         r_lat = request_data['latitude']
         r_long = request_data['longitude']
@@ -47,24 +51,40 @@ def get_nearest_squids(ip, count=10):
     nearest_squids = []
     
     ## computes the distance between each squid and the given ip address
-    ## and sorts them in a list of squids
+    ## and sorts them in a list of squids based on distance vs load correlation
+
+    earthrad = config.earthradius
+    b = config.loadconstant
+    maxload=-1
     for squid in web.shoal.values():
-        s_lat = float(squid.geo_data['latitude'])
-        s_long = float(squid.geo_data['longitude'])
+        try:
+            maxload = squid.maxload
+        except:
+            #no maxload is sent from agent, using default value of 1GB/s in kilobytes
+            maxload = 1048576		
 
-        distance = haversine(r_lat,r_long,s_lat,s_long)
+        if squid.verification=="Verified" or verification:
+            s_lat = float(squid.geo_data['latitude'])
+            s_long = float(squid.geo_data['longitude'])
 
-        nearest_squids.append((squid,distance))
+            distance = haversine(r_lat,r_long,s_lat,s_long)
+            distancecost = distance/(earthrad * 3.14159265359)
+            loadcost = (squid.load/maxload)**b 
+            nearest_squids.append((squid,distancecost+loadcost))
 
-    squids = sorted(nearest_squids, key=lambda k: (k[1], k[0].load))
-    return squids[:count]
+    squids = sorted(nearest_squids, key=lambda k: (k[1]))
+   
+    if verification:
+        return squids
+    else:
+        return squids[:count]
 
 def haversine(lat1,lon1,lat2,lon2):
     """
         Calculate distance between two points using Haversine Formula.
     """
     # radius of earth
-    r = 6371
+    r = 6378
 
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
     dlon = lon2 - lon1

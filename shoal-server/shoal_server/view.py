@@ -4,7 +4,9 @@ import json
 import operator
 import config
 import math
+#import squid_auditor
 
+from squid_auditor import audit
 from time import time
 from shoal_server import utilities
 from __version__ import version
@@ -28,10 +30,16 @@ class index:
 class nearest:
     def GET(self, count):
         web.header('Content-Type', 'application/json')
-        return view_nearest(count)
+        return view_nearest(count, False)
+
+class allnearest:
+    def GET(self, count):
+        web.header('Content-Type', 'application/json')
+        return view_nearest(count, True)
 
 class wpad:
     def GET(self):
+
         # note view_wpad does not return a string
         data = str(view_wpad())
         web.header('Content-Type', 'application/x-ns-proxy-autoconfig')
@@ -45,11 +53,12 @@ def view_index(size):
     """
     params = web.input()
     page = params.page if hasattr(params, 'page') else 1
-    sorted_shoal = sorted(web.shoal.values(), key=operator.attrgetter('last_active'))
+    sorted_shoal = sorted(web.shoal.values(), key=operator.attrgetter('last_active')) 
     sorted_shoal.reverse()
     total = len(sorted_shoal)
     page = int(page)
 
+      
     try:
         size = int(size)
     except (ValueError, TypeError):
@@ -67,7 +76,7 @@ def view_index(size):
     lower, upper = int(size * (page - 1)), int(size * page)
     return render.index(time(), total, sorted_shoal[lower:upper], page, pages, size)
 
-def view_nearest(count):
+def view_nearest(count, verification):
     """
         returns the nearest squid as a JSON formatted str
     """
@@ -78,8 +87,7 @@ def view_nearest(count):
 
     ip = web.ctx['ip']
 
-    squids = utilities.get_nearest_squids(ip,count)
-
+    squids = utilities.get_nearest_squids(ip,verification,count)
     if squids:
         squid_json = {}
         for i,squid in enumerate(squids):

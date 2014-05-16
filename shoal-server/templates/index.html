@@ -24,7 +24,8 @@ $def with (now, total, shoal, page, pages, size)
           <th class="hidden-phone">Longitude</th>
           <th class="hidden-phone">Last Received</th>
           <th>Alive</th>
-        </tr>
+          <th>Verification</th>
+	 </tr>
       </thead>
       <tbody>
         $for i,squid in enumerate(shoal):
@@ -54,7 +55,8 @@ $def with (now, total, shoal, page, pages, size)
                 <td class="hidden-phone">$squid.geo_data['longitude']</td>
                 <td class="hidden-phone">$(last_msg)s</td>
                 <td>$(hour)h$(minute)m$(second)s</td>
-            </tr>
+                <td>$squid.verification</td>
+	    </tr>
       </tbody>
     </table>
   </div>

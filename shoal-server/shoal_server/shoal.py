@@ -8,6 +8,8 @@ import logging
 import pika
 import socket
 import uuid
+import squid_auditor
+from squid_auditor import authTest
 from time import time, sleep
 from threading import Thread
 
@@ -19,7 +21,7 @@ from shoal_server import utilities
 """
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, last_active=time()):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verification, max_load, last_active=time()):
         """
         constructor for SquidNode, time created is current time
         """
@@ -33,6 +35,8 @@ class SquidNode(object):
         self.external_ip = external_ip
         self.geo_data = geo_data
         self.load = load
+	self.verification = verification
+	self.max_load = max_load
 
     def update(self, load):
         """
@@ -55,6 +59,8 @@ class SquidNode(object):
                   "external_ip": self.external_ip,
                   "geo_data": self.geo_data,
                   "load": self.load,
+                  "verification": self.verification,
+                  "max_load": self.max_load,
                 },
                )
 
@@ -115,6 +121,7 @@ class ThreadMonitor(Thread):
 
 """
     ShoalUpdate is used for trimming inactive squids every set interval.
+    Now also responsible for verifying squids on the shoal
 """
 class ShoalUpdate(Thread):
 
@@ -122,7 +129,7 @@ class ShoalUpdate(Thread):
     INACTIVE = config.squid_inactive_time
 
     def __init__(self, shoal):
-        """
+        """ShoalUpdate
         constructor for ShoalUpdate, uses parent Thread constructor as well
         """
         Thread.__init__(self)
@@ -134,9 +141,28 @@ class ShoalUpdate(Thread):
         runs ShoalUpdate
         """
         self.running = True
+	i=0
+	blacklist=[]
         while self.running:
             sleep(self.INTERVAL)
             self.update()
+            if i==0:
+                for squid in self.shoal.values():
+                    try:
+                        if "verified" in squid.verification:
+                            if squid.public_ip in (authTest(squid.public_ip, squid.squid_port)):
+                                self.shoal.pop(squid.key)
+                            else:
+                                squid.verification="Verified"
+                    except TypeError:
+                        logging.info("VERIFIED: " + squid.public_ip)
+                        squid.verification = "Verified"
+
+                i = 1
+            elif i==2:
+                i=0
+            else:
+                i=i+1
 
     def update(self):
         """
@@ -144,7 +170,7 @@ class ShoalUpdate(Thread):
         """
         curr = time()
         for squid in self.shoal.values():
-            if curr - squid.last_active > self.INACTIVE:
+	    if curr - squid.last_active > self.INACTIVE:
                 self.shoal.pop(squid.key)
 
     def stop(self):
@@ -167,6 +193,7 @@ class WebpyServer(Thread):
         web.config.debug = False
         self.app = None
         self.urls = (
+            '/allnearest/?(\d+)?/?', 'shoal_server.view.allnearest',
             '/nearest/?(\d+)?/?', 'shoal_server.view.nearest',
             '/wpad.dat', 'shoal_server.view.wpad',
             '/(\d+)?/?', 'shoal_server.view.index',
@@ -176,9 +203,9 @@ class WebpyServer(Thread):
         """
         runs web application
         """
-        try:
+	try:
             self.app = web.application(self.urls, globals())
-            self.app.run()
+	    self.app.run()
         except Exception as e:
             logging.error("Could not start webpy server.\n{0}".format(e))
             sys.exit(1)
@@ -467,11 +494,20 @@ class RabbitMQConsumer(Thread):
             private_ip = data['private_ip']
         except KeyError:
             pass
-    
+        try:
+            verification = data['verification']
+        except KeyError:
+            verification='Unverified'
+            pass	
+        try:
+            maxload=data['max_load']
+        except KeyError:
+            maxload=1048576
+
         # for each squid in shoal, if public ip matches,
         # load for the squid will update and send a acknowledgment message
         # TODO: check to see if this is problem for natted squids. This loop may 
-        # not be necessary
+        # not be necessary and it also causes agents from the same ip to be consolidated
         for squid in self.shoal.values():
            if squid.public_ip == public_ip:
               squid.update(load)
@@ -491,7 +527,7 @@ class RabbitMQConsumer(Thread):
             if not geo_data:
                 logging.error("Unable to generate geo location data, discarding message")
             else:
-                new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, time_sent)
+                new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verification, maxload, time_sent)
                 self.shoal[key] = new_squid
 
         self.acknowledge_message(basic_deliver.delivery_tag)

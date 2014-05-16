@@ -33,6 +33,17 @@ error_reconnect_attempts = 10
 
 homedir = expanduser('~')
 
+#radius of earth used to calculate distnace vs load cost after haversine and a tuneable constant for the same calculation
+earthradius = 6378
+loadconstant = 1
+
+#servers and repos to check for authentication
+#These servers and repos will have to be updated once the occurences of /opt/ are removed
+servers=["http://cvmfs.racf.bnl.gov:8000","http://cvmfs.fnal.gov:8000","http://cvmfs-stratum-one.cern.ch:8000","http://cernvmfs.gridpp.rl.ac.uk:8000","http://cvmfs02.grid.sinica.edu.tw:8000"]
+#belle, nightlies should be in this list but every server is having trouble accessing it.
+repos=["atlas","atlas-condb","sft","grid"]
+
+
 # find config file by checking the directory of the calling script and sets path
 if  exists(abspath(sys.path[0]+"/shoal_server.conf")):
     path = abspath(sys.path[0]+"/shoal_server.conf")
