@@ -47,6 +47,9 @@ class HaversineTest(unittest.TestCase):
                                 self.seattle[0], self.seattle[1]))
 
 
+    def suite():
+        return unittest.TestLoader().loadTestsFromTestCase(HaversineTest)
+
 
 if __name__ == '__main__':
     unittest.main()
