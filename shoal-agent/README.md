@@ -13,10 +13,10 @@ service shoal-agent force-restart
 
 ##Installation
 
-The **best** way to install is with yum using our provided repositories. The imapatient should skip to the Recomeneded Method section below.
+The **best** way to install is with yum using our provided repositories. The impatient should skip to the Recommended Method section below.
 
-If yum is used to install the Shoal RPM, then the Shoal agent files will be placed in the standard system locations.
-Otherwise, Shoal can be installed your home directory without needing root privileges (or anywhere else).
+If yum is used to install the Shoal RPM, then the Shoal Agent files will be placed in the standard system locations.
+Otherwise, Shoal can be installed in your home directory or elsewhere, without needing root privileges.
 
 In either case, the Shoal agent does not require root privilege to run. The init script uses the `nobody` user by default, although this is adjustable.
 
@@ -36,7 +36,7 @@ Get the Shoal yum repository:
     sudo curl http://shoal.heprc.uvic.ca/repo/shoal.repo -o /etc/yum.repos.d/shoal.repo
    
 Install the agent:
-
+    sudo rpm --import http://hepnetcanada.ca/pubkeys/igable.asc
     sudo yum install shoal-agent
 
 Configure the agent and start it:
