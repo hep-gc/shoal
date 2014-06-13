@@ -36,6 +36,7 @@ Get the Shoal yum repository:
     sudo curl http://shoal.heprc.uvic.ca/repo/shoal.repo -o /etc/yum.repos.d/shoal.repo
    
 Install the agent:
+
     sudo rpm --import http://hepnetcanada.ca/pubkeys/igable.asc
     sudo yum install shoal-agent
 
