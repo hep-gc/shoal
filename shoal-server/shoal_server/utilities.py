@@ -28,13 +28,10 @@ def get_geolocation(ip):
         logger.error(e)
         return None
 
-def get_nearest_squids(ip,verification,count=10):  
+def get_nearest_squids(ip,count=10):  
     """
         Given an IP return a sorted list of nearest squids up to a given count
     """
-    #This is for testing locally, it cant find the location of a 0.0.0 ip
-    if ip=="127.0.0.1":
-        ip="206.12.154.45"
     request_data = get_geolocation(ip)
     if not request_data:
 	print "no geolocation"
@@ -63,7 +60,8 @@ def get_nearest_squids(ip,verification,count=10):
             #no maxload is sent from agent, using default value of 1GB/s in kilobytes
             maxload = 1048576		
 
-        if squid.verification=="Verified" or verification:
+        #additional logic for special case servers should be placed here in the future
+        if squid.verification=="Verified":
             s_lat = float(squid.geo_data['latitude'])
             s_long = float(squid.geo_data['longitude'])
 
@@ -73,11 +71,18 @@ def get_nearest_squids(ip,verification,count=10):
             nearest_squids.append((squid,distancecost+loadcost))
 
     squids = sorted(nearest_squids, key=lambda k: (k[1]))
-   
-    if verification:
-        return squids
-    else:
-        return squids[:count]
+    return squids[:count]
+
+def get_all_squids():  
+    """
+        Return a list of all active squids
+    """
+    squids = []
+    
+    for squid in web.shoal.values():
+        squids.append(squid)
+
+    return squids
 
 def haversine(lat1,lon1,lat2,lon2):
     """

@@ -21,7 +21,7 @@ from shoal_server import utilities
 """
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verification, max_load, last_active=time()):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verification, max_load=1048576, last_active=time()):
         """
         constructor for SquidNode, time created is current time
         """
@@ -35,8 +35,8 @@ class SquidNode(object):
         self.external_ip = external_ip
         self.geo_data = geo_data
         self.load = load
-	self.verification = verification
-	self.max_load = max_load
+        self.verification = verification
+        self.max_load = max_load
 
     def update(self, load):
         """
@@ -89,6 +89,12 @@ class ThreadMonitor(Thread):
         update_thread = ShoalUpdate(self.shoal)
         update_thread.daemon = True
         self.threads.append(update_thread)
+        
+        #add verify thread
+        verify_thread = SquidVerifier(self.shoal)
+        verify_thread.daemon = True
+        self.threads.append(verify_thread)
+
 
     def run(self):
         """
@@ -121,7 +127,6 @@ class ThreadMonitor(Thread):
 
 """
     ShoalUpdate is used for trimming inactive squids every set interval.
-    Now also responsible for verifying squids on the shoal
 """
 class ShoalUpdate(Thread):
 
@@ -141,28 +146,21 @@ class ShoalUpdate(Thread):
         runs ShoalUpdate
         """
         self.running = True
-	i=0
-	blacklist=[]
         while self.running:
             sleep(self.INTERVAL)
             self.update()
-            if i==0:
-                for squid in self.shoal.values():
-                    try:
-                        if "verified" in squid.verification:
-                            if squid.public_ip in (authTest(squid.public_ip, squid.squid_port)):
-                                self.shoal.pop(squid.key)
-                            else:
-                                squid.verification="Verified"
-                    except TypeError:
-                        logging.info("VERIFIED: " + squid.public_ip)
-                        squid.verification = "Verified"
 
-                i = 1
-            elif i==2:
-                i=0
-            else:
-                i=i+1
+    def verify(self):
+        for squid in self.shoal.values():
+            try:
+                if "verified" in squid.verification:
+                    if squid.public_ip in (authTest(squid.public_ip, squid.squid_port)):
+                        self.shoal.pop(squid.key)
+                    else:
+                        squid.verification="Verified"
+            except TypeError:
+                logging.info("VERIFIED: " + squid.public_ip)
+                squid.verification = "Verified"
 
     def update(self):
         """
@@ -170,7 +168,7 @@ class ShoalUpdate(Thread):
         """
         curr = time()
         for squid in self.shoal.values():
-	    if curr - squid.last_active > self.INACTIVE:
+            if curr - squid.last_active > self.INACTIVE:
                 self.shoal.pop(squid.key)
 
     def stop(self):
@@ -193,7 +191,7 @@ class WebpyServer(Thread):
         web.config.debug = False
         self.app = None
         self.urls = (
-            '/allnearest/?(\d+)?/?', 'shoal_server.view.allnearest',
+            '/all/?(\d+)?/?', 'shoal_server.view.allsquids',
             '/nearest/?(\d+)?/?', 'shoal_server.view.nearest',
             '/wpad.dat', 'shoal_server.view.wpad',
             '/(\d+)?/?', 'shoal_server.view.index',
@@ -203,9 +201,9 @@ class WebpyServer(Thread):
         """
         runs web application
         """
-	try:
+        try:
             self.app = web.application(self.urls, globals())
-	    self.app.run()
+            self.app.run()
         except Exception as e:
             logging.error("Could not start webpy server.\n{0}".format(e))
             sys.exit(1)
@@ -478,6 +476,7 @@ class RabbitMQConsumer(Thread):
             time_sent = data['timestamp']
             load = data['load']
             squid_port = data['squid_port']
+
         except KeyError as e:
             logging.error("Message received was not the proper format (missing:{0}), discarding...".format(e))
             self.acknowledge_message(basic_deliver.delivery_tag)
@@ -498,7 +497,6 @@ class RabbitMQConsumer(Thread):
             verification = data['verification']
         except KeyError:
             verification='Unverified'
-            pass	
         try:
             maxload=data['max_load']
         except KeyError:
@@ -531,3 +529,49 @@ class RabbitMQConsumer(Thread):
                 self.shoal[key] = new_squid
 
         self.acknowledge_message(basic_deliver.delivery_tag)
+        
+        
+"""
+    SquidVerifier runs on an interval specified in the config file. Each interval it checks each
+    squid saves to the server to make sure it is ready for traffic and is servering files.
+    If a squid isn't responding to requests it is removed from the server, otherwise it is tagged as verified.
+"""
+class SquidVerifier(Thread):
+
+    INTERVAL = config.squid_verify_interval
+
+    def __init__(self, shoal):
+        """SquidVerifier
+        constructor for SquidVerifier, uses parent Thread constructor as well
+        """
+        Thread.__init__(self)
+        self.shoal = shoal
+        self.running = False
+
+    def run(self):
+        """
+        runs verify
+        """
+        self.running = True
+        while self.running:
+            sleep(self.INTERVAL)
+            self.verify()
+
+    def verify(self):
+        for squid in self.shoal.values():
+            try:
+                if "verified" in squid.verification:
+                    if squid.public_ip in (authTest(squid.public_ip, squid.squid_port)):
+                        self.shoal.pop(squid.key)
+                    else:
+                        squid.verification="Verified"
+            except TypeError:
+                logging.info("VERIFIED: " + squid.public_ip)
+                squid.verification = "Verified"
+
+
+    def stop(self):
+        """
+        stops Squid_Verifier
+        """
+        self.running = False

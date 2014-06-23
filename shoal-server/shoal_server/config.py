@@ -17,6 +17,7 @@ geolitecity_url = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCit
 geolitecity_update = 2592000
 squid_cleanse_interval = 15
 squid_inactive_time = 180
+squid_verify_interval = 60
 amqp_server_url = 'localhost'
 amqp_port       = 5672
 amqp_virtual_host = '/'

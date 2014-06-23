@@ -168,7 +168,7 @@ def main():
         logging.error("Unable to automatically detect interface to monitor, please set the interface to monitor in configuration file.")
         sys.exit(1)
 
-    # enable the sigterm signal handler to log befor exit
+    # enable the sigterm signal handler to log before exit
     signal.signal(signal.SIGTERM, SIGTERM_handler)
 
     logging.info("shoal-agent configured, starting up")

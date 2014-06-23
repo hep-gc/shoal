@@ -4,9 +4,7 @@ import json
 import operator
 import config
 import math
-#import squid_auditor
 
-from squid_auditor import audit
 from time import time
 from shoal_server import utilities
 from __version__ import version
@@ -30,12 +28,12 @@ class index:
 class nearest:
     def GET(self, count):
         web.header('Content-Type', 'application/json')
-        return view_nearest(count, False)
+        return view_nearest(count)
 
-class allnearest:
+class allsquids:
     def GET(self, count):
         web.header('Content-Type', 'application/json')
-        return view_nearest(count, True)
+        return view_allsquids()
 
 class wpad:
     def GET(self):
@@ -76,7 +74,7 @@ def view_index(size):
     lower, upper = int(size * (page - 1)), int(size * page)
     return render.index(time(), total, sorted_shoal[lower:upper], page, pages, size)
 
-def view_nearest(count, verification):
+def view_nearest(count):
     """
         returns the nearest squid as a JSON formatted str
     """
@@ -87,12 +85,25 @@ def view_nearest(count, verification):
 
     ip = web.ctx['ip']
 
-    squids = utilities.get_nearest_squids(ip,verification,count)
+    squids = utilities.get_nearest_squids(ip,count)
     if squids:
         squid_json = {}
         for i,squid in enumerate(squids):
             squid_json[i] = squid[0].jsonify()
             squid_json[i]['distance'] = squid[1]
+        return json.dumps(squid_json)
+    else:
+        return json.dumps(None)
+    
+def view_allsquids():
+    """
+        returns the all squids as a JSON formatted str
+    """
+    squids = utilities.get_all_squids()
+    if squids:
+        squid_json = {}
+        for i,squid in enumerate(squids):
+            squid_json[i] = squid.jsonify()
         return json.dumps(squid_json)
     else:
         return json.dumps(None)
