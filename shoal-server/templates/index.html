@@ -42,9 +42,9 @@ $def with (now, total, shoal, page, pages, size)
                 $ state = 'warning'
             $else:
                 $ state = 'error'
-            $if squid.global_access:
+            $if squid.global_access == True:
                 $ access = 'Global'
-            $elif squid.domain_access:
+            $elif squid.domain_access == True:
                 $ access = 'Same Domain Only'
             $else:
                 $ access = 'No Outside Access'

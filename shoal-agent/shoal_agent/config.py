@@ -144,3 +144,15 @@ if config_file.has_option("general", "external_ip"):
 
 if config_file.has_option("general", "interface"):
     interface = config_file.get("general", "interface")
+
+if config_file.has_option("general", "verified"):
+    verified = config_file.get("general","verified")
+
+if config_file.has_option("general", "global_access"):
+    global_access = config_file.get("general","global_access")
+
+if config_file.has_option("general", "domain_access"):
+    domain_access = config_file.get("general","domain_access")
+
+if config_file.has_option("general", "max_load"):
+    global_access = config_file.get("general","max_load")
