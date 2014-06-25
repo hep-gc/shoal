@@ -24,7 +24,8 @@ $def with (now, total, shoal, page, pages, size)
           <th class="hidden-phone">Longitude</th>
           <th class="hidden-phone">Last Received</th>
           <th>Alive</th>
-          <th>Verification</th>
+          <th>Verified</th>
+	  <th>Access Level</th>
 	 </tr>
       </thead>
       <tbody>
@@ -41,7 +42,17 @@ $def with (now, total, shoal, page, pages, size)
                 $ state = 'warning'
             $else:
                 $ state = 'error'
-    
+            $if squid.global_access:
+                $ access = 'Global'
+            $elif squid.domain_access:
+                $ access = 'Same Domain Only'
+            $else:
+                $ access = 'No Outside Access'
+            $if squid.verified:
+                $ verified = '✔' 
+            $else:
+                $ verified = '✘'
+
             <tr class='$state'>
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
                 <td>$squid.hostname</td>
@@ -55,7 +66,8 @@ $def with (now, total, shoal, page, pages, size)
                 <td class="hidden-phone">$squid.geo_data['longitude']</td>
                 <td class="hidden-phone">$(last_msg)s</td>
                 <td>$(hour)h$(minute)m$(second)s</td>
-                <td>$squid.verification</td>
+                <td>$verified</td>
+                <td>$access</td>
 	    </tr>
       </tbody>
     </table>

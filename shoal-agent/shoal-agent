@@ -127,8 +127,10 @@ def main():
             'uuid': uuid.uuid1().hex,
             'hostname': socket.gethostname(),
             'squid_port': config.squid_port,
-            'verification': config.verification,
-            'max_load': config.max_load
+            'verified': config.verified,
+            'max_load': config.max_load,
+            'global_access': config.global_access,
+            'domain_access': config.domain_access
            }
 
     public_ip, private_ip = get_ip_addresses()

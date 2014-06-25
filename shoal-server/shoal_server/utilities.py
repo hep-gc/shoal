@@ -58,10 +58,11 @@ def get_nearest_squids(ip,count=10):
             maxload = squid.maxload
         except:
             #no maxload is sent from agent, using default value of 1GB/s in kilobytes
-            maxload = 1048576		
+            maxload = config.squid_max_load		
 
         #additional logic for special case servers should be placed here in the future
-        if squid.verification=="Verified":
+        #check if squid is verified or if verification is turned off
+        if squid.verified or not config.squid_verification :
             s_lat = float(squid.geo_data['latitude'])
             s_long = float(squid.geo_data['longitude'])
 

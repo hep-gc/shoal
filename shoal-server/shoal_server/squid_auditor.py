@@ -22,7 +22,7 @@ def authTest(ip, port):
     targeturl = ''
     for server in servers:
         for repo in repos:
-            #this is broken and will need to be fixed. everything defaulting to /opt/ for now
+            #this will need to be refactored with the changes to cvmfs
             if repo=='atlas' or 'atlas-condb':
                 targeturl = "%s/opt/%s/.cvmfswhitelist" % (server, repo)
             else:

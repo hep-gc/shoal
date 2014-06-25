@@ -21,7 +21,7 @@ from shoal_server import utilities
 """
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verification, max_load=1048576, last_active=time()):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, max_load=1048576, last_active=time()):
         """
         constructor for SquidNode, time created is current time
         """
@@ -35,7 +35,9 @@ class SquidNode(object):
         self.external_ip = external_ip
         self.geo_data = geo_data
         self.load = load
-        self.verification = verification
+        self.verified = verified
+        self.global_access = global_access
+        self.domain_access = domain_access
         self.max_load = max_load
 
     def update(self, load):
@@ -59,7 +61,9 @@ class SquidNode(object):
                   "external_ip": self.external_ip,
                   "geo_data": self.geo_data,
                   "load": self.load,
-                  "verification": self.verification,
+                  "verified": self.verified,
+                  "global_access": self.global_access,
+                  "domain_access": self.domain_access,
                   "max_load": self.max_load,
                 },
                )
@@ -90,10 +94,11 @@ class ThreadMonitor(Thread):
         update_thread.daemon = True
         self.threads.append(update_thread)
         
-        #add verify thread
-        verify_thread = SquidVerifier(self.shoal)
-        verify_thread.daemon = True
-        self.threads.append(verify_thread)
+        #check if verification is turned on in config
+        if config.squid_verification:
+            verify_thread = SquidVerifier(self.shoal)
+            verify_thread.daemon = True
+            self.threads.append(verify_thread)
 
 
     def run(self):
@@ -149,18 +154,6 @@ class ShoalUpdate(Thread):
         while self.running:
             sleep(self.INTERVAL)
             self.update()
-
-    def verify(self):
-        for squid in self.shoal.values():
-            try:
-                if "verified" in squid.verification:
-                    if squid.public_ip in (authTest(squid.public_ip, squid.squid_port)):
-                        self.shoal.pop(squid.key)
-                    else:
-                        squid.verification="Verified"
-            except TypeError:
-                logging.info("VERIFIED: " + squid.public_ip)
-                squid.verification = "Verified"
 
     def update(self):
         """
@@ -461,6 +454,8 @@ class RabbitMQConsumer(Thread):
         inactive time and a public/private ip exists
         """
         external_ip = public_ip = private_ip = None
+        #assume global access unless otherwise indicated
+        globalaccess = domainaccess = True
         curr = time()
     
         # extracts information from data from body
@@ -494,23 +489,21 @@ class RabbitMQConsumer(Thread):
         except KeyError:
             pass
         try:
-            verification = data['verification']
+            verified = data['verified']
         except KeyError:
-            verification='Unverified'
+            verified=config.squid_verified_default
         try:
             maxload=data['max_load']
         except KeyError:
-            maxload=1048576
-
-        # for each squid in shoal, if public ip matches,
-        # load for the squid will update and send a acknowledgment message
-        # TODO: check to see if this is problem for natted squids. This loop may 
-        # not be necessary and it also causes agents from the same ip to be consolidated
-        for squid in self.shoal.values():
-           if squid.public_ip == public_ip:
-              squid.update(load)
-              self.acknowledge_message(basic_deliver.delivery_tag)
-              return
+            maxload= config.squid_max_load
+        try:
+            globalaccess = data['global_access']
+        except KeyError:
+            pass
+        try:
+            domainaccess = data['domain_access']
+        except KeyError:
+            pass
     
         # if there's a key in shoal, shoal's key will update with the load
         if key in self.shoal:
@@ -525,7 +518,7 @@ class RabbitMQConsumer(Thread):
             if not geo_data:
                 logging.error("Unable to generate geo location data, discarding message")
             else:
-                new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verification, maxload, time_sent)
+                new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, maxload, time_sent)
                 self.shoal[key] = new_squid
 
         self.acknowledge_message(basic_deliver.delivery_tag)
@@ -559,16 +552,16 @@ class SquidVerifier(Thread):
 
     def verify(self):
         for squid in self.shoal.values():
+            #only verify if it has not already been verified
             try:
-                if "verified" in squid.verification:
+                if not squid.verified:
                     if squid.public_ip in (authTest(squid.public_ip, squid.squid_port)):
                         self.shoal.pop(squid.key)
                     else:
-                        squid.verification="Verified"
+                        squid.verified=True
             except TypeError:
                 logging.info("VERIFIED: " + squid.public_ip)
-                squid.verification = "Verified"
-
+                squid.verified = True
 
     def stop(self):
         """

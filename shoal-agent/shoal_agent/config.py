@@ -31,8 +31,12 @@ cloud = ''
 squid_port = 3128
 log_file = '/var/log/shoal_agent.log'
 logging_level = logging.ERROR
-#this value should be Unverified, unless it is one of the special cases No outside Access, or Same Domain
-verification = 'No Outside Access'
+#this value should be false unless you wish the shoal server to neglect verifying this squid
+verified = False
+#squid server accessible globally
+global_access = True
+#squid serve accessible by same domain only
+domain_access = False
 #this is the max load of the server in terms of kb/s
 max_load = 1048576
 
