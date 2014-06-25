@@ -489,7 +489,10 @@ class RabbitMQConsumer(Thread):
         except KeyError:
             pass
         try:
-            verified = data['verified']
+            if 'True' in data['verified']:
+                verified = True
+            else:
+                verified = False
         except KeyError:
             verified=config.squid_verified_default
         try:
@@ -497,11 +500,17 @@ class RabbitMQConsumer(Thread):
         except KeyError:
             maxload= config.squid_max_load
         try:
-            globalaccess = data['global_access']
+            if 'True' in data['global_access']:
+                globalaccess = True
+            else:
+                globalaccess = False
         except KeyError:
             pass
         try:
-            domainaccess = data['domain_access']
+            if 'True' in data['domain_access']:
+                domainaccess = True
+            else:
+                domainaccess = False
         except KeyError:
             pass
     
