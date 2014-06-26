@@ -52,6 +52,8 @@ $def with (now, total, shoal, page, pages, size)
                 $ verified = '✔' 
             $else:
                 $ verified = '✘'
+                $if squid.global_access == True:
+                    $ state = 'warning'
 
             <tr class='$state'>
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
