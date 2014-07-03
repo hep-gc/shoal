@@ -21,6 +21,8 @@ squid_verification = True
 squid_verify_interval = 60
 squid_max_load = 1048576
 squid_verified_default = False
+squid_loadconstant = 1
+squid_distloadweight = 0.5
 amqp_server_url = 'localhost'
 amqp_port       = 5672
 amqp_virtual_host = '/'
@@ -39,7 +41,7 @@ homedir = expanduser('~')
 
 #radius of earth used to calculate distnace vs load cost after haversine and a tuneable constant for the same calculation
 earthradius = 6378
-loadconstant = 1
+
 
 #servers and repos to check for authentication
 #These servers and repos will have to be updated once the occurences of /opt/ are removed
@@ -113,6 +115,48 @@ if config_file.has_option("squid", "squid_inactive_time"):
     except ValueError:
         print "Configuration file problem: squid_inactive_time must be an " \
               "integer value."
+        sys.exit(1)
+        
+if config_file.has_option("squid", "squid_verification"):
+    try:
+        squid_verification = config_file.getboolean("squid", "squid_verification")
+    except ValueError:
+        print "Configuration file problem: squid_verification must be a boolean value"
+        sys.exit(1)
+
+if config_file.has_option("squid", "squid_verified_default"):
+    try:
+        squid_verification = config_file.getboolean("squid", "squid_verified_default")
+    except ValueError:
+        print "Configuration file problem: squid_verified_default must be a boolean value"
+        sys.exit(1)
+
+if config_file.has_option("squid", "squid_verify_interval"):
+    try:
+        squid_verification = config_file.getint("squid", "squid_verify_interval")
+    except ValueError:
+        print "Configuration file problem: squid_verify_interval must be a integer value"
+        sys.exit(1)
+
+if config_file.has_option("squid", "squid_max_load"):
+    try:
+        squid_verification = config_file.getint("squid", "squid_max_load")
+    except ValueError:
+        print "Configuration file problem: squid_max_load must be a integer value"
+        sys.exit(1)
+
+if config_file.has_option("squid", "squid_loadconstant"):
+    try:
+        squid_verification = config_file.getfloat("squid", "squid_loadconstant")
+    except ValueError:
+        print "Configuration file problem: squid_loadconstant must be a float value"
+        sys.exit(1)
+
+if config_file.has_option("squid", "squid_distloadweight"):
+    try:
+        squid_verification = config_file.getfloat("squid", "squid_distloadweight")
+    except ValueError:
+        print "Configuration file problem: squid_distloadweight must be a float value"
         sys.exit(1)
 
 if config_file.has_option("rabbitmq", "amqp_server_url"):

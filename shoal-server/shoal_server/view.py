@@ -29,6 +29,11 @@ class nearest:
     def GET(self, count):
         web.header('Content-Type', 'application/json')
         return view_nearest(count)
+    
+class nearestverified:
+    def GET(self, count):
+        web.header('Content-Type', 'application/json')
+        return view_nearest_verified(count)
 
 class allsquids:
     def GET(self, count):
@@ -94,7 +99,28 @@ def view_nearest(count):
         return json.dumps(squid_json)
     else:
         return json.dumps(None)
-    
+
+def view_nearest_verified(count):
+    """
+        returns the nearest squid as a JSON formatted str
+    """
+    try:
+        count = int(count)
+    except (ValueError, TypeError):
+        count = 5
+
+    ip = web.ctx['ip']
+
+    squids = utilities.get_nearest_verified_squids(ip,count)
+    if squids:
+        squid_json = {}
+        for i,squid in enumerate(squids):
+            squid_json[i] = squid[0].jsonify()
+            squid_json[i]['distance'] = squid[1]
+        return json.dumps(squid_json)
+    else:
+        return json.dumps(None)
+
 def view_allsquids():
     """
         returns the all squids as a JSON formatted str
