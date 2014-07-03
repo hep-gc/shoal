@@ -34,7 +34,7 @@ def get_nearest_squids(ip,count=10):
     """
     request_data = get_geolocation(ip)
     if not request_data:
-	print "no geolocation"
+        print "no geolocation"
         return None
     
     try:
@@ -51,7 +51,52 @@ def get_nearest_squids(ip,count=10):
     ## and sorts them in a list of squids based on distance vs load correlation
 
     earthrad = config.earthradius
-    b = config.loadconstant
+    b = config.squid_loadconstant
+    w = config.squid_distloadweight
+    maxload=-1
+    for squid in web.shoal.values():
+        try:
+            maxload = squid.maxload
+        except:
+            #no maxload is sent from agent, using default value of 1GB/s in kilobytes
+            maxload = config.squid_max_load        
+
+        s_lat = float(squid.geo_data['latitude'])
+        s_long = float(squid.geo_data['longitude'])
+
+        distance = haversine(r_lat,r_long,s_lat,s_long)
+        distancecost = distance/(earthrad * 3.14159265359) * (w)
+        loadcost = ((squid.load/maxload)**b) * (1-w)
+        nearest_squids.append((squid,distancecost+loadcost))
+
+    squids = sorted(nearest_squids, key=lambda k: (k[1]))
+    return squids[:count]
+
+def get_nearest_verified_squids(ip,count=10):  
+    """
+        Given an IP return a sorted list of nearest squids up to a given count
+    """
+    request_data = get_geolocation(ip)
+    if not request_data:
+        print "no geolocation"
+        return None
+    
+    try:
+        r_lat = request_data['latitude']
+        r_long = request_data['longitude']
+    except KeyError as e:
+        logger.error("Could not read request data:")
+        logger.error(e)
+        return None
+
+    nearest_squids = []
+    
+    ## computes the distance between each squid and the given ip address
+    ## and sorts them in a list of squids based on distance vs load correlation
+
+    earthrad = config.earthradius
+    b = config.squid_loadconstant
+    w = config.squid_distloadweight
     maxload=-1
     for squid in web.shoal.values():
         try:
@@ -61,14 +106,14 @@ def get_nearest_squids(ip,count=10):
             maxload = config.squid_max_load		
 
         #additional logic for special case servers should be placed here in the future
-        #check if squid is verified or if verification is turned off
-        if squid.verified or not config.squid_verification :
+        #check if squid is verified or if verification is turned off in the config. or if there is no global access but the requester is from the same domain
+        if squid.verified or not config.squid_verification or (checkDomain(ip, squid.public_ip) and not squid.global_access):
             s_lat = float(squid.geo_data['latitude'])
             s_long = float(squid.geo_data['longitude'])
 
             distance = haversine(r_lat,r_long,s_lat,s_long)
-            distancecost = distance/(earthrad * 3.14159265359)
-            loadcost = (squid.load/maxload)**b 
+            distancecost = distance/(earthrad * 3.14159265359) * (w)
+            loadcost = ((squid.load/maxload)**b) * (1-w)
             nearest_squids.append((squid,distancecost+loadcost))
 
     squids = sorted(nearest_squids, key=lambda k: (k[1]))
@@ -84,6 +129,13 @@ def get_all_squids():
         squids.append(squid)
 
     return squids
+
+def checkDomain(req_ip, squid_ip):
+    """
+    Check if two ips come from the same domain
+    This is a stub function until a method is decided and a database is available
+    """
+    return False
 
 def haversine(lat1,lon1,lat2,lon2):
     """
