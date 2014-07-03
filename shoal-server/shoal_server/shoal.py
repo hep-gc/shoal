@@ -186,6 +186,7 @@ class WebpyServer(Thread):
         self.urls = (
             '/all/?(\d+)?/?', 'shoal_server.view.allsquids',
             '/nearest/?(\d+)?/?', 'shoal_server.view.nearest',
+            '/nearestverified/?(\d+)?/?', 'shoal_server.view.nearestverified',
             '/wpad.dat', 'shoal_server.view.wpad',
             '/(\d+)?/?', 'shoal_server.view.index',
         )
@@ -563,7 +564,7 @@ class SquidVerifier(Thread):
         for squid in self.shoal.values():
             #only verify if it has not already been verified and it is gobally accessable
             try:
-                if not squid.verified and squid.global_access:
+                if not squid.verified and (squid.global_access or squid.domain_access):
                     if squid.public_ip in (authTest(squid.public_ip, squid.squid_port)):
                         self.shoal.pop(squid.key)
                     else:
