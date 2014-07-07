@@ -106,7 +106,8 @@ def get_nearest_verified_squids(ip,count=10):
             maxload = config.squid_max_load		
 
         #additional logic for special case servers should be placed here in the future
-        #check if squid is verified or if verification is turned off in the config. or if there is no global access but the requester is from the same domain
+        #check if squid is verified or if verification is turned off in the config. or 
+        #if there is no global access but the requester is from the same domain
         if squid.verified or not config.squid_verification or (checkDomain(ip, squid.public_ip) and not squid.global_access):
             s_lat = float(squid.geo_data['latitude'])
             s_long = float(squid.geo_data['longitude'])
