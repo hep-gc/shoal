@@ -10,6 +10,7 @@ from time import time, sleep
 from math import radians, cos, sin, asin, sqrt
 from urllib import urlretrieve
 
+import squid_auditor
 import config
 
 GEOLITE_DB = os.path.join(config.geolitecity_path,"GeoLiteCity.dat")
@@ -58,7 +59,6 @@ def get_nearest_squids(ip,count=10):
         try:
             maxload = squid.maxload
         except:
-            #no maxload is sent from agent, using default value of 1GB/s in kilobytes
             maxload = config.squid_max_load        
 
         s_lat = float(squid.geo_data['latitude'])
@@ -206,3 +206,27 @@ def generate_wpad(ip):
         return proxy_str
     else:
         return None
+    
+def verify():
+     for squid in web.shoal.values():
+         #only verify if it has not already been verified and it is gobally accessable
+         try:
+             if not squid.verified and (squid.global_access or squid.domain_access):
+                 if not squid_auditor.is_available(squid.public_ip, squid.squid_port):
+                     logging.info( squid.public_ip + " Failed Verification.")
+                 else:
+                     logging.info("VERIFIED: " + squid.public_ip)
+                     squid.verified=True
+         except TypeError:
+             logging.info("VERIFIED: " + squid.public_ip)
+             squid.verified = True
+             
+def verify_new_squid(ip):
+    for squid in web.shoal.values():
+        if ip == squid.public_ip:
+             if not squid.verified and (squid.global_access or squid.domain_access):
+                 if not squid_auditor.is_available(squid.public_ip, squid.squid_port):
+                     logging.error( squid.public_ip + " Failed Verification.")
+                 else:
+                     logging.info("VERIFIED: " + squid.public_ip)
+                     squid.verified=True

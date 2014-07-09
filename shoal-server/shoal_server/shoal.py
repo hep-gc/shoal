@@ -8,20 +8,20 @@ import logging
 import pika
 import socket
 import uuid
-import squid_auditor
-from squid_auditor import authTest
+
 from time import time, sleep
 from threading import Thread
 
 from shoal_server import config
 from shoal_server import utilities
+from shoal_server import squid_auditor
 
 """
     Basic class to store and update information about each squid server.
 """
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, max_load=1048576, last_active=time()):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, max_load=122000, last_active=time()):
         """
         constructor for SquidNode, time created is current time
         """
@@ -514,7 +514,7 @@ class RabbitMQConsumer(Thread):
                 domainaccess = False
         except KeyError:
             pass
-    
+
         # if there's a key in shoal, shoal's key will update with the load
         if key in self.shoal:
             self.shoal[key].update(load)
@@ -530,6 +530,7 @@ class RabbitMQConsumer(Thread):
             else:
                 new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, maxload, time_sent)
                 self.shoal[key] = new_squid
+                utilities.verify_new_squid(public_ip)
 
         self.acknowledge_message(basic_deliver.delivery_tag)
         
@@ -558,20 +559,7 @@ class SquidVerifier(Thread):
         self.running = True
         while self.running:
             sleep(self.INTERVAL)
-            self.verify()
-
-    def verify(self):
-        for squid in self.shoal.values():
-            #only verify if it has not already been verified and it is gobally accessable
-            try:
-                if not squid.verified and (squid.global_access or squid.domain_access):
-                    if squid.public_ip in (authTest(squid.public_ip, squid.squid_port)):
-                        self.shoal.pop(squid.key)
-                    else:
-                        squid.verified=True
-            except TypeError:
-                logging.info("VERIFIED: " + squid.public_ip)
-                squid.verified = True
+            utilities.verify()
 
     def stop(self):
         """

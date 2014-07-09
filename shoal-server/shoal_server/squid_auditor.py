@@ -7,7 +7,7 @@ import requests
 import logging
 import config
 
-def authTest(ip, port):
+def is_available(ip, port):
     """
     using no system commands to download file thru proxy and assert its correctness to authenticate a given proxy
     returns the ip if it cannot authenticate it
@@ -33,17 +33,13 @@ def authTest(ip, port):
                 f = file.content
             except:
                 logging.info("Timeout or proxy error, blacklisting:%s " % (ip))
-                return ip
+                return False
 			
-            #Bool marked as false if the repo checks out, else the ip has failed verficication and should be returned
-            blist = True
             for line in f.splitlines():
                 if line.startswith('N'):
                     if repo in line:
-                        blist = False
-                        break     
-            if blist:
-                return ip
+                        return True
+    return False
 
 def authenticate(file, repo):
     """

@@ -38,7 +38,7 @@ global_access = True
 #squid serve accessible by same domain only
 domain_access = False
 #this is the max load of the server in terms of kb/s
-max_load = 1048576
+max_load = 122000
 
 homedir = expanduser('~')
 
