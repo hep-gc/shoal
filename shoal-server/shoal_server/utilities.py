@@ -6,11 +6,11 @@ import web
 import logging
 import operator
 import gzip
+import requests
 from time import time, sleep
 from math import radians, cos, sin, asin, sqrt
 from urllib import urlretrieve
 
-import squid_auditor
 import config
 
 GEOLITE_DB = os.path.join(config.geolitecity_path,"GeoLiteCity.dat")
@@ -212,7 +212,7 @@ def verify():
          #only verify if it has not already been verified and it is gobally accessable
          try:
              if not squid.verified and (squid.global_access or squid.domain_access):
-                 if not squid_auditor.is_available(squid.public_ip, squid.squid_port):
+                 if not is_available(squid.public_ip, squid.squid_port):
                      logging.info( squid.public_ip + " Failed Verification.")
                  else:
                      logging.info("VERIFIED: " + squid.public_ip)
@@ -225,8 +225,42 @@ def verify_new_squid(ip):
     for squid in web.shoal.values():
         if ip == squid.public_ip:
              if not squid.verified and (squid.global_access or squid.domain_access):
-                 if not squid_auditor.is_available(squid.public_ip, squid.squid_port):
+                 if not is_available(squid.public_ip, squid.squid_port):
                      logging.error( squid.public_ip + " Failed Verification.")
                  else:
                      logging.info("VERIFIED: " + squid.public_ip)
                      squid.verified=True
+                     
+def is_available(ip, port):
+    """
+    Downloads file thru proxy and assert its correctness to verify a given proxy
+    returns the True if it is verified or False if it cannot be
+    """
+    servers = config.servers
+    repos = config.repos
+    proxystring = "http://%s:%s" % (ip,  str(port))
+    #set proxy
+    proxies = {
+        "http":proxystring,
+    }
+    targeturl = ''
+    for server in servers:
+        for repo in repos:
+            #this will need to be refactored with the changes to cvmfs
+            if repo=='atlas' or 'atlas-condb':
+                targeturl = "%s/opt/%s/.cvmfswhitelist" % (server, repo)
+            else:
+                targeturl = "%s/cvmfs/%s/.cvmfswhitelist" % (server, repo)
+
+            try:
+                file = requests.get(targeturl, proxies=proxies)
+                f = file.content
+            except:
+                logging.info("Timeout or proxy error, blacklisting:%s " % (ip))
+                return False
+            
+            for line in f.splitlines():
+                if line.startswith('N'):
+                    if repo in line:
+                        return True
+    return False
