@@ -14,7 +14,6 @@ from threading import Thread
 
 from shoal_server import config
 from shoal_server import utilities
-from shoal_server import squid_auditor
 
 """
     Basic class to store and update information about each squid server.
