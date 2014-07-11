@@ -8,18 +8,20 @@ import logging
 import pika
 import socket
 import uuid
+
 from time import time, sleep
 from threading import Thread
 
 from shoal_server import config
 from shoal_server import utilities
+from shoal_server import squid_auditor
 
 """
     Basic class to store and update information about each squid server.
 """
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, last_active=time()):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, max_load=122000, last_active=time()):
         """
         constructor for SquidNode, time created is current time
         """
@@ -33,6 +35,10 @@ class SquidNode(object):
         self.external_ip = external_ip
         self.geo_data = geo_data
         self.load = load
+        self.verified = verified
+        self.global_access = global_access
+        self.domain_access = domain_access
+        self.max_load = max_load
 
     def update(self, load):
         """
@@ -55,6 +61,10 @@ class SquidNode(object):
                   "external_ip": self.external_ip,
                   "geo_data": self.geo_data,
                   "load": self.load,
+                  "verified": self.verified,
+                  "global_access": self.global_access,
+                  "domain_access": self.domain_access,
+                  "max_load": self.max_load,
                 },
                )
 
@@ -83,6 +93,13 @@ class ThreadMonitor(Thread):
         update_thread = ShoalUpdate(self.shoal)
         update_thread.daemon = True
         self.threads.append(update_thread)
+        
+        #check if verification is turned on in config
+        if config.squid_verification:
+            verify_thread = SquidVerifier(self.shoal)
+            verify_thread.daemon = True
+            self.threads.append(verify_thread)
+
 
     def run(self):
         """
@@ -122,7 +139,7 @@ class ShoalUpdate(Thread):
     INACTIVE = config.squid_inactive_time
 
     def __init__(self, shoal):
-        """
+        """ShoalUpdate
         constructor for ShoalUpdate, uses parent Thread constructor as well
         """
         Thread.__init__(self)
@@ -167,7 +184,9 @@ class WebpyServer(Thread):
         web.config.debug = False
         self.app = None
         self.urls = (
+            '/all/?(\d+)?/?', 'shoal_server.view.allsquids',
             '/nearest/?(\d+)?/?', 'shoal_server.view.nearest',
+            '/nearestverified/?(\d+)?/?', 'shoal_server.view.nearestverified',
             '/wpad.dat', 'shoal_server.view.wpad',
             '/(\d+)?/?', 'shoal_server.view.index',
         )
@@ -436,6 +455,8 @@ class RabbitMQConsumer(Thread):
         inactive time and a public/private ip exists
         """
         external_ip = public_ip = private_ip = None
+        #assume global access unless otherwise indicated
+        globalaccess = domainaccess = True
         curr = time()
     
         # extracts information from data from body
@@ -451,6 +472,7 @@ class RabbitMQConsumer(Thread):
             time_sent = data['timestamp']
             load = data['load']
             squid_port = data['squid_port']
+
         except KeyError as e:
             logging.error("Message received was not the proper format (missing:{0}), discarding...".format(e))
             self.acknowledge_message(basic_deliver.delivery_tag)
@@ -467,17 +489,29 @@ class RabbitMQConsumer(Thread):
             private_ip = data['private_ip']
         except KeyError:
             pass
-    
-        # for each squid in shoal, if public ip matches,
-        # load for the squid will update and send a acknowledgment message
-        # TODO: check to see if this is problem for natted squids. This loop may 
-        # not be necessary
-        for squid in self.shoal.values():
-           if squid.public_ip == public_ip:
-              squid.update(load)
-              self.acknowledge_message(basic_deliver.delivery_tag)
-              return
-    
+        try:
+            verified = data['verified']
+        except KeyError:
+            verified=config.squid_verified_default
+        try:
+            maxload=data['max_load']
+        except KeyError:
+            maxload= config.squid_max_load
+        try:
+            if 'True' in data['global_access']:
+                globalaccess = True
+            else:
+                globalaccess = False
+        except KeyError:
+            pass
+        try:
+            if 'True' in data['domain_access']:
+                domainaccess = True
+            else:
+                domainaccess = False
+        except KeyError:
+            pass
+
         # if there's a key in shoal, shoal's key will update with the load
         if key in self.shoal:
             self.shoal[key].update(load)
@@ -491,7 +525,41 @@ class RabbitMQConsumer(Thread):
             if not geo_data:
                 logging.error("Unable to generate geo location data, discarding message")
             else:
-                new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, time_sent)
+                new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, maxload, time_sent)
                 self.shoal[key] = new_squid
+                utilities.verify_new_squid(public_ip)
 
         self.acknowledge_message(basic_deliver.delivery_tag)
+        
+        
+"""
+    SquidVerifier runs on an interval specified in the config file. Each interval it checks each
+    squid saves to the server to make sure it is ready for traffic and is servering files.
+    If a squid isn't responding to requests it is removed from the server, otherwise it is tagged as verified.
+"""
+class SquidVerifier(Thread):
+
+    INTERVAL = config.squid_verify_interval
+
+    def __init__(self, shoal):
+        """SquidVerifier
+        constructor for SquidVerifier, uses parent Thread constructor as well
+        """
+        Thread.__init__(self)
+        self.shoal = shoal
+        self.running = False
+
+    def run(self):
+        """
+        runs verify
+        """
+        self.running = True
+        while self.running:
+            sleep(self.INTERVAL)
+            utilities.verify()
+
+    def stop(self):
+        """
+        stops Squid_Verifier
+        """
+        self.running = False

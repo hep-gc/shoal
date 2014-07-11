@@ -31,6 +31,14 @@ cloud = ''
 squid_port = 3128
 log_file = '/var/log/shoal_agent.log'
 logging_level = logging.ERROR
+#this value should be false unless you wish the shoal server to neglect verifying this squid
+verified = False
+#squid server accessible globally
+global_access = True
+#squid serve accessible by same domain only
+domain_access = False
+#this is the max load of the server in terms of kb/s
+max_load = 122000
 
 homedir = expanduser('~')
 
@@ -136,3 +144,12 @@ if config_file.has_option("general", "external_ip"):
 
 if config_file.has_option("general", "interface"):
     interface = config_file.get("general", "interface")
+
+if config_file.has_option("general", "global_access"):
+    global_access = config_file.get("general","global_access")
+
+if config_file.has_option("general", "domain_access"):
+    domain_access = config_file.get("general","domain_access")
+
+if config_file.has_option("general", "max_load"):
+    max_load = config_file.get("general","max_load")
