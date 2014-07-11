@@ -490,10 +490,7 @@ class RabbitMQConsumer(Thread):
         except KeyError:
             pass
         try:
-            if 'True' in data['verified']:
-                verified = True
-            else:
-                verified = False
+            verified = data['verified']
         except KeyError:
             verified=config.squid_verified_default
         try:
