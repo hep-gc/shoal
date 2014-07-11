@@ -155,4 +155,4 @@ if config_file.has_option("general", "domain_access"):
     domain_access = config_file.get("general","domain_access")
 
 if config_file.has_option("general", "max_load"):
-    global_access = config_file.get("general","max_load")
+    max_load = config_file.get("general","max_load")
