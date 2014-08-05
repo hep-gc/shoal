@@ -2,6 +2,7 @@ import sys
 import os
 import subprocess
 import pygeoip
+import geoip2.database
 import web
 import logging
 import operator
@@ -16,6 +17,7 @@ import config
 GEOLITE_DB = os.path.join(config.geolitecity_path,"GeoLiteCity.dat")
 GEOLITE_URL = config.geolitecity_url
 GEOLITE_UPDATE = config.geolitecity_update
+GEODOMAIN_DB = os.path.join(config.geodomain_path, "GeoIP2-Domain.mmdb")
 
 logger = logging.getLogger('shoal_server')
 def get_geolocation(ip):
@@ -105,13 +107,12 @@ def get_nearest_verified_squids(ip,count=10):
             #no maxload is sent from agent, using default value of 1GB/s in kilobytes
             maxload = config.squid_max_load		
 
-        #additional logic for special case servers should be placed here in the future
         #check if squid is verified or if verification is turned off in the config. or 
         #if there is no global access but the requester is from the same domain
-        if squid.verified or not config.squid_verification or (checkDomain(ip, squid.public_ip) and not squid.global_access):
+        if squid.verified or not config.squid_verification or (checkDomain(ip, squid.public_ip) and not (squid.global_access or squid.domain_access)):
             s_lat = float(squid.geo_data['latitude'])
             s_long = float(squid.geo_data['longitude'])
-
+ 
             distance = haversine(r_lat,r_long,s_lat,s_long)
             distancecost = distance/(earthrad * 3.14159265359) * (w)
             loadcost = ((squid.load/maxload)**b) * (1-w)
@@ -134,9 +135,20 @@ def get_all_squids():
 def checkDomain(req_ip, squid_ip):
     """
     Check if two ips come from the same domain
-    This is a stub function until a method is decided and a database is available
+    If no database file is detected produce an error message and continue functioning without the domain lookup feature
     """
-    return False
+    if os.path.exists(GEODOMAIN_DB):
+        reader = geoip2.database.Reader(GEODOMAIN_DB)
+        req_domain = reader.domain(req_ip)
+        squid_domain = reader.domain(squid_ip)
+        if req_domain.domain == squid_domain.domain:
+            return True
+        else:
+             return False
+    else:
+        logging.error("No geoDomain database file detected. Add the database file \
+            to shoal-server/static/db before installation and ensure the path in the config file is correct")
+        return False
 
 def haversine(lat1,lon1,lat2,lon2):
     """
@@ -182,7 +194,7 @@ def download_geolitecity():
     try:
         content = gzip.open(GEOLITE_DB + '.gz').read()
     except Exception as e:
-        logger.error("GeoLiteCity.dat file was not properly downloaded. Check contents of {0} for possible errors.".format(GEOLITE_DB + '.gz'))
+        logger.error("GeoLiteCity.datDS FOR THE SOLE PURPOSE OF HAVING THE ENTIRE ANALYST DESK MAKE FUN OF LIFTLIFT BEING AT  file was not properly downloaded. Check contents of {0} for possible errors.".format(GEOLITE_DB + '.gz'))
         sys.exit(1)
 
     with open(GEOLITE_DB,'w') as f:

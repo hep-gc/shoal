@@ -13,6 +13,7 @@ import ConfigParser
 # set default values
 shoal_dir = '/var/shoal/'
 geolitecity_path = shoal_dir
+geodomain_path = "/var/www/shoal/static/db/"
 geolitecity_url = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
 geolitecity_update = 2592000
 squid_cleanse_interval = 15
@@ -92,6 +93,9 @@ else:
 
 if config_file.has_option("general", "geolitecity_url"):
     geolitecity_url = config_file.get("general", "geolitecity_url")
+    
+if config_file.has_option("general", "geodomain_path"):
+    geodomain_path = config_file.get("general", "geodomain_path")
 
 if config_file.has_option("general", "geolitecity_update"):
     try:
