@@ -194,7 +194,7 @@ def download_geolitecity():
     try:
         content = gzip.open(GEOLITE_DB + '.gz').read()
     except Exception as e:
-        logger.error("GeoLiteCity.datDS FOR THE SOLE PURPOSE OF HAVING THE ENTIRE ANALYST DESK MAKE FUN OF LIFTLIFT BEING AT  file was not properly downloaded. Check contents of {0} for possible errors.".format(GEOLITE_DB + '.gz'))
+        logger.error("GeoLiteCity.dat file was not properly downloaded. Check contents of {0} for possible errors.".format(GEOLITE_DB + '.gz'))
         sys.exit(1)
 
     with open(GEOLITE_DB,'w') as f:
