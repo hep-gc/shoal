@@ -77,6 +77,8 @@ def get_nearest_squids(ip,count=10):
 def get_nearest_verified_squids(ip,count=10):  
     """
         Given an IP return a sorted list of nearest squids up to a given count
+        Takes into account the special cases where a squid cannot be verified
+        and will check the domain of the requester to see if it matches and if it does it will serve it to the requester
     """
     request_data = get_geolocation(ip)
     if not request_data:
@@ -110,6 +112,9 @@ def get_nearest_verified_squids(ip,count=10):
         #check if squid is verified or if verification is turned off in the config. or 
         #if there is no global access but the requester is from the same domain
         if squid.verified or not config.squid_verification or (checkDomain(ip, squid.public_ip) and not (squid.global_access or squid.domain_access)):
+            #same domain only gets by on verified and must be checked to see if it is the same domian before it can be served
+            if not checkDomain(ip, squid.public_ip) and not squid.global_access and squid.domain_access:
+                continue
             s_lat = float(squid.geo_data['latitude'])
             s_long = float(squid.geo_data['longitude'])
  
@@ -138,13 +143,18 @@ def checkDomain(req_ip, squid_ip):
     If no database file is detected produce an error message and continue functioning without the domain lookup feature
     """
     if os.path.exists(GEODOMAIN_DB):
-        reader = geoip2.database.Reader(GEODOMAIN_DB)
-        req_domain = reader.domain(req_ip)
-        squid_domain = reader.domain(squid_ip)
-        if req_domain.domain == squid_domain.domain:
-            return True
-        else:
-             return False
+        try:
+            reader = geoip2.database.Reader(GEODOMAIN_DB)
+            req_domain = reader.domain(req_ip)
+            squid_domain = reader.domain(squid_ip)
+            if req_domain.domain == squid_domain.domain:
+                return True
+            else:
+                 return False
+        except Exception as e:
+            logging.error(e)
+            logging.error("IP not found in database - could not find second level domain name")
+            return False
     else:
         logging.error("No geoDomain database file detected. Add the database file \
             to shoal-server/static/db before installation and ensure the path in the config file is correct")
