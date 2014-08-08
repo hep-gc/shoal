@@ -45,6 +45,16 @@ Configure the agent and start it:
     vim /etc/shoal/shoal_agent.conf
     service shoal-agent start
 
+**Note on configuration of boolean variables
+global_access: Set this to true if the squid is accessible globally and can be
+served to whoever is close.
+
+domain_access: Set this to true if the squid is globally available but you want
+to confine access to clients from the same domain only.
+
+Set both to false if the squid is behind a firewall or cannot be accessed from outside.
+
+
 ###Other Methods
 1. [Install EPEL](http://fedoraproject.org/wiki/EPEL)
 2. `yum install python-pika python-netifaces`
