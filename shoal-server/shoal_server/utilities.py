@@ -273,6 +273,7 @@ def is_available(ip, port):
             file = requests.get(targeturl, proxies=proxies)
             f = file.content
         except:
+            #note that this would catch any RE errors aswell but they are specified in the config and all fit the pattern.
             logging.info("Timeout or proxy error, blacklisting:%s " % (ip))
             return False
         
@@ -281,6 +282,6 @@ def is_available(ip, port):
                 if repo in line:
                     testflag = True
         if testflag is False:
-            logging.error(ip + "failed verification on: " + targeturl + " " + repo)
+            logging.error(ip + " failed verification on: " + targetur)
             return False
     return True
