@@ -45,10 +45,28 @@ earthradius = 6378
 
 
 #servers and repos to check for authentication
-#These servers and repos will have to be updated once the occurences of /opt/ are removed
-servers=["http://cvmfs.racf.bnl.gov:8000","http://cvmfs.fnal.gov:8000","http://cvmfs-stratum-one.cern.ch:8000","http://cernvmfs.gridpp.rl.ac.uk:8000","http://cvmfs02.grid.sinica.edu.tw:8000"]
-#belle, nightlies should be in this list but every server is having trouble accessing it.
-repos=["atlas","atlas-condb","sft","grid"]
+paths = [
+    "http://cvmfs.racf.bnl.gov:8000/cvmfs/atlas/.cvmfswhitelist",
+    "http://cvmfs.racf.bnl.gov:8000/cvmfs/atlas-condb/.cvmfswhitelist",
+    "http://cvmfs.racf.bnl.gov:8000/cvmfs/sft/.cvmfswhitelist",
+    "http://cvmfs.racf.bnl.gov:8000/cvmfs/grid/.cvmfswhitelist",
+    "http://cvmfs.fnal.gov:8000/cvmfs/atlas/.cvmfswhitelist",
+    "http://cvmfs.fnal.gov:8000/cvmfs/atlas-condb/.cvmfswhitelist",
+    "http://cvmfs.fnal.gov:8000/cvmfs/sft/.cvmfswhitelist",
+    "http://cvmfs.fnal.gov:8000/cvmfs/grid/.cvmfswhitelist",
+    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/atlas.cern.ch/.cvmfswhitelist",
+    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
+    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/sft.cern.ch/.cvmfswhitelist",
+    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/grid.cern.ch/.cvmfswhitelist",
+    "http://cernvmfs.gridpp.rl.ac.uk:8000/cvmfs/atlas/.cvmfswhitelist",
+    "http://cernvmfs.gridpp.rl.ac.uk:8000/cvmfs/atlas-condb/.cvmfswhitelist",
+    "http://cernvmfs.gridpp.rl.ac.uk:8000/cvmfs/sft/.cvmfswhitelist",
+    "http://cernvmfs.gridpp.rl.ac.uk:8000/cvmfs/grid/.cvmfswhitelist",
+    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/atlas/.cvmfswhitelist",
+    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/atlas-condb/.cvmfswhitelist",
+    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/sft/.cvmfswhitelist",
+    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/grid/.cvmfswhitelist"
+]
 
 
 # find config file by checking the directory of the calling script and sets path

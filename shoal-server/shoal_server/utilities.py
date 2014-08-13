@@ -8,6 +8,7 @@ import logging
 import operator
 import gzip
 import requests
+import re
 from time import time, sleep
 from math import radians, cos, sin, asin, sqrt
 from urllib import urlretrieve
@@ -258,31 +259,28 @@ def is_available(ip, port):
     Downloads file thru proxy and assert its correctness to verify a given proxy
     returns the True if it is verified or False if it cannot be
     """
-    servers = config.servers
-    repos = config.repos
+    paths = config.paths
     proxystring = "http://%s:%s" % (ip,  str(port))
     #set proxy
     proxies = {
         "http":proxystring,
     }
-    targeturl = ''
-    for server in servers:
-        for repo in repos:
-            #this will need to be refactored with the changes to cvmfs
-            if repo=='atlas' or 'atlas-condb':
-                targeturl = "%s/opt/%s/.cvmfswhitelist" % (server, repo)
-            else:
-                targeturl = "%s/cvmfs/%s/.cvmfswhitelist" % (server, repo)
-
-            try:
-                file = requests.get(targeturl, proxies=proxies)
-                f = file.content
-            except:
-                logging.info("Timeout or proxy error, blacklisting:%s " % (ip))
-                return False
-            
-            for line in f.splitlines():
-                if line.startswith('N'):
-                    if repo in line:
-                        return True
-    return False
+    for targeturl in paths:
+        #if a url checks out testflag set to true, otherwise fails verification at end of loop
+        testflag = False
+        try:
+            repo = re.search("cvmfs\/(.+?)(\/|\.)", targeturl).group(1)
+            file = requests.get(targeturl, proxies=proxies)
+            f = file.content
+        except:
+            logging.info("Timeout or proxy error, blacklisting:%s " % (ip))
+            return False
+        
+        for line in f.splitlines():
+            if line.startswith('N'):
+                if repo in line:
+                    testflag = True
+        if testflag is False:
+            logging.error(ip + "failed verification on: " + targeturl + " " + repo)
+            return False
+    return True
