@@ -231,20 +231,28 @@ def generate_wpad(ip):
         return None
     
 def verify():
-     for squid in web.shoal.values():
-         #only verify if it has not already been verified and it is gobally accessable
-         try:
-             if not squid.verified and (squid.global_access or squid.domain_access):
-                 if not is_available(squid.public_ip, squid.squid_port):
-                     logging.info( squid.public_ip + " Failed Verification.")
-                 else:
-                     logging.info("VERIFIED: " + squid.public_ip)
-                     squid.verified=True
-         except TypeError:
-             logging.info("VERIFIED: " + squid.public_ip)
-             squid.verified = True
+    """
+    This function is peridoically run by a daemon thread to reverify that the squids in shoal are active
+    """
+    for squid in web.shoal.values():
+        #only verify if it is gobally accessable
+        try:
+            if squid.global_access or squid.domain_access:
+                if not is_available(squid.public_ip, squid.squid_port):
+                    logging.info( squid.public_ip + " Failed Verification.")
+                else:
+                    logging.info("VERIFIED: " + squid.public_ip)
+                    squid.verified=True
+        except TypeError:
+            logging.info("VERIFIED: " + squid.public_ip)
+            squid.verified = True
              
 def verify_new_squid(ip):
+    """
+    When a new squid is added to shoal this method is called to verify the squid is active
+    and can recieve requests from active worker nodes
+    """
+    
     for squid in web.shoal.values():
         if ip == squid.public_ip:
              if not squid.verified and (squid.global_access or squid.domain_access):
@@ -257,6 +265,7 @@ def verify_new_squid(ip):
 def is_available(ip, port):
     """
     Downloads file thru proxy and assert its correctness to verify a given proxy
+    A list of paths are tested to see all repos are working, the list can be found in config.py as "paths"
     returns the True if it is verified or False if it cannot be
     """
     paths = config.paths
@@ -282,6 +291,6 @@ def is_available(ip, port):
                 if repo in line:
                     testflag = True
         if testflag is False:
-            logging.error(ip + " failed verification on: " + targetur)
+            logging.error(ip + " failed verification on: " + targeturl)
             return False
     return True
