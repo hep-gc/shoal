@@ -19,9 +19,9 @@ RUN yum install -y git gcc
 
 # Install shoal agent
 RUN echo "Installing shoal agent..."
-RUN mkdir /tmp/work
-RUN cd /tmp/work
+RUN mkdir -p /tmp/work
+WORKDIR /tmp/work
 RUN git clone https://github.com/hep-gc/shoal.git
-RUN cd /tmp/work/shoal/shoal-agent
-
+WORKDIR /tmp/work/shoal/shoal-agent
+RUN python ./setup.py install
 
