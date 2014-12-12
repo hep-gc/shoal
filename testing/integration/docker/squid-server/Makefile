@@ -3,7 +3,7 @@ build-image:
 	sudo docker build -t squid-server .
 
 run:
-	sudo docker run --rm -d --name="squid-server" --link shoal-server:shoal-server squid-server
+	sudo docker run -d --name="squid-server" --link shoal-server:shoal-server squid-server
 
 connect:
 	sudo docker exec -i -t squid-server /bin/bash

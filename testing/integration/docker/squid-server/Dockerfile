@@ -14,13 +14,9 @@ RUN yum install -y vim
 
 # Install squid server
 RUN yum install -y squid
-#RUN iptables -I INPUT -p tcp --dport 3128 -j ACCEPT
 
 # Configure squid server and check the configuration.
 # (nothing to do for now)
-
-# Start squid server
-RUN /usr/sbin/squid
 
 # Install shoal prerequisites
 RUN yum install -y git gcc python-setuptools python-netifaces python-devel
@@ -39,5 +35,5 @@ RUN sed -i 's/amqp_server_url = localhost/amqp_server_url = shoal-server/g' /etc
 RUN sed -i 's/external_ip = /external_ip = 132.246.112.10/g' /etc/shoal/shoal_agent.conf
 
 
-# Start shoal agent
-CMD /tmp/work/shoal/shoal-agent/shoal-agent
+# Start squid server and shoal agent
+CMD /usr/sbin/squid ; sleep 5; /tmp/work/shoal/shoal-agent/shoal-agent
