@@ -2,7 +2,7 @@ build-image:
 	sudo docker build -t shoal-server .
 
 run:
-	sudo docker run -d --name="shoal-server" shoal-server
+	sudo docker run -d -p 8080:8080 --name="shoal-server" shoal-server
 
 connect:
 	sudo docker exec -i -t shoal-server /bin/bash
