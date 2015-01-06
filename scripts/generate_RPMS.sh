@@ -5,8 +5,29 @@
 #clone the repo first and make sure that if any shoal products are installed to delete the installed config files otherwise they wont be included in rpm
 #set the version numbers in the spec files in /dist/
 
-SHOAL_DIR="$HOME/projects/heprc/shoal"
-
+if [ $# -eq 0 ]
+then
+    echo "Please provide argurgments."
+    echo "Usage: ./generate_RPMS.sh <OPTION> <SHOAL_PATH>"
+    echo "Options:"
+    echo "all: generate all RPMs"
+    echo "agent: generate agent RPM"
+    echo "client: generate client RPM"
+    echo "server: generate server RPM"
+    echo "If <SHOAL_PATH> not specified default will be set to parent of active directory"
+    exit
+    
+elif [ $# -eq 1 ]
+then
+    echo "Setting shoal_dir to: $SHOAL_DIR"
+    cd ..
+    SHOAL_DIR=$PWD
+    
+elif [ $# -eq 2 ]
+then
+    echo "Setting shoal_dir to $2" 
+    SHOAL_DIR="$2"
+fi
 
 if [ "$1" == "client" ];
 then
@@ -55,14 +76,16 @@ then
     python $SHOAL_DIR/shoal-server/setup.py bdist_rpm --requires="pygeoip >= 0.2.5,pika >= 0.9.11,web.py >= 0.3"
     
 else
-    echo "Please provide an argurgment."
-    echo "Usage: ./generate_RPMS.sh <OPTION>"
+    echo "Invalid command please try again."
+    echo "---------------------------------------------------------------------------"
+    echo "Please provide argurgments."
+    echo "Usage: ./generate_RPMS.sh <OPTION> <SHOAL_PATH>"
     echo "Options:"
-    echo "all: generate all RPMs"
-    echo "agent: generate agent RPM"
+    echo "all:    generate all RPMs"
+    echo "agent:  generate agent RPM"
     echo "client: generate client RPM"
     echo "server: generate server RPM"
-    
+    echo "If <SHOAL_PATH> not specified default will be set to parent of active directory"
 fi
 
 exit
