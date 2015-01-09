@@ -17,6 +17,7 @@ import logging
 import urllib
 import urllib2
 
+
 from shoal_agent import config
 
 # Time interval to send data
