@@ -283,7 +283,8 @@ def is_available(ip, port):
             f = file.content
         except:
             #note that this would catch any RE errors aswell but they are specified in the config and all fit the pattern.
-            logging.info("Timeout or proxy error, blacklisting:%s " % (ip))
+            logging.error(sys.exc_info()[1])
+            logging.error("Timeout or proxy error,on %s repo blacklisting:%s " % (targeturl, ip))
             return False
         
         for line in f.splitlines():

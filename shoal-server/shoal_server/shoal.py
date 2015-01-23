@@ -526,6 +526,7 @@ class RabbitMQConsumer(Thread):
             else:
                 new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, maxload, time_sent)
                 self.shoal[key] = new_squid
+                logging.error("Verifying new squid.")
                 utilities.verify_new_squid(public_ip)
 
         self.acknowledge_message(basic_deliver.delivery_tag)

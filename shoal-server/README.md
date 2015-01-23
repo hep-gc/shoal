@@ -18,6 +18,21 @@ Clients can use the Shoal Server RESTful API to retrieve a list of nearest squid
  
 -To get a list of all squids stored in shoal use:
  'http://localhost/all'
+ 
+###Optional Features
+The new release of shoal has several new optional features
+- Verification
+ - The new verification feature is toggleable in the shoal_server configuration file
+ - Shoal server will verify the squids advertised by shoal agents by checking their connectivity and attempting to download a common file from a repo on the proxy.
+- Access Levels (requires GeoIP domain database**)
+ - Shoal server will intelligently serve proxies to requesters based on Access Levels
+ - Access Levels are configurable on the shoal-agents with 3 levels of access
+  - Global: accessible from anywhere and will be served to any requester
+  - Same Domain Only: accessible from anywhere but will only be served by requesters from the same domain (can still be verified)
+  - No Outside Access: only accessible from inside the network due to firewall or other configuration, only served to requesters from same domain (cannot be verified)
+
+**GeoIP2 Domain database will have to be manually placed in the proper directory default:
+`/var/www/shoal/static/db/`
 
 ###WPAD
 Shoal Server has a basic implementation of the [WPAD](http://en.wikipedia.org/wiki/Web_Proxy_Autodiscovery_Protocol) standard.
