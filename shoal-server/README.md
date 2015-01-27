@@ -48,6 +48,28 @@ _**Note**: Shoal static files will be located either at `~/shoal_server/` or `/v
 
 _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if sudo was used_
 
+###Recommended Method: Use yum
+
+First install [EPEL](http://fedoraproject.org/wiki/EPEL)
+
+    sudo yum install yum-conf-epel
+    sudo yum update
+
+Get the Shoal yum repository:
+
+    sudo curl http://shoal.heprc.uvic.ca/repo/shoal.repo -o /etc/yum.repos.d/shoal.repo
+   
+Install the server:
+
+    sudo rpm --import http://hepnetcanada.ca/pubkeys/igable.asc
+    sudo yum install shoal-server
+    
+Configure the server and start it:
+
+    vim /etc/shoal/shoal_server.conf
+    service shoal-server start
+    (it is recomended shoal server is run with apache see "Apache and Mod_WSGI" below)
+
 ###Using Pip
 
 1. `pip install shoal-server`
@@ -78,6 +100,8 @@ _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/sho
 
 2. Adjust settings in `/etc/shoal/shoal_server.conf`
 3. Make sure you have a working Apache installation with mod_wsgi.
+    - sudo yum install httpd
+    - sudo yum install mod_wsgi
 4. Move Shoal folder to Apache readable location. `mv /var/shoal/ /var/www/`
  - _Ensure you also change `shoal_dir` in `shoal_server.conf` to point to new directory (`/var/www/shoal/` as per example)_
 
