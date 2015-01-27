@@ -41,10 +41,8 @@ def include_files(src, dst):
     return temp
 
 # check for preexisting config files
-if isfile(join(config_files_dir, config_file)):
+if not isfile(join(config_files_dir, config_file)):
     data_files += [(config_files_dir, [config_file])]
-else:
-    data_files += [config_file]
 # add all files in static/
 data_files += include_files(static_files_dir, shoal_server_dir)
 # add all files in templates/
