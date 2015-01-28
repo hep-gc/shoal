@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: shoal-client
+Version: 0.666666.0
+Summary: A squid cache publishing and advertising tool designed to work in fast changing environments
+Home-page: http://github.com/hep-gc/shoal
+Author: Mike Chester
+Author-email: mchester@uvic.ca
+License: 'GPL3' or 'Apache 2'
+Description: UNKNOWN
+Platform: UNKNOWN
