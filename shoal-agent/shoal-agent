@@ -5,6 +5,7 @@
 # You may distribute under the terms of either the GNU General Public
 # License or the Apache v2 License.
 
+
 import sys
 import json
 import pika
