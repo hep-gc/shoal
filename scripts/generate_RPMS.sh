@@ -5,6 +5,25 @@
 #clone the repo first and make sure that if any shoal products are installed to delete the installed config files otherwise they wont be included in rpm
 #set the version numbers in the spec files in /dist/
 
+if [ -f /etc/shoal/shoal_server.conf ];
+then
+   echo "Shoal config file detected at /etc/shoal"
+   echo "Please remove these files before constructing RPMS or they will not be included"
+   exit
+fi
+if [ -f /etc/shoal/shoal_agent.conf ];
+then
+   echo "Shoal config file detected at /etc/shoal"
+   echo "Please remove these files before constructing RPMS or they will not be included"
+   exit
+fi
+if [ -f /etc/shoal/shoal_client.conf ];
+then
+   echo "Shoal config file detected at /etc/shoal"
+   echo "Please remove these files before constructing RPMS or they will not be included"
+   exit
+fi
+
 if [ $# -eq 0 ]
 then
     echo "Please provide argurgments."

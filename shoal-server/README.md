@@ -105,7 +105,7 @@ Configure the server and start it:
 4. Move Shoal folder to Apache readable location. `mv /var/shoal/ /var/www/`
  - _Ensure you also change `shoal_dir` in `shoal_server.conf` to point to new directory (`/var/www/shoal/` as per example)_
 
-5. Include this bare minimum Apache config settings in a file within `/etc/apache2/conf.d/` or similiar location.
+5. Include this bare minimum Apache config settings in a file within `/etc/httpd/conf.d/` or similiar location.
 
         WSGIDaemonProcess shoal user=www-data group=www-data threads=10 processes=1
         WSGIScriptAlias / /var/www/shoal/scripts/shoal_wsgi.py
