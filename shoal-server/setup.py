@@ -13,6 +13,7 @@ except:
 
 from shoal_server.__version__ import version
 
+
 data_files = []
 
 if not os.geteuid() == 0:
