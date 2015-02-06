@@ -61,7 +61,7 @@ setup(name='shoal-server',
           'python-requests>=1.1.0',
           'geoip2>=0.6.0',
           'maxminddb>=1.1.1',
-          'python-ipaddr>=2.1.9',
+          
       ],
       description='A squid cache publishing and advertising tool designed to work in fast changing environments',
       author='Mike Chester',
