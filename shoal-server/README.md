@@ -95,19 +95,21 @@ Configure the server and start it:
 
 ##Apache and Mod_WSGI
 
+`it should be noted that apache and rabbitmq do not mesh well with selinux and selinux should be diabled on a fresh install`
+
 1. Use one of the following above methods to install Shoal Server.
  - Make sure the shoal_server package is in the **global** Python packages folder.
 
 2. Adjust settings in `/etc/shoal/shoal_server.conf`
 3. Make sure you have a working Apache installation with mod_wsgi.
-    - sudo yum install httpd
-    - sudo yum install mod_wsgi
+    - `sudo yum install httpd`
+    - `sudo yum install mod_wsgi`
 4. Move Shoal folder to Apache readable location. `mv /var/shoal/ /var/www/`
  - _Ensure you also change `shoal_dir` in `shoal_server.conf` to point to new directory (`/var/www/shoal/` as per example)_
 
 5. Include this bare minimum Apache config settings in a file within `/etc/httpd/conf.d/` or similiar location.
 
-        WSGIDaemonProcess shoal user=www-data group=www-data threads=10 processes=1
+       ` WSGIDaemonProcess shoal user=www-data group=www-data threads=10 processes=1
         WSGIScriptAlias / /var/www/shoal/scripts/shoal_wsgi.py
         WSGISocketPrefix /var/run/wsgi
         WSGIProcessGroup shoal
@@ -119,7 +121,7 @@ Configure the server and start it:
         <Directory /var/www/shoal/>
             Order deny,allow
             Allow from all 
-        </Directory>
+        </Directory>`
  - Some values above may need to be adjusted depending on Linux Distro used.
 
 6. Restart Apache.
