@@ -32,7 +32,7 @@ RUN python ./setup.py install
 
 # Configure shoal agent
 RUN sed -i 's/amqp_server_url = localhost/amqp_server_url = shoal-server/g' /etc/shoal/shoal_agent.conf
-RUN sed -i 's/external_ip = /external_ip = 132.246.112.10/g' /etc/shoal/shoal_agent.conf
+RUN sed -i 's/external_ip = /external_ip = xxx.xxx.xxx.xxx/g' /etc/shoal/shoal_agent.conf
 
 
 # Start squid server and shoal agent
