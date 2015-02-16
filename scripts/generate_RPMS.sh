@@ -59,7 +59,7 @@ elif [ "$1" == "agent" ];
 then
     #agent
     cd $SHOAL_DIR/shoal-agent/
-    python $SHOAL_DIR/shoal-agent/setup.py bdist_rpm
+    python $SHOAL_DIR/shoal-agent/setup.py bdist_rpm --requires=" netifaces >= 0.8,pika >= 0.9.9"
 
     mkdir -p $HOME/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
     cp $SHOAL_DIR/shoal-agent/dist/shoal-agent-*.tar.gz $HOME/rpmbuild/SOURCES/.
@@ -82,11 +82,12 @@ then
 
     #agent
     cd $SHOAL_DIR/shoal-agent/
-    python $SHOAL_DIR/shoal-agent/setup.py bdist_rpm
+    python $SHOAL_DIR/shoal-agent/setup.py bdist_rpm --requires=" netifaces >= 0.8,pika >= 0.9.9"
 
     mkdir -p $HOME/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
     cp $SHOAL_DIR/shoal-agent/dist/shoal-agent-*.tar.gz $HOME/rpmbuild/SOURCES/.
     rpmbuild -ba shoal-agent.spec
+    exit
 
     #server
     #If you have already installed shoal when you build the RPM the configuration files will not be included.
