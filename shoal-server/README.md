@@ -109,7 +109,8 @@ Configure the server and start it:
 
 5. Include this bare minimum Apache config settings in a file within `/etc/httpd/conf.d/` or similiar location.
 
-       `WSGIDaemonProcess shoal user=www-data group=www-data threads=10 processes=1
+       ```
+       WSGIDaemonProcess shoal user=www-data group=www-data threads=10 processes=1
         WSGIScriptAlias / /var/www/shoal/scripts/shoal_wsgi.py
         WSGISocketPrefix /var/run/wsgi
         WSGIProcessGroup shoal
@@ -121,7 +122,8 @@ Configure the server and start it:
         <Directory /var/www/shoal/>
             Order deny,allow
             Allow from all 
-        </Directory>`
+        </Directory>
+        ```
  - Some values above may need to be adjusted depending on Linux Distro used.
 
 6. Restart Apache.
