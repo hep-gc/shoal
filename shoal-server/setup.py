@@ -50,6 +50,12 @@ data_files += include_files(static_files_dir, shoal_server_dir)
 data_files += include_files(template_files_dir, shoal_server_dir)
 # add all files in scripts/
 data_files += include_files(script_files_dir, shoal_server_dir)
+#add log and database files
+data_files += [('/var/log', ['shoal_server.log'])
+                     (shoal_server_dir, ['GeoLiteCity.dat'])
+               ]
+
+
 
 setup(name='shoal-server',
       version=version,
