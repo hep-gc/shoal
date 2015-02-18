@@ -69,8 +69,9 @@ Install the server:
 Configure the server and start it:
 
     vim /etc/shoal/shoal_server.conf
-    If the server is to be externam facing be sure to open port 80 for apache
+    If the server is to be external facing be sure to open port 80 for apache
     apachectl start
+    visit localhost
 
 ###Using Pip
 
