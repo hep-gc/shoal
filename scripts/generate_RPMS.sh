@@ -72,7 +72,7 @@ then
     #If you have already installed shoal when you build the RPM the configuration files will not be included.
     #Remove them from the installation directory prior to building RPMs
     cd $SHOAL_DIR/shoal-server/
-    python $SHOAL_DIR/shoal-server/setup.py bdist_rpm --requires="pygeoip >= 0.2.5,pika >= 0.9.11,web.py >= 0.3,python-requests >= 1.1.0,geoip2 >= 0.6.0, maxminddb >= 1.1.1, python-ipaddr >= 2.1.9"
+    python $SHOAL_DIR/shoal-server/setup.py bdist_rpm --requires="pygeoip >= 0.2.5,pika >= 0.9.11,web.py >= 0.3,python-requests >= 1.1.0,geoip2 >= 0.6.0, maxminddb >= 1.1.1, python-ipaddr >= 2.1.9, httpd >= 2.2.15, mod_wsgi >= 3.2"
     exit
 elif [ "$1" == "all" ];
 then
@@ -93,7 +93,7 @@ then
     #If you have already installed shoal when you build the RPM the configuration files will not be included.
     #Remove them from the installation directory prior to building RPMs
     cd $SHOAL_DIR/shoal-server/
-    python $SHOAL_DIR/shoal-server/setup.py bdist_rpm --requires="pygeoip >= 0.2.5,pika >= 0.9.11,web.py >= 0.3,python-requests >= 1.1.0,geoip2 >= 0.6.0, maxminddb >= 1.1.1, python-ipaddr >= 2.1.9"
+    python $SHOAL_DIR/shoal-server/setup.py bdist_rpm --requires="pygeoip >= 0.2.5,pika >= 0.9.11,web.py >= 0.3,python-requests >= 1.1.0,geoip2 >= 0.6.0, maxminddb >= 1.1.1, python-ipaddr >= 2.1.9, httpd >= 2.2.15, mod_wsgi >= 3.2"
     
 else
     echo "Invalid command please try again."

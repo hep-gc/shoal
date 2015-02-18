@@ -19,14 +19,20 @@ data_files = []
 if not os.geteuid() == 0:
     config_files_dir = expanduser('~/.shoal/')
     shoal_server_dir = expanduser('~/shoal_server')
+    shoal_log_dir = "/var/"
+    httpd_conf_dir = "/etc/httpd/conf.d/"
 else:
     config_files_dir = "/etc/shoal/"
-    shoal_server_dir = "/var/shoal/"
+    shoal_server_dir = "/var/www/shoal/"
+    shoal_log_dir = "/var/"
+    httpd_conf_dir = "/etc/httpd/conf.d/"
 
 static_files_dir = "static/"
 script_files_dir = "scripts/"
+log_file_dir = "log/"
 template_files_dir = "templates/"
 config_file = "shoal_server.conf"
+httpd_conf_file = "shoal.conf"
 
 # Recursively include all files in src, and create them in dst if they don't exist
 def include_files(src, dst):
@@ -50,12 +56,10 @@ data_files += include_files(static_files_dir, shoal_server_dir)
 data_files += include_files(template_files_dir, shoal_server_dir)
 # add all files in scripts/
 data_files += include_files(script_files_dir, shoal_server_dir)
-#add log and database files
-data_files += [('/var/log', ['shoal_server.log']),
-                     (shoal_server_dir, ['GeoLiteCity.dat'])
-               ]
-
-
+#add log file
+data_files += include_files(log_file_dir, shoal_log_dir)
+#add httpd conf file
+data_files += [(httpd_conf_dir, [httpd_conf_file])]
 
 setup(name='shoal-server',
       version=version,
@@ -64,17 +68,18 @@ setup(name='shoal-server',
           'pygeoip>=0.2.5',
           'pika>=0.9.11',
           'web.py>=0.3',
-          'python-requests>=1.1.0',
+          'requests>=1.1.0',
           'geoip2>=0.6.0',
           'maxminddb>=1.1.1',
-          'python-ipaddr>=2.1.9',
+          'ipaddr>=2.1.9',
           
       ],
       description='A squid cache publishing and advertising tool designed to work in fast changing environments',
-      author='Mike Chester',
-      author_email='mchester@uvic.ca',
+      author='UVic High Energy Physics Research Computing',
+      author_email='igable@uvic.ca',
       url='http://github.com/hep-gc/shoal',
       packages=['shoal_server'],
       scripts=["shoal-server"],
       data_files=data_files,
+      options = {'bdist_rpm':{'post_install':'manage_permissions'}},
 )
