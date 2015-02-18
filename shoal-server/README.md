@@ -48,7 +48,9 @@ _**Note**: Shoal static files will be located either at `~/shoal_server/` or `/v
 
 _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if sudo was used_
 
-###Recommended Method: Use yum
+###Recommended Method: Use yum (Apache)
+The Yum rpm will Install all the dependencies including apache and configure them for shoal.
+The Yum install does NOT [install the rabbitmq-server](https://www.rabbitmq.com/install-rpm.html) which will be required if one is not already running somewhere.
 
 First install [EPEL](http://fedoraproject.org/wiki/EPEL)
 
@@ -67,8 +69,8 @@ Install the server:
 Configure the server and start it:
 
     vim /etc/shoal/shoal_server.conf
-    service shoal-server start
-    (it is recomended shoal server is run with apache see "Apache and Mod_WSGI" below)
+    If the server is to be externam facing be sure to open port 80 for apache
+    apachectl start
 
 ###Using Pip
 
@@ -90,42 +92,5 @@ Configure the server and start it:
 4. Check settings in `shoal_server.conf` update as needed. Make sure RabbitMQ server is running.
 5. Start `shoal-server`
  - _First run make take a few seconds to start as it needs to download the GeoLiteCity database (~12MB)._
-
+ 
 6. Visit `http://localhost:8080`
-
-##Apache and Mod_WSGI
-
-* it should be noted that apache and rabbitmq do not mesh well with selinux and selinux should be diabled on a fresh install
-
-1. Use one of the following above methods to install Shoal Server.
- - Make sure the shoal_server package is in the **global** Python packages folder.
-
-2. Adjust settings in `/etc/shoal/shoal_server.conf`
-3. Make sure you have a working Apache installation with mod_wsgi.
-    - `sudo yum install httpd`
-    - `sudo yum install mod_wsgi`
-4. Move Shoal folder to Apache readable location. `mv /var/shoal/ /var/www/`
- - _Ensure you also change `shoal_dir` in `shoal_server.conf` to point to new directory (`/var/www/shoal/` as per example)_
-
-5. Include this bare minimum Apache config settings in a file within `/etc/httpd/conf.d/` or similiar location.
-
-```
-        WSGIDaemonProcess shoal user=www-data group=www-data threads=10 processes=1
-        WSGIScriptAlias / /var/www/shoal/scripts/shoal_wsgi.py
-        WSGISocketPrefix /var/run/wsgi
-        WSGIProcessGroup shoal
-
-        Alias /static /var/www/shoal/static/
-
-        AddType text/html .py 
-
-        <Directory /var/www/shoal/>
-            Order deny,allow
-            Allow from all 
-        </Directory>
-```
-        
- - Some values above may need to be adjusted depending on Linux Distro used.
-
-6. Restart Apache.
-7. Visit `http://localhost`
