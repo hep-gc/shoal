@@ -1,2 +1,3 @@
 recursive-include scripts *
 include shoal_agent.conf
+include manage_permissions

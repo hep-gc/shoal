@@ -257,9 +257,9 @@ def verify_new_squid(ip):
         if ip == squid.public_ip:
              if not squid.verified and (squid.global_access or squid.domain_access):
                  if not is_available(squid.public_ip, squid.squid_port):
-                     logging.error( squid.public_ip + " Failed Verification.")
+                     logging.error(" %s Failed Verification." % squid.public_ip )
                  else:
-                     logging.info("VERIFIED: " + squid.public_ip)
+                     logging.info("VERIFIED: %s" % squid.public_ip)
                      squid.verified=True
                      
 def is_available(ip, port):
@@ -292,6 +292,6 @@ def is_available(ip, port):
                 if repo in line:
                     testflag = True
         if testflag is False:
-            logging.error(ip + " failed verification on: " + targeturl)
+            logging.error("%s failed verification on: %s" % ip, targeturl)
             return False
     return True
