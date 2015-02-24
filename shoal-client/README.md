@@ -16,7 +16,7 @@ root permissions.
 
 ###Recommended Instalation Method: Use yum
 
-First install [EPEL](http://fedoraproject.org/wiki/EPEL)
+First install [EPEL](http://fedoraproject.org/wiki/EPEL) (est. ~5 min)
 
     sudo yum install epel-release
     sudo yum update

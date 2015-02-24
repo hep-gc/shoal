@@ -52,7 +52,7 @@ _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/sho
 The Yum rpm will Install all the dependencies including apache and configure them for shoal.
 The Yum install does NOT [install the rabbitmq-server](https://www.rabbitmq.com/install-rpm.html) which will be required if one is not already running somewhere.
 
-First install [EPEL](http://fedoraproject.org/wiki/EPEL)
+First install [EPEL](http://fedoraproject.org/wiki/EPEL) (est. ~10 min)
 
     sudo yum install epel-release
     sudo yum update
