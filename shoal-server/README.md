@@ -37,7 +37,7 @@ The new release of shoal has several new optional features
   - Same Domain Only: accessible from anywhere but will only be served by requesters from the same domain (can still be verified)
   - No Outside Access: only accessible from inside the network due to firewall or other configuration, only served to requesters from same domain (cannot be verified)
 
-**GeoIP2 Domain database will have to be manually placed in the proper directory default:
+**GeoIP2 Domain database will have to be manually placed in the proper directory default:**
 `/var/www/shoal/static/db/`
 
 ##Installation
