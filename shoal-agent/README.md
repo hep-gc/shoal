@@ -57,6 +57,13 @@ Set both to false if the squid is behind a firewall or cannot be accessed from o
  _**Note**: A geoip domain database is requied to use these boolean features.
 
 
+### Hint for the ATLAS Experiment Users:
+
+A complete shoal_agent.conf file for ATLAS can be obtained by:
+
+    sudo curl http://shoal.heprc.uvic.ca/repo/shoal_agent.conf -o /etc/shoal/shoal_agent.conf
+
+
 ###Other Methods
 1. [Install EPEL](http://fedoraproject.org/wiki/EPEL)
 2. `yum install python-pika python-netifaces`

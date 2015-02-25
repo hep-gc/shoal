@@ -35,6 +35,14 @@ Configure the client to use a shoal server:
 
 If you are using a shoal sever that has verification enabled make sure the configuration is set to
 the verifiednearest URL
+
+
+### Hint for the ATLAS Experiment Users:
+
+A complete shoal_client.conf file for ATLAS can be obtained by:
+
+    sudo curl http://shoal.heprc.uvic.ca/repo/shoal_client.conf -o /etc/shoal/shoal_client.conf
+
     
 ##Usage
 
@@ -52,14 +60,6 @@ If the output looks resonable now set a crontab entry to run shoal say every 30 
 
     crontab -e
     0,30 * * * * /usr/bin/shoal-client
-
-
-
-### Hint for the ATLAS Experiment Users:
-
-A complete shoal_client.conf file for ATLAS can be obtained by:
-
-    sudo curl http://shoal.heprc.uvic.ca/repo/shoal_client.conf -o /etc/shoal/shoal_client.conf
 
 
 ## Other Installation Methods

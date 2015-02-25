@@ -19,6 +19,12 @@ Clients can use the Shoal Server RESTful API to retrieve a list of nearest squid
 -To get a list of all squids stored in shoal use:
  'http://localhost/all'
  
+###WPAD
+Shoal Server has a basic implementation of the [WPAD](http://en.wikipedia.org/wiki/Web_Proxy_Autodiscovery_Protocol) standard.
+
+- To retrieve a WPAD file containing the 5 closest squids you can visit:
+  - `http://localhost/wpad.dat`
+
 ###Optional Features
 The new release of shoal has several new optional features
 - Verification
@@ -34,12 +40,6 @@ The new release of shoal has several new optional features
 **GeoIP2 Domain database will have to be manually placed in the proper directory default:
 `/var/www/shoal/static/db/`
 
-###WPAD
-Shoal Server has a basic implementation of the [WPAD](http://en.wikipedia.org/wiki/Web_Proxy_Autodiscovery_Protocol) standard.
-
-- To retrieve a WPAD file containing the 5 closest squids you can visit:
-  - `http://localhost/wpad.dat`
-
 ##Installation
  _**Note**: Requires you have a working RabbitMQ AMQP Server, and Python 2.6+_
 _Recommended to use a system wide install (sudo), but works in a virtualenv with tweaks_
@@ -50,7 +50,7 @@ _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/sho
 
 ###Recommended Method: Use yum (Apache)
 The Yum rpm will Install all the dependencies including apache and configure them for shoal.
-The Yum install does NOT [install the rabbitmq-server](https://www.rabbitmq.com/install-rpm.html) which will be required if one is not already running somewhere.
+**The Yum install does NOT [install the rabbitmq-server](https://www.rabbitmq.com/install-rpm.html) which will be required if one is not already running somewhere.**
 
 First install [EPEL](http://fedoraproject.org/wiki/EPEL) (est. ~10 min)
 
@@ -70,7 +70,7 @@ Configure the server and start it:
 
     vim /etc/shoal/shoal_server.conf
     If the server is to be external facing be sure to open port 80 for apache
-    apachectl start
+    service apachctl start
     visit localhost
 
 ###Using Pip
