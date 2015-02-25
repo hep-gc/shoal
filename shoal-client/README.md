@@ -1,4 +1,5 @@
-#Shoal Client v0.5.X README
+#Shoal Client README
+#Version: v0.6.X
 
 shoal-client will configure cvmfs to use the closest squid server to you by contacting the shoal server
 and then editing your local cvmfs config file, typically `/etc/cvmfs/default.local`.
