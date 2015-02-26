@@ -16,8 +16,8 @@ Clients can use the Shoal Server RESTful API to retrieve a list of nearest squid
 - To retrieve a variable size of nearest squids you can use `http://localhost/nearest/<# of squids>`. For example to retrieve the closest 20 squid servers you can use:
  - `http://localhost/nearest/20`
  
--To get a list of all squids stored in shoal use:
- 'http://localhost/all'
+- To get a list of all squids stored in shoal use:
+  - 'http://localhost/all'
  
 ###WPAD
 Shoal Server has a basic implementation of the [WPAD](http://en.wikipedia.org/wiki/Web_Proxy_Autodiscovery_Protocol) standard.
@@ -28,7 +28,7 @@ Shoal Server has a basic implementation of the [WPAD](http://en.wikipedia.org/wi
 ###Optional Features
 The new release of shoal has several new optional features
 - Verification
-  - The new verification feature is toggleable in the shoal_server configuration file
+  - The new verification feature ids toggleable in the shoal_server configuration file
   - Shoal server will verify the squids advertised by shoal agents by checking their connectivity and attempting to download a common file from a repo on the proxy.
 - Access Levels (requires GeoIP domain database**)
   - Shoal server will intelligently serve proxies to requesters based on Access Levels
