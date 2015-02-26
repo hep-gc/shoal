@@ -20,6 +20,8 @@ cvmfs_config = config.cvmfs_config
 default_http_proxy = config.default_squid_proxy
 
 data = None
+frontier = False
+numsquids = 2
 dump = False 
 closest_http_proxy = ''
 cvmfs_http_proxy = "CVMFS_HTTP_PROXY="
@@ -32,6 +34,8 @@ def get_args():
     """
     global server
     global dump
+    global frontier
+    global numsquids
 
     p = OptionParser()
     p.add_option("-s", "--server", action="store", type="string", dest="server", 
@@ -40,12 +44,22 @@ def get_args():
     p.add_option("-d", "--dump", action="store_true", dest="dump",
                  help="Print closest proxies to terminal for debugging "+ 
                       "instead of over writing the CVMFS config file")
+    p.add_option("-f", "--frontier", action="store_true", dest="frontier",
+                 help="Edits frontier enviroment variable instead of" +
+                       "over writing the CVMFS config file")
+    p.add_option("-n", "--squids", action="store", type="int", dest="numsquids",
+                 help="Specifies the number of squids to insert into" +
+                       "the frontier environment variable")
     (options, args) = p.parse_args()
 
     if options.server:
         server = options.server
     if options.dump:
         dump = True
+    if options.frontier:
+    	frontier = True
+    if options.numsquids:
+    	numsquids = options.numsquids
 
 def convertServerData(val):
     """
@@ -138,18 +152,39 @@ except (urllib2.URLError,ValueError), e:
 if data:
     ## iterates through the data dict and uses all hostname and squid_port keys
     ## to create addresses for each squid in closest_http_proxy
-    for i in range(0, len(data)):
-        try:
-            closest_http_proxy += 'http://%s:%s;' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
-        except KeyError, e:
-            logging.error("The data returned from '%s' was missing the key: %s. Please ensure the url is running the latest Shoal-Server." % (server, e))
-            sys.exit(1)
+    if frontier:
+        for i in range(0, numsquids):
+            try:
+                closest_http_proxy += '(proxyurl=http://%s:%s)' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
+            except KeyError, e:
+                logging.error("The data returned from '%s' was missing the key: %s. Please ensure the url is running the latest Shoal-Server." % (server, e))
+                sys.exit(1)
+    else:
+        for i in range(0, len(data)):
+            try:
+                closest_http_proxy += 'http://%s:%s;' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
+            except KeyError, e:
+                logging.error("The data returned from '%s' was missing the key: %s. Please ensure the url is running the latest Shoal-Server." % (server, e))
+                sys.exit(1)
 
 cvmfs_http_proxy += "\"" + closest_http_proxy + default_http_proxy + "\"\n"
 
 ## if dump -> don't overwrite CVMFS config file
 if dump:
     print "%s would have been written to the CVMFS config file", cvmfs_http_proxy
+elif frontier:
+    #retrieve frontier env variable and insert new squids
+    
+    frontier_var = os.getenv("FRONTIER_SERVER")
+    if frontier_var == None:
+    	logging.error("FRONTIER_SERVER env variable unset, unable to run with --frontier option")
+    	sys.exit(1)
+    frontier_output = ""
+    server_list = re.findall('(\(.*?\))', frontier_var)
+    server_list.insert(1,closest_http_proxy)
+    for srvr in server_list:
+        frontier_output += srvr
+    print frontier_output
 else:
     # attempt to read the cvmfs_config file, no point in continuing if it can't be read
     try:
