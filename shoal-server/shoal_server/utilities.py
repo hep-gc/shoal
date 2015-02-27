@@ -292,6 +292,6 @@ def is_available(ip, port):
                 if repo in line:
                     testflag = True
         if testflag is False:
-            logging.error("%s failed verification on: %s" % ip, targeturl)
+            logging.error("%s failed verification on: %s" % (ip, targeturl))
             return False
     return True

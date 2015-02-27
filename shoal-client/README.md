@@ -15,9 +15,9 @@ configured correctly (see Usage below).
 **Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if installed 
 root permissions.
 
-###Recommended Instalation Method: Use yum
+###Recommended Instalation Method: Use yum (est. ~5 min)
 
-First install [EPEL](http://fedoraproject.org/wiki/EPEL) (est. ~5 min)
+First install [EPEL](http://fedoraproject.org/wiki/EPEL) 
 
     sudo yum install epel-release
     sudo yum update

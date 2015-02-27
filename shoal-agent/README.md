@@ -25,9 +25,9 @@ In either case, the Shoal agent does not require root privilege to run. The init
 
 _**Note**: Shoal config files will be located either at `/etc/shoal/` or `~/.shoal/` depending on the installation method_
 
-###Recommended Method: Use yum
+###Recommended Method: Use yum (est. ~5 min)
 
-First install [EPEL](http://fedoraproject.org/wiki/EPEL) (est. ~5 min)
+First install [EPEL](http://fedoraproject.org/wiki/EPEL) 
 
     sudo yum install epel-release
     sudo yum update

@@ -511,6 +511,12 @@ class RabbitMQConsumer(Thread):
         except KeyError:
             pass
 
+        #attempt to detect misconfigured clocks and clock drifts, allows for a 10 second grace period
+        if (curr -time_sent > 10):
+            logging.error("Potential clock drift dectected: %s second descrepency on %s" % ((curr-time_sent), public_ip))
+        if(curr - time_sent < -10):
+            logging.error("Recived message from %s seconds in the future from %s" % ((-1*(curr-time_sent)), public_ip))
+
         # if there's a key in shoal, shoal's key will update with the load
         if key in self.shoal:
             self.shoal[key].update(load)

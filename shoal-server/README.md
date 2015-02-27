@@ -17,7 +17,7 @@ Clients can use the Shoal Server RESTful API to retrieve a list of nearest squid
  - `http://localhost/nearest/20`
  
 - To get a list of all squids stored in shoal use:
-  - 'http://localhost/all'
+  - `http://localhost/all`
  
 ###WPAD
 Shoal Server has a basic implementation of the [WPAD](http://en.wikipedia.org/wiki/Web_Proxy_Autodiscovery_Protocol) standard.
@@ -48,11 +48,11 @@ _**Note**: Shoal static files will be located either at `~/shoal_server/` or `/v
 
 _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if sudo was used_
 
-###Recommended Method: Use yum (Apache)
+###Recommended Method: Use yum (Apache) (est. ~10 min)
 The Yum rpm will Install all the dependencies including apache and configure them for shoal.
 **The Yum install does NOT [install the rabbitmq-server](https://www.rabbitmq.com/install-rpm.html) which will be required if one is not already running somewhere.**
 
-First install [EPEL](http://fedoraproject.org/wiki/EPEL) (est. ~10 min)
+First install [EPEL](http://fedoraproject.org/wiki/EPEL) 
 
     sudo yum install epel-release
     sudo yum update
@@ -69,7 +69,7 @@ Install the server:
 Configure the server and start it:
 
     vim /etc/shoal/shoal_server.conf
-    If the server is to be external facing be sure to open port 80 for apache
+    #If the server is to be external facing be sure to open port 80 for apache
     service apachctl start
     visit localhost
 
