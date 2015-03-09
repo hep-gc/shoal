@@ -61,10 +61,10 @@ then
     cd $SHOAL_DIR/shoal-agent/
     python $SHOAL_DIR/shoal-agent/setup.py bdist_rpm --requires=" netifaces >= 0.8,pika >= 0.9.9"
 
-    mkdir -p $HOME/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-    cp $SHOAL_DIR/shoal-agent/dist/shoal-agent-*.tar.gz $HOME/rpmbuild/SOURCES/.
-    rpmbuild -ba shoal-agent.spec
-    exit
+#    mkdir -p $HOME/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+#    cp $SHOAL_DIR/shoal-agent/dist/shoal-agent-*.tar.gz $HOME/rpmbuild/SOURCES/.
+#    rpmbuild -ba shoal-agent.spec
+#    exit
 
 elif [ "$1" == "server" ];
 then
@@ -84,17 +84,18 @@ then
     cd $SHOAL_DIR/shoal-agent/
     python $SHOAL_DIR/shoal-agent/setup.py bdist_rpm --requires=" netifaces >= 0.8,pika >= 0.9.9"
 
-    mkdir -p $HOME/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-    cp $SHOAL_DIR/shoal-agent/dist/shoal-agent-*.tar.gz $HOME/rpmbuild/SOURCES/.
-    rpmbuild -ba shoal-agent.spec
-    exit
+#    mkdir -p $HOME/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+#    cp $SHOAL_DIR/shoal-agent/dist/shoal-agent-*.tar.gz $HOME/rpmbuild/SOURCES/.
+#    rpmbuild -ba shoal-agent.spec
+ 
 
     #server
     #If you have already installed shoal when you build the RPM the configuration files will not be included.
     #Remove them from the installation directory prior to building RPMs
     cd $SHOAL_DIR/shoal-server/
     python $SHOAL_DIR/shoal-server/setup.py bdist_rpm --requires="pygeoip >= 0.2.5,pika >= 0.9.11,web.py >= 0.3,python-requests >= 1.1.0,geoip2 >= 0.6.0, maxminddb >= 1.1.1, python-ipaddr >= 2.1.9, httpd >= 2.2.15, mod_wsgi >= 3.2"
-    
+    exit
+   
 else
     echo "Invalid command please try again."
     echo "---------------------------------------------------------------------------"
