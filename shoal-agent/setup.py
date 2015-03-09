@@ -14,7 +14,7 @@ from shoal_agent.__version__ import version
 
 data_files = []
 
-if not os.geteuid() == 0:
+if not os.geteuid() == 0 and '--root' not in sys.argv:
     config_files_dir = expanduser("~/.shoal/")
 else:
     config_files_dir = "/etc/shoal/"
