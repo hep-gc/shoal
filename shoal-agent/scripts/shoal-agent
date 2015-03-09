@@ -12,11 +12,17 @@ EXECUTABLEPATH="shoal-agent"
 # Non-default python.
 PYTHON=""
 
-USER=nobody
+SHOAL_USER=nobody
+EXTRA_OPTIONS=""
 SERVICE=shoal_agent
 LOG=/var/log/${SERVICE}.log
 PIDFILE=/var/run/$SERVICE.pid
 COMMAND=$1
+
+if [ -f /etc/sysconfig/shoal-agent ] ;  then
+   . /etc/sysconfig/shoal-agent
+fi
+
 shift
 
 for i in "$PIDFILE" "$LOG"; do
@@ -42,7 +48,7 @@ start () {
         fi
     fi
     echo "Starting $EXECUTABLEPATH:"
-    /sbin/runuser -l -s /bin/bash "${USER}" -c "${EXECUTABLEPATH}" >> $LOG 2>&1 &
+    /sbin/runuser -l -s /bin/bash "${SHOAL_USER}" -c "${EXECUTABLEPATH} ${EXTRA_OPTIONS}" >> $LOG 2>&1 &
     echo $! > $PIDFILE
 }
 
@@ -51,7 +57,7 @@ stop () {
     if [ -f $PIDFILE ]; then
         echo $"Stopping $SERVICE:"
         PID=`cat $PIDFILE`
-        /sbin/runuser -l -s /bin/bash "${USER}" -c "/usr/bin/pkill -P ${PID}"
+        /sbin/runuser -l -s /bin/bash "${SHOAL_USER}" -c "/usr/bin/pkill -P ${PID}"
         while ps -p $PID >/dev/null; do sleep 1; done
         if [ $? -eq 0 ]; then
             rm -f $PIDFILE
@@ -81,7 +87,7 @@ forcekill () {
     if [ -f $PIDFILE ]; then
         echo $"Killing $SERVICE:"
         PID=`cat $PIDFILE`
-        /sbin/runuser -l -s /bin/bash "${USER}" -c "/usr/bin/pkill -SIGKILL -P ${PID}"
+        /sbin/runuser -l -s /bin/bash "${SHOAL_USER}" -c "/usr/bin/pkill -SIGKILL -P ${PID}"
         if [ $? -eq 0 ]; then
             rm -f $PIDFILE
         fi
