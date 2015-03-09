@@ -18,6 +18,7 @@ if not os.geteuid() == 0 and '--root' not in sys.argv:
     config_files_dir = expanduser("~/.shoal/")
 else:
     config_files_dir = "/etc/shoal/"
+    sys_config_files_dir = "/etc/sysconfig/shoal/"
     # if root install the init.d scripts.
     # check for preexisiting initd script
     initd_dir = "/etc/init.d/"
@@ -26,11 +27,15 @@ else:
         data_files += [(initd_dir, [initd_script])]
 
 config_file = "shoal_agent.conf"
+sys_config_file = "sysconfig/shoal-agent.template"
 
 # check for preexisting config files
 if not isfile(join(config_files_dir, config_file)):
     data_files += [(config_files_dir, [config_file])]
 
+if not isfile(join(sys_config_files_dir, sys_config_file)):
+    data_files += [(sys_config_files_dir, [sys_config_file])]
+    
 setup(name='shoal-agent',
       version=version,
       license="'GPL3' or 'Apache 2'",
