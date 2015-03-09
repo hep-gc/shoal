@@ -483,7 +483,7 @@ class RabbitMQConsumer(Thread):
         try:
             public_ip = data['public_ip']
         except KeyError:
-            pass
+            public_ip=external_ip
         try:
             private_ip = data['private_ip']
         except KeyError:

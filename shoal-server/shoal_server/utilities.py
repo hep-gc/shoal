@@ -108,7 +108,7 @@ def get_nearest_verified_squids(ip,count=10):
             maxload = squid.maxload
         except:
             #no maxload is sent from agent, using default value of 1GB/s in kilobytes
-            maxload = config.squid_max_load		
+            maxload = config.squid_max_load        
 
         #check if squid is verified or if verification is turned off in the config. or 
         #if there is no global access but the requester is from the same domain
@@ -238,13 +238,14 @@ def verify():
         #only verify if it is gobally accessable
         try:
             if squid.global_access or squid.domain_access:
-                if not is_available(squid.public_ip, squid.squid_port):
-                    logging.info( squid.public_ip + " Failed Verification.")
+        
+                if not is_available(str(squid.public_ip or squid.private_ip), squid.squid_port):
+                    logging.info( "Failed Verification: %s " % str(squid.public_ip or squid.private_ip))
                 else:
-                    logging.info("VERIFIED: " + squid.public_ip)
+                    logging.info("VERIFIED:%s " % str(squid.public_ip or squid.private_ip))
                     squid.verified=True
         except TypeError:
-            logging.info("VERIFIED: " + squid.public_ip)
+            logging.info("VERIFIED: %s" % str(squid.public_ip or squid.private_ip))
             squid.verified = True
              
 def verify_new_squid(ip):
@@ -256,7 +257,7 @@ def verify_new_squid(ip):
     for squid in web.shoal.values():
         if ip == squid.public_ip:
              if not squid.verified and (squid.global_access or squid.domain_access):
-                 if not is_available(squid.public_ip, squid.squid_port):
+                 if not is_available(str(squid.public_ip or squid.private_ip), squid.squid_port):
                      logging.error(" %s Failed Verification." % squid.public_ip )
                  else:
                      logging.info("VERIFIED: %s" % squid.public_ip)
@@ -292,6 +293,6 @@ def is_available(ip, port):
                 if repo in line:
                     testflag = True
         if testflag is False:
-            logging.error("%s failed verification on: %s" % (ip, targeturl))
+            logging.error("%s failed verification on: %s" % ip, targeturl)
             return False
     return True
