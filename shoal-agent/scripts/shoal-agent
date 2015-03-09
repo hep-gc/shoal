@@ -66,11 +66,14 @@ status () {
             if [ $? -eq 0 ]; then
                 PID=`cat $PIDFILE`
                 echo $"$SERVICE is running with PID ${PID}."
+                return 0
             else
                 echo $"$SERVICE has exited unexpectedly."
+                return 1
             fi
         else
             echo "$SERVICE isn't running."
+            return 1
         fi
 }
 
