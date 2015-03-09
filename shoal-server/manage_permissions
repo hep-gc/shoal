@@ -1,0 +1,6 @@
+#!/bin/bash
+touch /var/log/shoal_server.log
+chown apache:apache /var/log/shoal_server.log
+python /var/www/shoal/scripts/setup_files.py
+chown apache:apache /var/www/shoal/GeoLiteCity.dat
+exit 0
