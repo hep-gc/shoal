@@ -1,8 +1,10 @@
 #!/bin/bash
 
 #A script to generate the rpm files for the shoal project
-#Run the script with "all" argument to generate all, or provide the argument of which rpm you'd like to generate (server, client, agent)
-#clone the repo first and make sure that if any shoal products are installed to delete the installed config files otherwise they wont be included in rpm
+#Run the script with "all" argument to generate all, or provide the argument
+#of which rpm you'd like to generate (server, client, agent)
+#clone the repo first and make sure that if any shoal products are installed
+#to delete the installed config files otherwise they wont be included in rpm
 #set the version numbers in the spec files in /dist/
 
 if [ -f /etc/shoal/shoal_server.conf ];
