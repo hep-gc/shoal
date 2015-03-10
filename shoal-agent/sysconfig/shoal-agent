@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#This config file allows you to set enviroment variables that will
+#be used by the shoal-agent. This file will be sourced by the init
+#script and have its contents set as enviroment variables.
+
+#User to run the shoal-agent application as
+#
+SHOAL_USER=shoal
+
+#Any extra options you wish to specify when running shoal-agent
+#
+EXTRA_OPTIONS=""
+
