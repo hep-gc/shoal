@@ -6,9 +6,9 @@
 
 #User to run the shoal-agent application as
 #
-SHOAL_USER=shoal
+#SHOAL_USER=shoal
 
 #Any extra options you wish to specify when running shoal-agent
 #
-EXTRA_OPTIONS=""
+#EXTRA_OPTIONS=""
 
