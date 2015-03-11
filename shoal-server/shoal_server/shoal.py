@@ -435,8 +435,11 @@ class RabbitMQConsumer(Thread):
         except Exception as e:
             logging.error("Unable to connect ot RabbitMQ Server. {0}".format(e))
             sys.exit(1)
-        self._connection.ioloop.start()
-
+        try:
+            self._connection.ioloop.start()
+        except Exception as e:
+            logging.error("rabbitmq connection died %s" % e)
+            
     def stop(self):
         """
         stops consuming and closes IO loop
