@@ -27,7 +27,7 @@ else:
         data_files += [(initd_dir, [initd_script])]
 
 config_file = "shoal_agent.conf"
-sys_config_file = "sysconfig/shoal-agent.template"
+sys_config_file = "sysconfig/shoal-agent"
 
 # check for preexisting config files
 if not isfile(join(config_files_dir, config_file)):
