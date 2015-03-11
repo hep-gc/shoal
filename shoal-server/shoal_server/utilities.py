@@ -21,6 +21,8 @@ GEOLITE_UPDATE = config.geolitecity_update
 GEODOMAIN_DB = os.path.join(config.geodomain_path, "GeoIP2-Domain.mmdb")
 
 logger = logging.getLogger('shoal_server')
+logging.getLogger("requests").setLevel(logging.WARNING)
+
 def get_geolocation(ip):
     """
         Given an IP return all its geographical information (using GeoLiteCity.dat)
