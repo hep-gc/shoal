@@ -51,5 +51,5 @@ setup(name='shoal-agent',
       scripts=['shoal-agent'],
       data_files=data_files,
       options = {'bdist_rpm':{'post_install':'manage_permissions'},
-                 'bdist_rpm':{'requires':'netifaces >= 0.8,pika >= 0.9.9'}},
+                 'bdist_rpm':{'requires':'python-netifaces >= 0.5,python-pika >= 0.9.5'}},
 )
