@@ -1,0 +1,7 @@
+/var/log/shoal_agent.log {
+  notifempty
+  missingok
+  compress
+  copytruncate
+  create 0644 nobody nobody
+}
