@@ -12,29 +12,6 @@ except:
 
 from shoal_agent.__version__ import version
 
-data_files = []
-
-if not os.geteuid() == 0 and '--root' not in sys.argv:
-    config_files_dir = expanduser("~/.shoal/")
-else:
-    config_files_dir = "/etc/shoal/"
-    sys_config_files_dir = "/etc/sysconfig/shoal/"
-    # if root install the init.d scripts.
-    # check for preexisiting initd script
-    initd_dir = "/etc/init.d/"
-    initd_script = "scripts/shoal-agent"
-    if not isfile(initd_dir + "shoal-agent"):
-        data_files += [(initd_dir, [initd_script])]
-
-config_file = "shoal_agent.conf"
-sys_config_file = "sysconfig/shoal-agent"
-
-# check for preexisting config files
-if not isfile(join(config_files_dir, config_file)):
-    data_files += [(config_files_dir, [config_file])]
-
-if not isfile(join(sys_config_files_dir, sys_config_file)):
-    data_files += [(sys_config_files_dir, [sys_config_file])]
     
 setup(name='shoal-agent',
       version=version,
@@ -49,7 +26,8 @@ setup(name='shoal-agent',
       url='http://github.com/hep-gc/shoal',
       packages=['shoal_agent'],
       scripts=['shoal-agent'],
-      data_files=data_files,
+      data_files=[('conf', ['conf/shoal_agent.conf','conf/shoal-agent.init','conf/shoal-agent.logrotate','conf/shoal-agent.sysconfig',])
+                  ],
       options = {'bdist_rpm':{'post_install':'manage_permissions'},
                  'bdist_rpm':{'requires':'python-netifaces >= 0.5,python-pika >= 0.9.5'}},
 )
