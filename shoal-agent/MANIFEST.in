@@ -1,4 +1,2 @@
-recursive-include scripts *
-recursive-include sysconfig *
-include shoal_agent.conf
+recursive-include conf *
 include manage_permissions
