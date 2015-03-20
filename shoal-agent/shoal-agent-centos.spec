@@ -2,7 +2,7 @@
 %define version 0.9.3
 %define unmangled_version 0.9.3
 %define release 1
-%define python_version
+%define python_version 2.6
 
 Summary: A squid cache publishing and advertising tool designed to work in fast changing environments
 Name: %{name}
@@ -21,8 +21,10 @@ Url: http://github.com/hep-gc/shoal
 %description
 shoal-agent runs on squid servers and publishes the load and IP of the
 squid server to the shoal-server using a json formatted AMQP message at
-regular intervals. This agent is designed to be trivially installed in
-a few seconds with python's pip tool.
+regular intervals. The purpose of the shoal-agent is to advertise it's
+existence to a central shoal-server so that when new cloud compute nodes
+are booted they can contact the shoal-server and contextualize to the
+nearest squid proxy.
 
 %prep
 %setup -n %{name}-%{unmangled_version}
