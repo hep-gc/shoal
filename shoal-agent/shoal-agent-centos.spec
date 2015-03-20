@@ -1,6 +1,6 @@
 %define name shoal-agent
-%define version 0.9.2
-%define unmangled_version 0.9.2
+%define version 0.9.3
+%define unmangled_version 0.9.3
 %define release 1
 
 Summary: A squid cache publishing and advertising tool designed to work in fast changing environments
@@ -18,7 +18,10 @@ Requires: python-netifaces >= 0.5 python-pika >= 0.9.5
 Url: http://github.com/hep-gc/shoal
 
 %description
-UNKNOWN
+shoal-agent runs on squid servers and publishes the load and IP of the
+squid server to the shoal-server using a json formatted AMQP message at
+regular intervals. This agent is designed to be trivially installed in
+a few seconds with python's pip tool.
 
 %prep
 %setup -n %{name}-%{unmangled_version}
@@ -45,7 +48,7 @@ chown nobody:nobody /var/log/shoal_agent.log
 
 %files 
 /usr/lib/python2.6/site-packages/shoal_agent/*
-/usr/lib/python2.6/site-packages/shoal_agent-0.9.2-py2.6.egg-info/*
+/usr/lib/python2.6/site-packages/shoal_agent-%{unmangled_version}-py2.6.egg-info/*
 /usr/bin/shoal-agent
 %config(noreplace) /etc/shoal/shoal_agent.conf
 %config(noreplace) /etc/sysconfig/shoal/shoal-agent
