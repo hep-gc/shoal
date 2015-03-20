@@ -2,6 +2,7 @@
 %define version 0.9.3
 %define unmangled_version 0.9.3
 %define release 1
+%define python_version
 
 Summary: A squid cache publishing and advertising tool designed to work in fast changing environments
 Name: %{name}
@@ -47,8 +48,8 @@ chown nobody:nobody /var/log/shoal_agent.log
 
 
 %files 
-/usr/lib/python2.6/site-packages/shoal_agent/*
-/usr/lib/python2.6/site-packages/shoal_agent-%{unmangled_version}-py2.6.egg-info/*
+/usr/lib/python%{python_version}/site-packages/shoal_agent/*
+/usr/lib/python%{python_version}/site-packages/shoal_agent-%{unmangled_version}-py%{python_version}.egg-info/*
 /usr/bin/shoal-agent
 %config(noreplace) /etc/shoal/shoal_agent.conf
 %config(noreplace) /etc/sysconfig/shoal/shoal-agent
