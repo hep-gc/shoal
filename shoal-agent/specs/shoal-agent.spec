@@ -54,7 +54,7 @@ mkdir -p $RPM_BUILD_ROOT/%{_initddir}
 mv $RPM_BUILD_ROOT/usr/shoal-agent-conf/shoal-agent.init $RPM_BUILD_ROOT/%{_initddir}/shoal-agent
 %else
 mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
-mv $RPM_BUILD_ROOT/usr/shoal-agent-conf/shoal-agent.init $RPM_BUILD_ROOT/%{_unitdir}/shoal-agent.service
+mv $RPM_BUILD_ROOT/usr/shoal-agent-conf/shoal-agent.service $RPM_BUILD_ROOT/%{_unitdir}/shoal-agent.service
 
 %endif
 rm -rf $RPM_BUILD_ROOT/%{python_sitelib}/shoal_agent-%{unmangled_version}-py%{python_version}.egg-info
