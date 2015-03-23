@@ -14,13 +14,13 @@ BuildArch: noarch
 Vendor: Ian Gable <igable@uvic.ca>
 Requires: python-netifaces >= 0.5 
 Requires: python-pika >= 0.9.5
-if 0%{?el6}
+%if 0%{?el6}
 %else
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
 %endif
-if 0%{?el6}
+%if 0%{?el6}
 %else
 BuildRequires: systemd
 
@@ -45,14 +45,19 @@ python setup.py build
 python setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/etc/{shoal,init.d,logrotate.d,sysconfig}
 mkdir $RPM_BUILD_ROOT/etc/sysconfig/shoal
+mkdir -p $RPM_BUILD_ROOT/var/log
 mv $RPM_BUILD_ROOT/usr/shoal-agent-conf/shoal_agent.conf $RPM_BUILD_ROOT/etc/shoal/shoal_agent.conf
 mv $RPM_BUILD_ROOT/usr/shoal-agent-conf/shoal-agent.logrotate $RPM_BUILD_ROOT/etc/logrotate.d/shoal-agent
 mv $RPM_BUILD_ROOT/usr/shoal-agent-conf/shoal-agent.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/shoal/shoal-agent
 %if 0%{?el6}
-mv $RPM_BUILD_ROOT/usr/shoal-agent-conf/shoal-agent.init $RPM_BUILD_ROOT/%{_initddir}/shoal-agent                                       
+mkdir -p $RPM_BUILD_ROOT/%{_initddir}
+mv $RPM_BUILD_ROOT/usr/shoal-agent-conf/shoal-agent.init $RPM_BUILD_ROOT/%{_initddir}/shoal-agent
 %else
+mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
 mv $RPM_BUILD_ROOT/usr/shoal-agent-conf/shoal.service $RPM_BUILD_ROOT/%{_unitdir}/shoal-agent.service
+
 %endif
+rm -rf $RPM_BUILD_ROOT/%{python_sitelib}/shoal_agent-%{unmangled_version}-py%{python_version}.egg-info
 touch $RPM_BUILD_ROOT/var/log/shoal_agent.log
 
 
@@ -78,7 +83,7 @@ touch $RPM_BUILD_ROOT/var/log/shoal_agent.log
 %files 
 %{python_sitelib}/shoal_agent
 %{_bindir}/shoal-agent
-%attr(nobody,nobody,-) /var/log/shoal-agent.log
+%attr(-,nobody,nobody) /var/log/shoal_agent.log
 %if 0%{?el6}
 %{_initddir}/shoal-agent
 %else
