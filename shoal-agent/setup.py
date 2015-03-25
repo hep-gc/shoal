@@ -26,7 +26,7 @@ setup(name='shoal-agent',
       url='http://github.com/hep-gc/shoal',
       packages=['shoal_agent'],
       scripts=['shoal-agent'],
-      data_files=[('shoal-agent-conf', ['conf/shoal_agent.conf','conf/shoal-agent.init','conf/shoal-agent.logrotate','conf/shoal-agent.sysconfig','conf/shoal-agent.service'])
+      data_files=[('share/shoal-agent', ['conf/shoal_agent.conf','conf/shoal-agent.init','conf/shoal-agent.logrotate','conf/shoal-agent.sysconfig','conf/shoal-agent.service'])
                   ],
       options = {'bdist_rpm':{'post_install':'manage_permissions'},
                  'bdist_rpm':{'requires':'python-netifaces >= 0.5,python-pika >= 0.9.5'}},
