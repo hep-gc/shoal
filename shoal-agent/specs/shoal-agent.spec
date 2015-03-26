@@ -46,16 +46,17 @@ python setup.py install --single-version-externally-managed -O1 --root=$RPM_BUIL
 mkdir -p $RPM_BUILD_ROOT/etc/{shoal,init.d,logrotate.d,sysconfig}
 mkdir $RPM_BUILD_ROOT/etc/sysconfig/shoal
 mkdir -p $RPM_BUILD_ROOT/var/log
-mv $RPM_BUILD_ROOT/usr/shoal-agent-conf/shoal_agent.conf $RPM_BUILD_ROOT/etc/shoal/shoal_agent.conf
-mv $RPM_BUILD_ROOT/usr/shoal-agent-conf/shoal-agent.logrotate $RPM_BUILD_ROOT/etc/logrotate.d/shoal-agent
-mv $RPM_BUILD_ROOT/usr/shoal-agent-conf/shoal-agent.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/shoal/shoal-agent
+mv $RPM_BUILD_ROOT/usr/share/shoal-agent/shoal_agent.conf $RPM_BUILD_ROOT/etc/shoal/shoal_agent.conf
+mv $RPM_BUILD_ROOT/usr/share/shoal-agent/shoal-agent.logrotate $RPM_BUILD_ROOT/etc/logrotate.d/shoal-agent
+mv $RPM_BUILD_ROOT/usr/share/shoal-agent/shoal-agent.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/shoal/shoal-agent
 %if 0%{?el6}
 mkdir -p $RPM_BUILD_ROOT/%{_initddir}
-mv $RPM_BUILD_ROOT/usr/shoal-agent-conf/shoal-agent.init $RPM_BUILD_ROOT/%{_initddir}/shoal-agent
+mv $RPM_BUILD_ROOT/usr/share/shoal-agent/shoal-agent.init $RPM_BUILD_ROOT/%{_initddir}/shoal-agent
+rm $RPM_BUILD_ROOT/usr/share/shoal-agent/shoal-agent.service
 %else
 mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
-mv $RPM_BUILD_ROOT/usr/shoal-agent-conf/shoal-agent.init $RPM_BUILD_ROOT/%{_unitdir}/shoal-agent.service
-
+mv $RPM_BUILD_ROOT/usr/share/shoal-agent/shoal-agent.service $RPM_BUILD_ROOT/%{_unitdir}/shoal-agent.service
+rm $RPM_BUILD_ROOT/usr/share/shoal-agent/shoal-agent.init
 %endif
 rm -rf $RPM_BUILD_ROOT/%{python_sitelib}/shoal_agent-%{unmangled_version}-py%{python_version}.egg-info
 touch $RPM_BUILD_ROOT/var/log/shoal_agent.log
