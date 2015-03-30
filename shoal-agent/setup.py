@@ -21,7 +21,7 @@ setup(name='shoal-agent',
           'pika>=0.9.5',
       ],
       description='A squid cache publishing and advertising tool designed to work in fast changing environments',
-      author='Mike Chester',
+      author='Mike Chester, Colson Drimiel, Ian Gable, Alex Lam, Rob Prior, Ryan Taylor, Steve Traylen'
       author_email='mchester@uvic.ca',
       url='http://github.com/hep-gc/shoal',
       packages=['shoal_agent'],
