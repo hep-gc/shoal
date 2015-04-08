@@ -284,7 +284,7 @@ def is_available(ip, port):
             repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
             if repo is None:
                 repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
-            file = requests.get(targeturl, proxies=proxies)
+            file = requests.get(targeturl, proxies=proxies, timeout=2)
             f = file.content
         except:
             #note that this would catch any RE errors aswell but they are specified in the config and all fit the pattern.
