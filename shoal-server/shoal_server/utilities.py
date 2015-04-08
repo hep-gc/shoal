@@ -281,8 +281,10 @@ def is_available(ip, port):
         #if a url checks out testflag set to true, otherwise fails verification at end of loop
         testflag = False
         try:
-            repo = re.search("cvmfs\/(.+?)(\/|\.)", targeturl).group(1)
-            file = requests.get(targeturl, proxies=proxies)
+            repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+            if repo is None:
+                repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+            file = requests.get(targeturl, proxies=proxies, timeout=2)
             f = file.content
         except:
             #note that this would catch any RE errors aswell but they are specified in the config and all fit the pattern.
