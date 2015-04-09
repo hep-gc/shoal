@@ -20,7 +20,7 @@ from shoal_server import utilities
 """
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, max_load=122000, last_active=time()):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, drift_detected, max_load=122000, last_active=time()):
         """
         constructor for SquidNode, time created is current time
         """
@@ -38,13 +38,15 @@ class SquidNode(object):
         self.global_access = global_access
         self.domain_access = domain_access
         self.max_load = max_load
+        self.drift_detected = drift_detected
 
-    def update(self, load):
+    def update(self, load, drift_detected):
         """
-        updates SquidNode with current time and load
+        updates SquidNode with current time, load and drift detection
         """
         self.last_active = time()
         self.load = load
+        self.drift_detected = drift_detected
 
     def jsonify(self):
         """
@@ -459,6 +461,7 @@ class RabbitMQConsumer(Thread):
         external_ip = public_ip = private_ip = None
         #assume global access unless otherwise indicated
         globalaccess = domainaccess = True
+        drift_detected = False
         curr = time()
     
         # extracts information from data from body
@@ -517,12 +520,18 @@ class RabbitMQConsumer(Thread):
         #attempt to detect misconfigured clocks and clock drifts, allows for a 10 second grace period
         if (curr -time_sent > 10):
             logging.error("Potential clock drift dectected: %s second descrepency on %s" % ((curr-time_sent), public_ip))
-        if(curr - time_sent < -10):
+            drift_detected = True
+        elif(curr - time_sent < -10):
             logging.error("Recived message from %s seconds in the future from %s" % ((-1*(curr-time_sent)), public_ip))
+            drift_detected = True
+        #this else is redundant because the var is initally set to false but this works well as a failsafe
+        else:
+            drift_detected = False
+            
 
-        # if there's a key in shoal, shoal's key will update with the load
+        # if there's a key in shoal, shoal's key will update with the load and drift detection
         if key in self.shoal:
-            self.shoal[key].update(load)
+            self.shoal[key].update(load, drift_detected)
         # if the difference in time since the last timestamp is less than the inactive time
         # and there exists a public or private ip, then the geo_data will update its location
         # or create a new SquidNode for shoal if the geo_data doesn't exist
@@ -533,7 +542,7 @@ class RabbitMQConsumer(Thread):
             if not geo_data:
                 logging.error("Unable to generate geo location data, discarding message")
             else:
-                new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, maxload, time_sent)
+                new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, drift_detected, maxload, time_sent)
                 self.shoal[key] = new_squid
                 utilities.verify_new_squid(public_ip)
 
