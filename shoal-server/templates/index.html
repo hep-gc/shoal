@@ -73,7 +73,10 @@ $def with (now, total, shoal, page, pages, size)
                 <td class="hidden-phone">$squid.geo_data['longitude']</td>
                 <td class="hidden-phone">$(last_msg)s</td>
                 <td>$(hour)h$(minute)m$(second)s</td>
-                <td style="text-align: center;">$("%.1fs" % squid.drift_time)</td>
+                $if squid.drift_detected == True:
+                    <td style="text-align: center;"><b>$("%.1fs" % squid.drift_time)</b></td>
+                $else:
+                    <td style="text-align: center;">$("%.1fs" % squid.drift_time)</td>
                 <td style="text-align: center;">$verified</td>
                 <td>$access</td>
 	    </tr>
