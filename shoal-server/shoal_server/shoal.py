@@ -20,7 +20,7 @@ from shoal_server import utilities
 """
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, drift_detected, max_load=122000, last_active=time()):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, drift_detected, drift_time, max_load=122000, last_active=time()):
         """
         constructor for SquidNode, time created is current time
         """
@@ -39,10 +39,11 @@ class SquidNode(object):
         self.domain_access = domain_access
         self.max_load = max_load
         self.drift_detected = drift_detected
+        self.drift_time = drift_time
 
-    def update(self, load, drift_detected):
+    def update(self, load, drift_detected, drift_time):
         """
-        updates SquidNode with current time, load and drift detection
+        updates SquidNode with current time, load and drift detection boolean value
         """
         self.last_active = time()
         self.load = load
@@ -527,7 +528,7 @@ class RabbitMQConsumer(Thread):
         #this else is redundant because the var is initally set to false but this works well as a failsafe
         else:
             drift_detected = False
-            
+            drift_time = (curr-time_sent)
 
         # if there's a key in shoal, shoal's key will update with the load and drift detection
         if key in self.shoal:
@@ -542,7 +543,7 @@ class RabbitMQConsumer(Thread):
             if not geo_data:
                 logging.error("Unable to generate geo location data, discarding message")
             else:
-                new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, drift_detected, maxload, time_sent)
+                new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, drift_detected, drift_time, maxload, time_sent)
                 self.shoal[key] = new_squid
                 utilities.verify_new_squid(public_ip)
 

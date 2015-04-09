@@ -26,6 +26,7 @@ $def with (now, total, shoal, page, pages, size)
           <th>Alive</th>
           <th>Verified</th>
           <th>Clock Drift</th>
+          <th>Verified</th>
 	      <th>Access Level</th>
 	 </tr>
       </thead>
@@ -58,10 +59,7 @@ $def with (now, total, shoal, page, pages, size)
                 $if squid.domain_access == True:
                     $ state = 'warning' 
             $if squid.drift_detected == True:
-                $ drift = '✔'
                 $ state = 'warning'
-            $else:
-                $ drift = '✘'
 
             <tr class='$state'>
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
@@ -76,8 +74,8 @@ $def with (now, total, shoal, page, pages, size)
                 <td class="hidden-phone">$squid.geo_data['longitude']</td>
                 <td class="hidden-phone">$(last_msg)s</td>
                 <td>$(hour)h$(minute)m$(second)s</td>
+                <td style="text-align: center;">$squid.drift_time</td>
                 <td style="text-align: center;">$verified</td>
-                <td style="text-align: center;">$drift</td>
                 <td>$access</td>
 	    </tr>
       </tbody>
