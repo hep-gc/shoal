@@ -57,7 +57,7 @@ $def with (now, total, shoal, page, pages, size)
                 $if squid.domain_access == True:
                     $ state = 'warning' 
             $if squid.drift_detected == True:
-                $ state = 'warning'
+                $ state = 'error'
 
             <tr class='$state'>
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
