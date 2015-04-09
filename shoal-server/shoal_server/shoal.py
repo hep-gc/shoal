@@ -463,6 +463,7 @@ class RabbitMQConsumer(Thread):
         #assume global access unless otherwise indicated
         globalaccess = domainaccess = True
         drift_detected = False
+        drift_time = 0
         curr = time()
     
         # extracts information from data from body
@@ -528,11 +529,11 @@ class RabbitMQConsumer(Thread):
         #this else is redundant because the var is initally set to false but this works well as a failsafe
         else:
             drift_detected = False
-            drift_time = (curr-time_sent)
+        drift_time = (curr-time_sent)
 
         # if there's a key in shoal, shoal's key will update with the load and drift detection
         if key in self.shoal:
-            self.shoal[key].update(load, drift_detected)
+            self.shoal[key].update(load, drift_detected, drift_time)
         # if the difference in time since the last timestamp is less than the inactive time
         # and there exists a public or private ip, then the geo_data will update its location
         # or create a new SquidNode for shoal if the geo_data doesn't exist
