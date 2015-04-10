@@ -145,11 +145,19 @@ if config_file.has_option("general", "external_ip"):
 if config_file.has_option("general", "interface"):
     interface = config_file.get("general", "interface")
 
-if config_file.has_option("general", "global_access"):
-    global_access = config_file.get("general","global_access")
-
-if config_file.has_option("general", "domain_access"):
-    domain_access = config_file.get("general","domain_access")
+if config_file.has_option("general", "access_level"):
+    access_level = config_file.get("general","access_level")
+    if access_level == "global" or access_level == "Global":
+        global_access = True
+        domain_access = True
+    if access_level == "localonly" or access_level == "Localonly":
+        global_access = False
+        domain_access = True
+    if access_level == "private" or access_level == "Private":
+        global_access = False
+        domain_access = False
+    else:
+        logging.error("access_level not set to known value in config - Defaulting to Global")
 
 if config_file.has_option("general", "max_load"):
     max_load = config_file.get("general","max_load")
