@@ -40,6 +40,7 @@ class SquidNode(object):
         self.max_load = max_load
         self.drift_detected = drift_detected
         self.drift_time = drift_time
+        self.last_verified = 0
 
     def update(self, load, drift_detected, drift_time):
         """
@@ -546,8 +547,6 @@ class RabbitMQConsumer(Thread):
             else:
                 new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, drift_detected, drift_time, maxload, time_sent)
                 self.shoal[key] = new_squid
-                utilities.verify_new_squid(public_ip)
-
         self.acknowledge_message(basic_deliver.delivery_tag)
         
         
@@ -572,13 +571,22 @@ class SquidVerifier(Thread):
         """
         runs verify
         """
+        INTERVAL = config.squid_verify_interval
         self.running = True
         while self.running:
-            sleep(self.INTERVAL)
-            utilities.verify()
+            for squid in web.shoal.values():
+                current_time = time()
+#In an ideal scenario shoal would continuously try to verify those that are not verified
+#However since many squids use old agents its likely that they are not configured 
+#correctly and this would make the verification loop try and verify them over
+#and over when they can't be. Instead they will be verified once every interval
+#greatly reducing computing resource requirements for misconfigured agents.
+                if (current_time - squid.last_verified) >= INTERVAL:
+                    utilities.verify(squid)
+                    squid.last_verified = time()
 
     def stop(self):
         """
         stops Squid_Verifier
-        """
+        """                                    
         self.running = False
