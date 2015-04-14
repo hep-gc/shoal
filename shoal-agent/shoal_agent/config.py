@@ -147,13 +147,13 @@ if config_file.has_option("general", "interface"):
 
 if config_file.has_option("general", "access_level"):
     access_level = config_file.get("general","access_level")
-    if access_level == "global" or access_level == "Global":
+    if "global" in access_level or "Global" in access_level:
         global_access = "True"
         domain_access = "True"
-    elif access_level == "servelocal" or access_level == "Servelocal":
+    elif "servelocal" in access_level or "Servelocal" in access_level:
         global_access = "False"
         domain_access = "True"
-    elif access_level == "private" or access_level == "Private":
+    elif "private" in access_level or "Private" in access_level:
         global_access = "False"
         domain_access = "False"
     else:
