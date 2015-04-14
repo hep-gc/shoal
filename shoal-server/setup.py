@@ -81,5 +81,5 @@ setup(name='shoal-server',
       packages=['shoal_server'],
       scripts=["shoal-server"],
       data_files=data_files,
-      options = {'bdist_rpm':{'post_install':'manage_permissions'}},
+#      options = {'bdist_rpm':{'post_install':'manage_permissions'}},
 )
