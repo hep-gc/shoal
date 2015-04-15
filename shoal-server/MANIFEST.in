@@ -1,7 +1,1 @@
-recursive-include log *
-recursive-include static *
-recursive-include templates *
-recursive-include scripts *
-include shoal_server.conf
-include shoal.conf
-include manage_permissions 
+recursive-include conf *
