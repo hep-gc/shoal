@@ -573,6 +573,7 @@ class SquidVerifier(Thread):
         runs verify
         """
         INTERVAL = config.squid_verify_interval
+        RETRY_INTERVAL = config.squid_retry_verify
         self.running = True
         while self.running:
             for squid in web.shoal.values():
@@ -587,9 +588,13 @@ class SquidVerifier(Thread):
                     if utilities.verify(squid):
                         #if it is verified give it a time stamp
                         squid.last_verified = time()
-                    else
+                    else:
                         #else retry in retry interval
-                        squid.last_verified += RETRY_INTERVAL
+                        if squid.last_verified == 0:
+                            squid.last_verified = time() - INTERVAL + RETRY_INTERVAL
+                        else:
+                            squid.last_verified = squid.last_verified + RETRY_INTERVAL
+
 
     def stop(self):
         """
