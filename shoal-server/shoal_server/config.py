@@ -19,7 +19,8 @@ geolitecity_update = 2592000
 squid_cleanse_interval = 15
 squid_inactive_time = 180
 squid_verification = True
-squid_verify_interval = 60
+squid_verify_interval = 3600
+squid_retry_verify = 300
 squid_max_load = 122000
 squid_verified_default = False
 squid_loadconstant = 1
@@ -158,6 +159,13 @@ if config_file.has_option("squid", "squid_verify_interval"):
         squid_verify_interval = config_file.getint("squid", "squid_verify_interval")
     except ValueError:
         print "Configuration file problem: squid_verify_interval must be a integer value"
+        sys.exit(1)
+
+if config_file.has_option("squid", "squid_retry_verify"):
+    try:
+        squid_retry_verify = config_file.getint("squid", "squid_retry_verify")
+    except ValueError:
+        print "Configuration file problem: squid_retry_verify must be a integer value"
         sys.exit(1)
 
 if config_file.has_option("squid", "squid_max_load"):

@@ -244,12 +244,17 @@ def verify(squid):
             if not is_available(str(squid.public_ip or squid.private_ip), squid.squid_port):
                 logging.info( "Failed Verification: %s " % str(squid.public_ip or squid.private_ip))
                 squid.verified = False
+                return False
             else:
                 logging.info("VERIFIED:%s " % str(squid.public_ip or squid.private_ip))
                 squid.verified = True
+                return True
     except TypeError:
         logging.info("VERIFIED: %s" % str(squid.public_ip or squid.private_ip))
         squid.verified = True
+        return True
+    #return true because squids that get this far cannot be verified
+    return True
 
                      
 def is_available(ip, port):

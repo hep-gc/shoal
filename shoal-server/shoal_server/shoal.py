@@ -558,6 +558,7 @@ class RabbitMQConsumer(Thread):
 class SquidVerifier(Thread):
 
     INTERVAL = config.squid_verify_interval
+    RETRY_INTERVAL = config.squid_retry_verify
 
     def __init__(self, shoal):
         """SquidVerifier
@@ -581,9 +582,14 @@ class SquidVerifier(Thread):
 #correctly and this would make the verification loop try and verify them over
 #and over when they can't be. Instead they will be verified once every interval
 #greatly reducing computing resource requirements for misconfigured agents.
+#if a squid fails verification when it shouldnt, It tries to verify it again after RETRY_INTERVAL
                 if (current_time - squid.last_verified) >= INTERVAL:
-                    utilities.verify(squid)
-                    squid.last_verified = time()
+                    if utilities.verify(squid):
+                        #if it is verified give it a time stamp
+                        squid.last_verified = time()
+                    else
+                        #else retry in retry interval
+                        squid.last_verified += RETRY_INTERVAL
 
     def stop(self):
         """
