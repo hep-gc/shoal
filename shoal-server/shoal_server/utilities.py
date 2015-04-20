@@ -232,40 +232,27 @@ def generate_wpad(ip):
     else:
         return None
     
-def verify():
+def verify(squid):
     """
     This function is peridoically run by a daemon thread to reverify that the squids in shoal are active
     """
-    for squid in web.shoal.values():
-        #only verify if it is gobally accessable
-        try:
-            if squid.global_access or squid.domain_access:
-        
-                if not is_available(str(squid.public_ip or squid.private_ip), squid.squid_port):
-                    logging.info( "Failed Verification: %s " % str(squid.public_ip or squid.private_ip))
-                else:
-                    logging.info("VERIFIED:%s " % str(squid.public_ip or squid.private_ip))
-                    squid.verified=True
-        except TypeError:
-            logging.info("VERIFIED: %s" % str(squid.public_ip or squid.private_ip))
-            squid.verified = True
-             
-def verify_new_squid(ip):
-    """
-    When a new squid is added to shoal this method is called to verify the squid is active
-    and can recieve requests from active worker nodes
-    """
+
+    #only verify if it is gobally accessable
+    try:
+        if squid.global_access or squid.domain_access:
     
-    for squid in web.shoal.values():
-        if ip == squid.public_ip:
-             if not squid.verified and (squid.global_access or squid.domain_access):
-                 if not is_available(str(squid.public_ip or squid.private_ip), squid.squid_port):
-                     logging.error("Failed Verification." )
-                 else:
-                     logging.info("VERIFIED: %s" % str(squid.public_ip or squid.private_ip))
-                     squid.verified=True
+            if not _is_available(str(squid.public_ip or squid.private_ip), squid.squid_port):
+                logging.info( "Failed Verification: %s " % str(squid.public_ip or squid.private_ip))
+                squid.verified = False
+            else:
+                logging.info("VERIFIED:%s " % str(squid.public_ip or squid.private_ip))
+                squid.verified = True
+    except TypeError:
+        logging.info("VERIFIED: %s" % str(squid.public_ip or squid.private_ip))
+        squid.verified = True
+
                      
-def is_available(ip, port):
+def _is_available(ip, port):
     """
     Downloads file thru proxy and assert its correctness to verify a given proxy
     A list of paths are tested to see all repos are working, the list can be found in config.py as "paths"

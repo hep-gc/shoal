@@ -148,35 +148,35 @@ if config_file.has_option("squid", "squid_verification"):
 
 if config_file.has_option("squid", "squid_verified_default"):
     try:
-        squid_verification = config_file.getboolean("squid", "squid_verified_default")
+        squid_verified_default = config_file.getboolean("squid", "squid_verified_default")
     except ValueError:
         print "Configuration file problem: squid_verified_default must be a boolean value"
         sys.exit(1)
 
 if config_file.has_option("squid", "squid_verify_interval"):
     try:
-        squid_verification = config_file.getint("squid", "squid_verify_interval")
+        squid_verify_interval = config_file.getint("squid", "squid_verify_interval")
     except ValueError:
         print "Configuration file problem: squid_verify_interval must be a integer value"
         sys.exit(1)
 
 if config_file.has_option("squid", "squid_max_load"):
     try:
-        squid_verification = config_file.getint("squid", "squid_max_load")
+        squid_max_load = config_file.getint("squid", "squid_max_load")
     except ValueError:
         print "Configuration file problem: squid_max_load must be a integer value"
         sys.exit(1)
 
 if config_file.has_option("squid", "squid_loadconstant"):
     try:
-        squid_verification = config_file.getfloat("squid", "squid_loadconstant")
+        squid_loadconstant = config_file.getfloat("squid", "squid_loadconstant")
     except ValueError:
         print "Configuration file problem: squid_loadconstant must be a float value"
         sys.exit(1)
 
 if config_file.has_option("squid", "squid_distloadweight"):
     try:
-        squid_verification = config_file.getfloat("squid", "squid_distloadweight")
+        squid_distloadweight = config_file.getfloat("squid", "squid_distloadweight")
     except ValueError:
         print "Configuration file problem: squid_distloadweight must be a float value"
         sys.exit(1)

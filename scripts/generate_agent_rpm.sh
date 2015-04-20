@@ -32,7 +32,7 @@ then
 	cd ..
 	SHOAL_DIR=$PWD
 	SPEC_DIR=$SHOAL_DIR/shoal-agent/specs
-	SPEC_FILE=shoal-agent-centos6.spec
+	SPEC_FILE=shoal-agent.spec
 elif [ $# -eq 1 ]
 then
 	cd ..
@@ -59,4 +59,4 @@ cp $SPEC_DIR/$SPEC_FILE ~/rpmbuild/SPECS
 cp $SHOAL_DIR/shoal-agent/dist/shoal-agent**.tar.gz ~/rpmbuild/SOURCES
 
 echo "Building agent RPM"
-rpmbuild -ba ~/rpmbuild/SPECS/shoal-agent-centos6.spec
+rpmbuild -ba ~/rpmbuild/SPECS/shoal-agent.spec
