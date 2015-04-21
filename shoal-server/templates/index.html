@@ -18,14 +18,14 @@ $def with (now, total, shoal, page, pages, size)
           <th class="hidden-phone">Private IP</th>
           <th>Bytes Out</th>
           <th>City</th>
-          <th>Region</th>
           <th class="hidden-phone">Country</th>
           <th class="hidden-phone">Latitude</th>
           <th class="hidden-phone">Longitude</th>
           <th class="hidden-phone">Last Received</th>
           <th>Alive</th>
+          <th>Clock Sync</th>
           <th>Verified</th>
-	  <th>Access Level</th>
+	      <th>Access Level</th>
 	 </tr>
       </thead>
       <tbody>
@@ -54,6 +54,8 @@ $def with (now, total, shoal, page, pages, size)
                 $ verified = '✘'
                 $if squid.global_access == True:
                     $ state = 'warning'
+            $if squid.drift_detected == True:
+                $ state = 'error'
 
             <tr class='$state'>
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
@@ -62,12 +64,15 @@ $def with (now, total, shoal, page, pages, size)
                 <td class="hidden-phone">$squid.private_ip</td>
                 <td>$squid.load kB/s</td>
                 <td>$squid.geo_data['city']</td>
-                <td></td>
                 <td class="hidden-phone">$squid.geo_data['country_name']</td>
                 <td class="hidden-phone">$squid.geo_data['latitude']</td>
                 <td class="hidden-phone">$squid.geo_data['longitude']</td>
                 <td class="hidden-phone">$(last_msg)s</td>
                 <td>$(hour)h$(minute)m$(second)s</td>
+                $if squid.drift_detected == True:
+                    <td style="text-align: center;"><b>$("%.1fs" % squid.drift_time)</b></td>
+                $else:
+                    <td style="text-align: center;">✔</td>
                 <td style="text-align: center;">$verified</td>
                 <td>$access</td>
 	    </tr>
