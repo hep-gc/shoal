@@ -35,11 +35,11 @@ setup(name='shoal-server',
       scripts=["shoal-server"],
       data_files=[('share/shoal-server', ['conf/shoal_server.conf', 'conf/shoal.conf','conf/shoal-server.logrotate']),
                        ('share/shoal-server/scripts', ['conf/scripts/shoal_wsgi.py','conf/scripts/setup_files.py']),
-                       ('share/shoal-server/static/css', ['conf/static/css/bootstrap.min.css','conf/static/css/bootstrap-responsive.min.css']),
-                       ('share/shoal-server/static/img', ['conf/static/img/glyphicons-halflings.png','conf/static/img/glyphicons-halflings-white.png']),
-                       ('share/shoal-server/static/img/icons', ['conf/static/img/icons/favicon.ico',]),
-                       ('share/shoal-server/static/js', ['conf/static/js/bootstrap.min.js','conf/static/js/jquery.min.js']),
-                       ('share/shoal-server/templates', ['conf/templates/base.html','conf/templates/index.html','conf/templates/wpad.dat'])                 
+                       ('share/shoal-server/static/css', ['static/css/bootstrap.min.css','static/css/bootstrap-responsive.min.css']),
+                       ('share/shoal-server/static/img', ['static/img/glyphicons-halflings.png','static/img/glyphicons-halflings-white.png']),
+                       ('share/shoal-server/static/img/icons', ['static/img/icons/favicon.ico',]),
+                       ('share/shoal-server/static/js', ['static/js/bootstrap.min.js','static/js/jquery.min.js']),
+                       ('share/shoal-server/templates', ['templates/base.html','templates/index.html','templates/wpad.dat'])                 
                    ],
 #      options = {'bdist_rpm':{'post_install':'manage_permissions'}},
 )
