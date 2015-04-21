@@ -34,9 +34,9 @@ logging_level = logging.ERROR
 #this value should be false unless you wish the shoal server to neglect verifying this squid
 verified = False
 #squid server accessible globally
-global_access = True
+global_access = "True"
 #squid serve accessible by same domain only
-domain_access = False
+domain_access = "False"
 #this is the max load of the server in terms of kb/s
 max_load = 122000
 
@@ -150,6 +150,20 @@ if config_file.has_option("general", "global_access"):
 
 if config_file.has_option("general", "domain_access"):
     domain_access = config_file.get("general","domain_access")
+
+if config_file.has_option("general", "access_level"):
+    access_level = config_file.get("general","access_level").lower()
+    if access_level == "global":
+        global_access = "True"
+        domain_access = "True"
+    elif access_level == "servelocal":
+        global_access = "False"
+        domain_access = "True"
+    elif access_level == "private":
+        global_access = "False"
+        domain_access = "False"
+    else:
+        logging.error("access_level not set to known value in config - Defaulting to Global")
 
 if config_file.has_option("general", "max_load"):
     max_load = config_file.get("general","max_load")

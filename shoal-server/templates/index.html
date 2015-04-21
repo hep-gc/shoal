@@ -45,9 +45,9 @@ $def with (now, total, shoal, page, pages, size)
             $if squid.global_access == True:
                 $ access = 'Global'
             $elif squid.domain_access == True:
-                $ access = 'Same Domain Only'
+                $ access = 'Local Access Only'
             $else:
-                $ access = 'No Outside Access'
+                $ access = 'Private'
             $if squid.verified:
                 $ verified = '✔' 
             $else:
