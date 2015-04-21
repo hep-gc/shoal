@@ -1,0 +1,8 @@
+/var/log/shoal_server.log {
+  notifempty
+  missingok
+  compress
+  copytruncate
+  create 0644 nobody nobody
+}
+
