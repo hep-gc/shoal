@@ -241,7 +241,7 @@ def verify(squid):
     try:
         if squid.global_access or squid.domain_access:
     
-            if not is_available(str(squid.public_ip or squid.private_ip), squid.squid_port):
+            if not _is_available(str(squid.public_ip or squid.private_ip), squid.squid_port):
                 logging.info( "Failed Verification: %s " % str(squid.public_ip or squid.private_ip))
                 squid.verified = False
             else:
@@ -252,7 +252,7 @@ def verify(squid):
         squid.verified = True
 
                      
-def is_available(ip, port):
+def _is_available(ip, port):
     """
     Downloads file thru proxy and assert its correctness to verify a given proxy
     A list of paths are tested to see all repos are working, the list can be found in config.py as "paths"
