@@ -54,18 +54,18 @@ paths = [
     "http://cvmfs.fnal.gov:8000/cvmfs/atlas-condb/.cvmfswhitelist",
     "http://cvmfs.fnal.gov:8000/cvmfs/sft/.cvmfswhitelist",
     "http://cvmfs.fnal.gov:8000/cvmfs/grid/.cvmfswhitelist",
-    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/atlas.cern.ch/.cvmfswhitelist",
-    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
-    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/sft.cern.ch/.cvmfswhitelist",
-    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/grid.cern.ch/.cvmfswhitelist",
+#    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/atlas.cern.ch/.cvmfswhitelist",
+#    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
+#    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/sft.cern.ch/.cvmfswhitelist",
+#    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/grid.cern.ch/.cvmfswhitelist",
     "http://cernvmfs.gridpp.rl.ac.uk:8000/cvmfs/atlas/.cvmfswhitelist",
     "http://cernvmfs.gridpp.rl.ac.uk:8000/cvmfs/atlas-condb/.cvmfswhitelist",
     "http://cernvmfs.gridpp.rl.ac.uk:8000/cvmfs/sft/.cvmfswhitelist",
-    "http://cernvmfs.gridpp.rl.ac.uk:8000/cvmfs/grid/.cvmfswhitelist",
-    "http://cvmfs02.grid.sinica.edu.tw:8000/opt/atlas/.cvmfswhitelist",
-    "http://cvmfs02.grid.sinica.edu.tw:8000/opt/atlas-condb/.cvmfswhitelist",
-    "http://cvmfs02.grid.sinica.edu.tw:8000/opt/sft/.cvmfswhitelist",
-    "http://cvmfs02.grid.sinica.edu.tw:8000/opt/grid/.cvmfswhitelist"
+    "http://cernvmfs.gridpp.rl.ac.uk:8000/cvmfs/grid/.cvmfswhitelist"
+#    "http://cvmfs02.grid.sinica.edu.tw:8000/opt/atlas/.cvmfswhitelist",
+#    "http://cvmfs02.grid.sinica.edu.tw:8000/opt/atlas-condb/.cvmfswhitelist",
+#    "http://cvmfs02.grid.sinica.edu.tw:8000/opt/sft/.cvmfswhitelist",
+#    "http://cvmfs02.grid.sinica.edu.tw:8000/opt/grid/.cvmfswhitelist"
 ]
 
 
