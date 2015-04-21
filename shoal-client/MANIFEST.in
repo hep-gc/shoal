@@ -1,2 +1,1 @@
-recursive-include scripts *
-include shoal_client.conf
+recursive-include conf *
