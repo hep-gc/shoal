@@ -145,15 +145,21 @@ if config_file.has_option("general", "external_ip"):
 if config_file.has_option("general", "interface"):
     interface = config_file.get("general", "interface")
 
+if config_file.has_option("general", "global_access"):
+    global_access = config_file.get("general","global_access")
+
+if config_file.has_option("general", "domain_access"):
+    domain_access = config_file.get("general","domain_access")
+
 if config_file.has_option("general", "access_level"):
-    access_level = config_file.get("general","access_level")
-    if "global" in access_level or "Global" in access_level:
+    access_level = config_file.get("general","access_level").lower()
+    if access_level == "global":
         global_access = "True"
         domain_access = "True"
-    elif "servelocal" in access_level or "Servelocal" in access_level:
+    elif access_level == "servelocal":
         global_access = "False"
         domain_access = "True"
-    elif "private" in access_level or "Private" in access_level:
+    elif access_level == "private":
         global_access = "False"
         domain_access = "False"
     else:
