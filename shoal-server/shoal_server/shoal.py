@@ -576,11 +576,11 @@ class SquidVerifier(Thread):
         while self.running:
             for squid in web.shoal.values():
                 current_time = time()
-#In an ideal scenario shoal would continuously try to verify those that are not verified
-#However since many squids use old agents its likely that they are not configured 
-#correctly and this would make the verification loop try and verify them over
-#and over when they can't be. Instead they will be verified once every interval
-#greatly reducing computing resource requirements for misconfigured agents.
+                #In an ideal scenario shoal would continuously try to verify those that are not verified
+                #However since many squids use old agents its likely that they are not configured 
+                #correctly and this would make the verification loop try and verify them over
+                #and over when they can't be. Instead they will be verified once every interval
+                #greatly reducing computing resource requirements for misconfigured agents.
                 if (current_time - squid.last_verified) >= INTERVAL:
                     utilities.verify(squid)
                     squid.last_verified = time()
