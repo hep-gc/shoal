@@ -80,11 +80,11 @@ _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and ap
 1. `pip install shoal-server`
 
 2. Move data and configuration files from `/usr/share/shoal-server/` to their proper locations:
-- `/usr/share/shoal-server/conf/shoal_server.conf` --> `/etc/shoal/shoal_server.conf`   (file)
-- `/usr/share/shoal-server/conf/shoal-server.logrotate --> `/etc/logrotate.d/shoal-server` (file)
-- `/usr/share/shoal-server/scripts/` --> `/var/www/shoal/scripts/` (folder)
-- `/usr/share/shoal-server/static/`  --> `/var/www/shoal/static/` (folder)
-- `/usr/share/shoal-server/templates/` --> `/var/www/shoal/templates/` (folder)
+- `/usr/share/shoal-server/conf/shoal_server.conf` > `/etc/shoal/shoal_server.conf`   (file)
+- `/usr/share/shoal-server/conf/shoal-server.logrotate > `/etc/logrotate.d/shoal-server` (file)
+- `/usr/share/shoal-server/scripts/` > `/var/www/shoal/scripts/` (folder)
+- `/usr/share/shoal-server/static/`  > `/var/www/shoal/static/` (folder)
+- `/usr/share/shoal-server/templates/` > `/var/www/shoal/templates/` (folder)
 
 3. Check settings in `shoal_server.conf` update as needed. Make sure RabbitMQ server is running.
 
