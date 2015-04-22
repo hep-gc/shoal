@@ -74,7 +74,7 @@ Configure the server and start it:
     visit localhost
 
 ###Using Pip
-
+(Needs update)
 1. `pip install shoal-server`
 
 2. Check settings in `shoal_server.conf` update as needed. Make sure RabbitMQ server is running.
@@ -84,14 +84,22 @@ Configure the server and start it:
 
 5. Visit `http://localhost:8080`
 
-###Using Git
+###Using Git (requires manual file placemet)
+_**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details.
 
 1. `git clone git://github.com/hep-gc/shoal.git`
 2. `cd shoal/shoal-server/`
 2.5 (optional) Make sure domain database is in /shoal-server/static/db/ prior to next step or it will not have the domain lookup functionality
 3. `python setup.py install`
-4. Check settings in `shoal_server.conf` update as needed. Make sure RabbitMQ server is running.
-5. Start `shoal-server`
+4. Move data and configuration files from `/usr/share/shoal-server/` to their proper locations:
+	-`/usr/share/shoal-server/conf/shoal_server.conf` --> `/etc/shoal/shoal_server.conf`   (file)
+	-`/usr/share/shoal-server/conf/shoal-server.logrotate --> `/etc/logrotate.d/shoal-server` (file)
+	-`/usr/share/shoal-server/scripts/` --> `/var/www/shoal/scripts/` (folder)
+	-`/usr/share/shoal-server/static/`  --> `/var/www/shoal/static/` (folder)
+	`/usr/share/shoal-server/templates/` --> `/var/www/shoal/templates/` (folder)
+	
+5. Check settings in `shoal_server.conf` update as needed. Make sure RabbitMQ server is running.
+6. Start `shoal-server`
  - _First run make take a few seconds to start as it needs to download the GeoLiteCity database (~12MB)._
  
-6. Visit `http://localhost:8080`
+7. Visit `http://localhost:8080`
