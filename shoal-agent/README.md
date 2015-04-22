@@ -68,7 +68,7 @@ A complete shoal_agent.conf file for ATLAS can be obtained by:
 	- `/usr/share/shoal-agent/conf/shoal-agent.init` --> `/etc/init.d/shoal-agent`
 	- `/usr/share/shoal-agent/conf/shoal-agent.logrotate` --> `/etc/logrotate.d/shoal-agent`
 	- `/usr/share/shoal-agent/conf/shoal-agent.sysconfig` --> `/etc/sysconfig/shoal/shoal-agent`
-	- `/usr/share/shoal-agent/conf/shoal-agent.service --? `/usr/lib/systemd/system/shoal-agent.service` (if necessary)
+	- `/usr/share/shoal-agent/conf/shoal-agent.service --> `/usr/lib/systemd/system/shoal-agent.service` (if necessary)
 5. Modify the settings in `shoal_agent.conf` as needed.
 6. Start shoal agent: `service shoal-agent start`
 
