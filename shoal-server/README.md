@@ -74,18 +74,28 @@ Configure the server and start it:
     visit localhost
 
 ###Using Pip
-(Needs update)
+_**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details.
+_**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and apache with a working version of mod_wsgi_
+
 1. `pip install shoal-server`
 
-2. Check settings in `shoal_server.conf` update as needed. Make sure RabbitMQ server is running.
+2. Move data and configuration files from `/usr/share/shoal-server/` to their proper locations:
+	-`/usr/share/shoal-server/conf/shoal_server.conf` --> `/etc/shoal/shoal_server.conf`   (file)
+	-`/usr/share/shoal-server/conf/shoal-server.logrotate --> `/etc/logrotate.d/shoal-server` (file)
+	-`/usr/share/shoal-server/scripts/` --> `/var/www/shoal/scripts/` (folder)
+	-`/usr/share/shoal-server/static/`  --> `/var/www/shoal/static/` (folder)
+	`/usr/share/shoal-server/templates/` --> `/var/www/shoal/templates/` (folder)
 
-4. Start `shoal-server`
+3. Check settings in `shoal_server.conf` update as needed. Make sure RabbitMQ server is running.
+
+4. Run the Apache service `service httpd start
   - _First run make take a few seconds to start as it needs to download the GeoLiteCity database (~12MB)._
 
-5. Visit `http://localhost:8080`
+5. Visit `http://localhost`
 
 ###Using Git (requires manual file placemet)
 _**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details.
+_**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and apache with a working version of mod_wsgi_
 
 1. `git clone git://github.com/hep-gc/shoal.git`
 2. `cd shoal/shoal-server/`
@@ -99,7 +109,7 @@ _**Note**: Some file permissions may need to be changed, check /var/log/shoal_se
 	`/usr/share/shoal-server/templates/` --> `/var/www/shoal/templates/` (folder)
 	
 5. Check settings in `shoal_server.conf` update as needed. Make sure RabbitMQ server is running.
-6. Start `shoal-server`
+6. Run the apache service `service httpd start`
  - _First run make take a few seconds to start as it needs to download the GeoLiteCity database (~12MB)._
  
-7. Visit `http://localhost:8080`
+7. Visit `http://localhost`
