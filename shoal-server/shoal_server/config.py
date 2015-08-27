@@ -46,26 +46,26 @@ earthradius = 6378
 
 #servers and repos to check for authentication
 paths = [
-    "http://cvmfs.racf.bnl.gov:8000/cvmfs/atlas/.cvmfswhitelist",
-    "http://cvmfs.racf.bnl.gov:8000/cvmfs/atlas-condb/.cvmfswhitelist",
-    "http://cvmfs.racf.bnl.gov:8000/cvmfs/sft/.cvmfswhitelist",
-    "http://cvmfs.racf.bnl.gov:8000/cvmfs/grid/.cvmfswhitelist",
-    "http://cvmfs.fnal.gov:8000/cvmfs/atlas/.cvmfswhitelist",
-    "http://cvmfs.fnal.gov:8000/cvmfs/atlas-condb/.cvmfswhitelist",
-    "http://cvmfs.fnal.gov:8000/cvmfs/sft/.cvmfswhitelist",
-    "http://cvmfs.fnal.gov:8000/cvmfs/grid/.cvmfswhitelist",
-#    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/atlas.cern.ch/.cvmfswhitelist",
-#    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
-#    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/sft.cern.ch/.cvmfswhitelist",
-#    "http://cvmfs02.grid.sinica.edu.tw:8000/cvmfs/grid.cern.ch/.cvmfswhitelist",
-    "http://cernvmfs.gridpp.rl.ac.uk:8000/cvmfs/atlas/.cvmfswhitelist",
-    "http://cernvmfs.gridpp.rl.ac.uk:8000/cvmfs/atlas-condb/.cvmfswhitelist",
-    "http://cernvmfs.gridpp.rl.ac.uk:8000/cvmfs/sft/.cvmfswhitelist",
-    "http://cernvmfs.gridpp.rl.ac.uk:8000/cvmfs/grid/.cvmfswhitelist"
-#    "http://cvmfs02.grid.sinica.edu.tw:8000/opt/atlas/.cvmfswhitelist",
-#    "http://cvmfs02.grid.sinica.edu.tw:8000/opt/atlas-condb/.cvmfswhitelist",
-#    "http://cvmfs02.grid.sinica.edu.tw:8000/opt/sft/.cvmfswhitelist",
-#    "http://cvmfs02.grid.sinica.edu.tw:8000/opt/grid/.cvmfswhitelist"
+"http://cvmfs-stratum-one.cern.ch/cvmfs/atlas.cern.ch/.cvmfswhitelist",
+"http://cvmfs-stratum-one.cern.ch/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
+"http://cvmfs-stratum-one.cern.ch/cvmfs/sft.cern.ch/.cvmfswhitelist",
+"http://cvmfs-stratum-one.cern.ch/cvmfs/grid.cern.ch/.cvmfswhitelist",
+"http://cernvmfs.gridpp.rl.ac.uk/cvmfs/atlas.cern.ch/.cvmfswhitelist",
+"http://cernvmfs.gridpp.rl.ac.uk/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
+"http://cernvmfs.gridpp.rl.ac.uk/cvmfs/sft.cern.ch/.cvmfswhitelist",
+"http://cernvmfs.gridpp.rl.ac.uk/cvmfs/grid.cern.ch/.cvmfswhitelist",
+"http://cvmfs.racf.bnl.gov/cvmfs/atlas.cern.ch/.cvmfswhitelist",
+"http://cvmfs.racf.bnl.gov/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
+"http://cvmfs.racf.bnl.gov/cvmfs/sft.cern.ch/.cvmfswhitelist",
+"http://cvmfs.racf.bnl.gov/cvmfs/grid.cern.ch/.cvmfswhitelist",
+"http://cvmfs.fnal.gov/cvmfs/atlas.cern.ch/.cvmfswhitelist",
+"http://cvmfs.fnal.gov/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
+"http://cvmfs.fnal.gov/cvmfs/sft.cern.ch/.cvmfswhitelist",
+"http://cvmfs.fnal.gov/cvmfs/grid.cern.ch/.cvmfswhitelist",
+"http://cvmfs02.grid.sinica.edu.tw/cvmfs/atlas.cern.ch/.cvmfswhitelist",
+"http://cvmfs02.grid.sinica.edu.tw/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
+"http://cvmfs02.grid.sinica.edu.tw/cvmfs/sft.cern.ch/.cvmfswhitelist",
+"http://cvmfs02.grid.sinica.edu.tw/cvmfs/grid.cern.ch/.cvmfswhitelist"
 ]
 
 
