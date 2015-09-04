@@ -264,6 +264,8 @@ def _is_available(ip, port):
     proxies = {
         "http":proxystring,
     }
+    badpaths=0
+    badflags=0
     for targeturl in paths:
         #if a url checks out testflag set to true, otherwise fails verification at end of loop
         testflag = False
@@ -275,15 +277,19 @@ def _is_available(ip, port):
             f = file.content
         except:
             #note that this would catch any RE errors aswell but they are specified in the config and all fit the pattern.
+            badpaths += 1
             logging.error(sys.exc_info()[1])
-            logging.error("Timeout or proxy error,on %s repo blacklisting:%s " % (targeturl, ip))
-            return False
+            logging.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing" % (targeturl, badpaths, len(paths)))
         
         for line in f.splitlines():
             if line.startswith('N'):
                 if repo in line:
                     testflag = True
         if testflag is False:
-            logging.error("%s failed verification on: %s" % (ip, targeturl))
-            return False
-    return True
+            badflags += 1
+            logging.error("%s failed verification on: %s. Currently %s out of %s IPs failing" % (ip, targeturl, badpaths, len(paths)))
+
+    if badpaths<len(paths) and badflags<len(paths):
+        return True
+    else:
+        return False
