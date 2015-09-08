@@ -292,5 +292,6 @@ def _is_available(ip, port):
     if badpaths<len(paths) and badflags<len(paths):
         return True
     else:
+        logging.error("%s/%s URLs and %s/%s IPs failed verification. %s has been blacklisted" % badpaths, len(paths), badflags, len(paths), targeturl)
         return False
         
