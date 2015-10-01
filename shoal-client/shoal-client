@@ -124,7 +124,6 @@ get_args()
     from that data, creates addresses to each squid, stores in cvmfs_http_proxy
     overwrites cvmfs config file with cvmfs_http_proxy if dump is not specified
 """
-## CVMFS = CERN Virtual Machine File System
 
 ## reads in server data (if it can be read in) into a dictionary called data
 try:
