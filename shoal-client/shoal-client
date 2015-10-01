@@ -24,7 +24,7 @@ dump = False
 closest_http_proxy = ''
 cvmfs_http_proxy = "CVMFS_HTTP_PROXY="
 
-logging.basicConfig(filename="shoal_client.log", format='%(asctime)s %(message)s')
+logging.basicConfig(filename="/var/log/shoal_client.log", format='%(asctime)s %(message)s')
 
 def get_args():
     """
