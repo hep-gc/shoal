@@ -149,7 +149,7 @@ cvmfs_http_proxy += "\"" + closest_http_proxy + default_http_proxy + "\"\n"
 
 ## if dump -> don't overwrite CVMFS config file
 if dump:
-    print "%s would have been written to the CVMFS config file", cvmfs_http_proxy
+    print cvmfs_http_proxy
 else:
     # attempt to read the cvmfs_config file, no point in continuing if it can't be read
     try:
