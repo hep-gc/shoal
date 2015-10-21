@@ -270,28 +270,30 @@ def _is_available(ip, port):
         #if a url checks out testflag set to true, otherwise fails verification at end of loop
         testflag = False
         try:
+            logging.info("Trying %s",targeturl)
             repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
             if repo is None:
                 repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
             file = requests.get(targeturl, proxies=proxies, timeout=2)
             f = file.content
+            for line in f.splitlines():
+                if line.startswith('N'):
+                    if repo in line:
+                        testflag = True
+            if testflag is False:
+                badflags = badflags + 1
+                logging.error("%s failed verification on: %s. Currently %s out of %s IPs failing" % (ip, targeturl, badflags, len(paths)))
         except:
             #note that this would catch any RE errors aswell but they are specified in the config and all fit the pattern.
-            badpaths += 1
-            logging.error(sys.exc_info()[1])
+            badpaths = badpaths + 1
+            #logging.error(sys.exc_info()[1])
             logging.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing" % (targeturl, badpaths, len(paths)))
-        
-        for line in f.splitlines():
-            if line.startswith('N'):
-                if repo in line:
-                    testflag = True
-        if testflag is False:
-            badflags += 1
-            logging.error("%s failed verification on: %s. Currently %s out of %s IPs failing" % (ip, targeturl, badpaths, len(paths)))
+        finally:
+            #Keep going   
+            logging.info("Next...")
 
     if badpaths<len(paths) and badflags<len(paths):
         return True
-    else:
-        logging.error("%s/%s URLs and %s/%s IPs failed verification. %s has been blacklisted" % badpaths, len(paths), badflags, len(paths), targeturl)
-        return False
-        
+    else:    
+        logging.error("%s/%s repos and %s/%s IPs failed verification. %s has been blacklisted" % (badpaths, len(paths), badflags, len(paths), targeturl))
+        return False        
