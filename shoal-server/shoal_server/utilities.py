@@ -114,10 +114,8 @@ def get_nearest_verified_squids(ip,count=10):
 
         #check if squid is verified or if verification is turned off in the config. or 
         #if there is no global access but the requester is from the same domain
-        if squid.verified or not config.squid_verification or (checkDomain(ip, squid.public_ip) and not (squid.global_access or squid.domain_access)):
-            #same domain only gets by on verified and must be checked to see if it is the same domian before it can be served
-            if not checkDomain(ip, squid.public_ip) and not squid.global_access and squid.domain_access:
-                continue
+        if ((squid.verified or not config.squid_verification) and squid.global_access) or (checkDomain(ip, squid.public_ip) and squid.domain_access):
+
             s_lat = float(squid.geo_data['latitude'])
             s_long = float(squid.geo_data['longitude'])
  
