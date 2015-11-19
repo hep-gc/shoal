@@ -61,13 +61,8 @@ paths = [
 "http://cvmfs.fnal.gov/cvmfs/atlas.cern.ch/.cvmfswhitelist",
 "http://cvmfs.fnal.gov/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
 "http://cvmfs.fnal.gov/cvmfs/sft.cern.ch/.cvmfswhitelist",
-"http://cvmfs.fnal.gov/cvmfs/grid.cern.ch/.cvmfswhitelist",
-"http://cvmfs02.grid.sinica.edu.tw/cvmfs/atlas.cern.ch/.cvmfswhitelist",
-"http://cvmfs02.grid.sinica.edu.tw/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
-"http://cvmfs02.grid.sinica.edu.tw/cvmfs/sft.cern.ch/.cvmfswhitelist",
-"http://cvmfs02.grid.sinica.edu.tw/cvmfs/grid.cern.ch/.cvmfswhitelist"
+"http://cvmfs.fnal.gov/cvmfs/grid.cern.ch/.cvmfswhitelist"
 ]
-
 
 # find config file by checking the directory of the calling script and sets path
 if  exists(abspath(sys.path[0]+"/shoal_server.conf")):
