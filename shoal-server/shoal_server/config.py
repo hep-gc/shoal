@@ -46,10 +46,6 @@ earthradius = 6378
 
 #servers and repos to check for authentication
 paths = [
-"http://cvmfs-stratum-one.cern.ch/cvmfs/atlas.cern.ch/.cvmfswhitelist",
-"http://cvmfs-stratum-one.cern.ch/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
-"http://cvmfs-stratum-one.cern.ch/cvmfs/sft.cern.ch/.cvmfswhitelist",
-"http://cvmfs-stratum-one.cern.ch/cvmfs/grid.cern.ch/.cvmfswhitelist",
 "http://cernvmfs.gridpp.rl.ac.uk/cvmfs/atlas.cern.ch/.cvmfswhitelist",
 "http://cernvmfs.gridpp.rl.ac.uk/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
 "http://cernvmfs.gridpp.rl.ac.uk/cvmfs/sft.cern.ch/.cvmfswhitelist",
