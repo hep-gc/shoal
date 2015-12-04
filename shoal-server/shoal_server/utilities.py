@@ -36,46 +36,11 @@ def get_geolocation(ip):
 
 def get_nearest_squids(ip,count=10):  
     """
-        Given an IP return a sorted list of nearest squids up to a given count
+        Previously this function returned list of all squids ranked by geographical distance.
+        It makes sence that the returned list should always be of verified or same domain squids.
+        For this reason, this function now simply calls  get_nearest_verified_squids.
     """
-    request_data = get_geolocation(ip)
-    if not request_data:
-        print "no geolocation"
-        return None
-    
-    try:
-        r_lat = request_data['latitude']
-        r_long = request_data['longitude']
-    except KeyError as e:
-        logger.error("Could not read request data:")
-        logger.error(e)
-        return None
-
-    nearest_squids = []
-    
-    ## computes the distance between each squid and the given ip address
-    ## and sorts them in a list of squids based on distance vs load correlation
-
-    earthrad = config.earthradius
-    b = config.squid_loadconstant
-    w = config.squid_distloadweight
-    maxload=-1
-    for squid in web.shoal.values():
-        try:
-            maxload = squid.maxload
-        except:
-            maxload = config.squid_max_load        
-
-        s_lat = float(squid.geo_data['latitude'])
-        s_long = float(squid.geo_data['longitude'])
-
-        distance = haversine(r_lat,r_long,s_lat,s_long)
-        distancecost = distance/(earthrad * 3.14159265359) * (w)
-        loadcost = ((squid.load/maxload)**b) * (1-w)
-        nearest_squids.append((squid,distancecost+loadcost))
-
-    squids = sorted(nearest_squids, key=lambda k: (k[1]))
-    return squids[:count]
+    return get_nearest_verified_squids(ip,count)
 
 def get_nearest_verified_squids(ip,count=10):  
     """
