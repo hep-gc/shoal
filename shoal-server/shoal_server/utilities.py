@@ -74,7 +74,7 @@ def get_nearest_verified_squids(ip,count=10):
         try:
             maxload = squid.maxload
         except:
-            #no maxload is sent from agent, using default value of 1GB/s in kilobytes
+            #no maxload is sent from agent, using default value
             maxload = config.squid_max_load        
 
         #check if squid is verified or if verification is turned off in the config. or 
