@@ -145,13 +145,13 @@ for i in range(0, len(data)):
         sys.exit(2)
 
 cvmfs_http_proxy = "\"" + closest_http_proxy + default_http_proxy + "\""
-logging.debug("Data parsing complete: %s" % cvmfs_http_proxy)
+logging.debug("Data parsing complete.")
 
 ## if dump, don't set CVMFS proxies
 if dump:
     print cvmfs_http_proxy
 else:
-    logging.debug("Executing cvmfs_talk proxy set")
+    logging.debug("Executing 'cvmfs_talk proxy set %s'" % cvmfs_http_proxy)
     try:
         p = Popen(["cvmfs_talk", "proxy", "set", cvmfs_http_proxy], stdout=PIPE, stderr=PIPE)
         output, errors = p.communicate()
