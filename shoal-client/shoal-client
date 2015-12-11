@@ -14,6 +14,7 @@ from shoal_client import config as config
 
 from optparse import OptionParser
 from urllib2 import urlopen
+from subprocess import Popen, PIPE
 
 server = config.shoal_server_url
 cvmfs_config = config.cvmfs_config
@@ -22,9 +23,9 @@ default_http_proxy = config.default_squid_proxy
 data = None
 dump = False 
 closest_http_proxy = ''
-cvmfs_http_proxy = "CVMFS_HTTP_PROXY="
 
 logging.basicConfig(filename="/var/log/shoal_client.log", format='%(asctime)s %(message)s')
+#logging.basicConfig(filename="/var/log/shoal_client.log", format='%(asctime)s %(message)s', level=logging.DEBUG)
 
 def get_args():
     """
@@ -36,10 +37,10 @@ def get_args():
     p = OptionParser()
     p.add_option("-s", "--server", action="store", type="string", dest="server", 
                  help="Also needs string for specifying the shoal server to use. " +
-                      "Takes presedence over the option in config file")
+                      "Takes precedence over the option in config file")
     p.add_option("-d", "--dump", action="store_true", dest="dump",
                  help="Print closest proxies to terminal for debugging "+ 
-                      "instead of over writing the CVMFS config file")
+                      "instead of overwriting the CVMFS config file")
     (options, args) = p.parse_args()
 
     if options.server:
@@ -120,67 +121,48 @@ def parseServerData(jsonStr):
 get_args()
 
 """
-    opens up a url to a server, parses server data from there
-    from that data, creates addresses to each squid, stores in cvmfs_http_proxy
-    overwrites cvmfs config file with cvmfs_http_proxy if dump is not specified
+    Reads data from a URL from a Shoal server, parses it, prepares a list of proxies
+    stored in cvmfs_http_proxy, executes command to set CVMFS proxies if dump is not specified.
 """
 
-## reads in server data (if it can be read in) into a dictionary called data
+## read server data (if it can be read) into a dictionary called data
 try:
     f = urlopen(server)
     # data = json.loads(f.read())
     data = parseServerData(f.read())
 except (urllib2.URLError,ValueError), e:
-    logging.error("Unable to open url. %s" % e)
-    data = None
+    logging.error("Unable to open URL: %s" % e)
+    sys.exit(1)
+logging.debug("Got data from %s" % server)
 
-if data:
-    ## iterates through the data dict and uses all hostname and squid_port keys
-    ## to create addresses for each squid in closest_http_proxy
-    for i in range(0, len(data)):
-        try:
-            closest_http_proxy += 'http://%s:%s;' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
-        except KeyError, e:
-            logging.error("The data returned from '%s' was missing the key: %s. Please ensure the url is running the latest Shoal-Server." % (server, e))
-            sys.exit(1)
+## iterate through the data dict and use all hostname and squid_port keys
+## to create addresses for squids in closest_http_proxy
+for i in range(0, len(data)):
+    try:
+        closest_http_proxy += 'http://%s:%s;' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
+    except KeyError, e:
+        logging.error("The data returned from '%s' was missing the key: %s. Please ensure the server is running the latest version of Shoal-Server." % (server, e))
+        sys.exit(2)
 
-cvmfs_http_proxy += "\"" + closest_http_proxy + default_http_proxy + "\"\n"
+cvmfs_http_proxy = "\"" + closest_http_proxy + default_http_proxy + "\""
+logging.debug("Data parsing complete.")
 
-## if dump -> don't overwrite CVMFS config file
+## if dump, don't set CVMFS proxies
 if dump:
     print cvmfs_http_proxy
 else:
-    # attempt to read the cvmfs_config file, no point in continuing if it can't be read
+    logging.debug("Executing 'cvmfs_talk proxy set %s'" % cvmfs_http_proxy)
     try:
-        f = open(cvmfs_config)
-        lines = f.readlines()
-    except:
-        logging.error("Could not open and read the CVMFS config file")
-        sys.exit(1)
-    f.close()
-    # create a list of tuples of lines/line numbers that have "CVMFS_HTTP_PROXY" 
-    CVMFS_proxy_lines = [t for t in enumerate(lines) if "CVMFS_HTTP_PROXY" in t[1]]
-    # if there is only one can just replace it with the new proxy
-    if len(CVMFS_proxy_lines) == 1:
-        lines[CVMFS_proxy_lines[0][0]] = cvmfs_http_proxy
-    # add a line if it doesn't exist
-    elif len(CVMFS_proxy_lines) == 0:
-        lines += cvmfs_http_proxy
-    # something is wrong with the CVMFS config; there are multiple entries
-    # fixing it by changing the first and removing the extras
-    else:
-        logging.error("CVMFS file had duplicate CVMFS_HTTP_PROXY entries;" +
-                      " writing the first deleting the rest")
-        lines[CVMFS_proxy_lines[0][0]] = cvmfs_http_proxy
-        for line in CVMFS_proxy_lines[1:]:
-            lines[line[0]] = ""
-    # open the file again this time for writing and replace its contents with the modified lines
-    try:
-        try:
-            f = open(cvmfs_config, "w")
-            f.writelines(lines)
-        except Exception:
-            logging.error("Could not write CVMFS config file")
-    finally:
-            f.close()
+        p = Popen(["cvmfs_talk", "proxy", "set", cvmfs_http_proxy], stdout=PIPE, stderr=PIPE)
+        output, errors = p.communicate()
+        if errors:
+            logging.error(errors)
+        if output:
+            logging.debug(output)
+        if p.returncode:
+            logging.error("Failed to set CVMFS proxies")
+        else:
+            logging.info("CVMFS proxies set to %s" % cvmfs_http_proxy)
+    except OSError as e:
+        logging.error("Could not execute cvmfs_talk: %s %s" % (e.strerror, e.errno))
 
