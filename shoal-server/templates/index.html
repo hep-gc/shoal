@@ -58,7 +58,6 @@ $$(document).ready(function(){
        </tr>
       </thead>
       <tbody>
-        <div id="flip">
         $for i,squid in enumerate(shoal):
             $ last_msg = int(now - squid.last_active)
             $ alive_time = int(now - squid.created); 
@@ -87,7 +86,7 @@ $$(document).ready(function(){
             $if squid.drift_detected == True:
                 $ state = 'error'
 
-            <tr class='$state'>
+            <tr class='$state' id="flip">
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
                 <td>$squid.hostname</td>
                 <td class="hidden-phone">$squid.public_ip</td>
@@ -106,10 +105,9 @@ $$(document).ready(function(){
                 <td style="text-align: center;">$verified</td>
                 <td>$access</td>
             </tr>
-        </div>
-        <div id="panel">
-          Diagnostics Info...
-        </div>
+            <tr class="$state" id="panel">
+                <td colspan="14">$squid.hostname</td>
+            </tr>
       </tbody>
     </table>
   </div>
