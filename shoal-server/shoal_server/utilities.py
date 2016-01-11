@@ -204,7 +204,7 @@ def verify(squid):
     try:
         if squid.global_access or squid.domain_access:
     
-            if not _is_available(str(squid):
+            if not _is_available(squid):
                 logging.info( "Failed Verification: %s " % str(squid.public_ip or squid.private_ip))
                 squid.verified = False
             else:
@@ -248,18 +248,21 @@ def _is_available(squid):
                         testflag = True
             if testflag is False:
                 badflags = badflags + 1
-                logging.error("%s failed verification on: %s. Currently %s out of %s IPs failing" % (ip, targeturl, badflags, len(paths)))
+                squid.error = "%s failed verification on: %s. Currently %s out of %s IPs failing" % (ip, targeturl, badflags, len(paths))
+                logging.error(squid.error)
         except:
             #note that this would catch any RE errors aswell but they are specified in the config and all fit the pattern.
             badpaths = badpaths + 1
             #logging.error(sys.exc_info()[1])
-            logging.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing" % (targeturl, badpaths, len(paths)))
+            squid.error = "Timeout or proxy error on %s repo. Currently %s out of %s repos failing" % (targeturl, badpaths, len(paths))
+            logging.error(squid.error)
         finally:
             #Keep going   
             logging.info("Next...")
 
     if badpaths<len(paths) and badflags<len(paths):
         return True
-    else:    
-        logging.error("%s/%s repos and %s/%s IPs failed verification. %s has been blacklisted" % (badpaths, len(paths), badflags, len(paths), targeturl))
+    else:
+        squid.error = "%s/%s repos and %s/%s IPs failed verification. %s has been blacklisted" % (badpaths, len(paths), badflags, len(paths), targeturl)
+        logging.error(squid.error)
         return False        
