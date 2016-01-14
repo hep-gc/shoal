@@ -3,27 +3,15 @@ $def with (now, total, shoal, page, pages, size)
 <html>
 <head>
 <script src="/static/js/jquery.min.js"></script>
-<script> 
-$$(document).ready(function(){
-    $$("#flip").click(function(){
-        $$("#panel").slideToggle("slow");
+<script>
+$$(document).ready(function () {
+    $$(".squid-list").each(function (index) {
+        $$(".squid-row"+index).on('click', function(){
+            $$(".squid-panel"+index).toggle();
+        });
     });
 });
 </script>
-
-<style> 
-#panel, #flip {
-    padding: 5px;
-    text-align: center;
-    background-color: #e5eecc;
-    border: solid 1px #c3c3c3;
-}
-
-#panel {
-    padding: 50px;
-    display: none;
-}
-</style>
 </head>
 <body>
 
@@ -85,8 +73,7 @@ $$(document).ready(function(){
                     $ state = 'warning'
             $if squid.drift_detected == True:
                 $ state = 'error'
-
-            <tr class='$state' id="flip">
+            <tr class="$state squid-row$i squid-list">
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
                 <td>$squid.hostname</td>
                 <td class="hidden-phone">$squid.public_ip</td>
@@ -105,7 +92,7 @@ $$(document).ready(function(){
                 <td style="text-align: center;">$verified</td>
                 <td>$access</td>
             </tr>
-            <tr class="$state" id="panel">
+            <tr class="$state squid-panel$i" style="display:none">
                 <td colspan="14">$squid.error</td>
             </tr>
       </tbody>
