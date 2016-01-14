@@ -41,7 +41,7 @@ class SquidNode(object):
         self.drift_detected = drift_detected
         self.drift_time = drift_time
         self.last_verified = 0
-        self.error = ''
+        self.error = 'All systems OK!'
 
     def update(self, load, drift_detected, drift_time):
         """

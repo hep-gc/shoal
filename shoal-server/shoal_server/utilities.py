@@ -248,14 +248,12 @@ def _is_available(squid):
                         testflag = True
             if testflag is False:
                 badflags = badflags + 1
-                squid.error = "%s failed verification on: %s. Currently %s out of %s IPs failing" % (ip, targeturl, badflags, len(paths))
-                logging.error(squid.error)
+                logging.error("%s failed verification on: %s. Currently %s out of %s IPs failing" % (ip, targeturl, badflags, len(paths)))
         except:
             #note that this would catch any RE errors aswell but they are specified in the config and all fit the pattern.
             badpaths = badpaths + 1
             #logging.error(sys.exc_info()[1])
-            squid.error = "Timeout or proxy error on %s repo. Currently %s out of %s repos failing" % (targeturl, badpaths, len(paths))
-            logging.error(squid.error)
+            logging.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing" % (targeturl, badpaths, len(paths)))
         finally:
             #Keep going   
             logging.info("Next...")
@@ -263,6 +261,6 @@ def _is_available(squid):
     if badpaths<len(paths) and badflags<len(paths):
         return True
     else:
-        squid.error = "%s/%s repos and %s/%s IPs failed verification. %s has been blacklisted" % (badpaths, len(paths), badflags, len(paths), targeturl)
+        squid.error = "%s/%s repos and %s/%s IPs failed verification. %s has been blacklisted" % (badpaths, len(paths), badflags, len(paths), squid.hostname)
         logging.error(squid.error)
         return False        
