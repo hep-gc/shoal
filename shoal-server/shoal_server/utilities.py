@@ -261,6 +261,9 @@ def _is_available(squid):
     if badpaths<len(paths) and badflags<len(paths):
         return True
     else:
-        squid.error = "%s/%s repos and %s/%s IPs failed verification. %s has been blacklisted" % (badpaths, len(paths), badflags, len(paths), squid.hostname)
+        if squid.domain_access:
+            squid.error = "%s is a local access only Squid. Cannot verify..."  % (squid.hostname)
+        else:
+            squid.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. %s has been blacklisted" % (badpaths, len(paths), badflags, len(paths), squid.hostname)
         logging.error(squid.error)
         return False        
