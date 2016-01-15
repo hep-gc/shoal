@@ -1,5 +1,5 @@
 %define name shoal-client
-%define version 0.6.1
+%define version 0.6.2
 %define unmangled_version 0.6.1
 %define release 1
 
@@ -11,7 +11,7 @@ Source0: %{name}-%{unmangled_version}.tar.gz
 License: 'GPL3' or 'Apache 2'
 Group: Development/Libraries
 BuildArch: noarch
-Vendor: Ian Gable <igable@uvic.ca>
+Vendor: UVic HEPRC <rsobie@uvic.ca>
 Requires: python >= 2.4
 Url: http://github.com/hep-gc/shoal
 

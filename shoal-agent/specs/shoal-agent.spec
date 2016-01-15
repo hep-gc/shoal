@@ -11,7 +11,7 @@ Source0: %{name}-%{unmangled_version}.tar.gz
 License: 'GPL3' or 'Apache 2'
 Group: Development/Libraries
 BuildArch: noarch
-Vendor: Ian Gable <igable@uvic.ca>
+Vendor: UVic HEPRC <rsobie@uvic.ca>
 Requires: python-netifaces >= 0.5 
 Requires: python-pika >= 0.9.5
 %if 0%{?el6}
