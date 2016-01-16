@@ -261,8 +261,11 @@ def _is_available(squid):
     if badpaths<len(paths) and badflags<len(paths):
         return True
     else:
-        if squid.domain_access:
-            squid.error = "%s is a local access only Squid. Cannot verify..."  % (squid.hostname)
+        if squid.domain_access and squid.global_access:
+            squid.error = "Configuration confilct detected! %s is configued for both Local Access Only and Global Access."  % (squid.hostname)
+
+        if squid.domain_access and not squid.global_access:
+            squid.error = "Squid is configured for Local Access Only. Cannot verify %s"  % (squid.hostname)
         else:
             squid.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. %s has been blacklisted" % (badpaths, len(paths), badflags, len(paths), squid.hostname)
         logging.error(squid.error)
