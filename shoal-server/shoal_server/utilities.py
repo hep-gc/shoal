@@ -262,7 +262,7 @@ def _is_available(squid):
         return True
     else:
         if squid.domain_access and squid.global_access:
-            squid.error = "Configuration confilct detected! %s is configued for both Local Access Only and Global Access."  % (squid.hostname)
+            squid.error = "Configuration conflict detected! %s is configured for both Local Access Only and Global Access."  % (squid.hostname)
 
         if squid.domain_access and not squid.global_access:
             squid.error = "Squid is configured for Local Access Only. Cannot verify %s"  % (squid.hostname)
