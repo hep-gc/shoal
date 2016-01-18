@@ -131,7 +131,7 @@ try:
     # data = json.loads(f.read())
     data = parseServerData(f.read())
 except (urllib2.URLError,ValueError), e:
-    logging.error("Unable to open URL: %s" % e)
+    logging.error("Unable to open URL %s : %s" % (server, e))
     sys.exit(1)
 logging.debug("Got data from %s" % server)
 
