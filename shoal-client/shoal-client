@@ -160,7 +160,7 @@ else:
         if output:
             logging.debug(output)
         if p.returncode:
-            logging.error("Failed to set CVMFS proxies")
+            logging.error("WARNING: CVMFS proxies may not have been set correctly for all repos")
             sys.exit(p.returncode)
         else:
             logging.info("CVMFS proxies set to %s" % cvmfs_http_proxy)
