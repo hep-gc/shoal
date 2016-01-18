@@ -161,8 +161,10 @@ else:
             logging.debug(output)
         if p.returncode:
             logging.error("Failed to set CVMFS proxies")
+            sys.exit(p.returncode)
         else:
             logging.info("CVMFS proxies set to %s" % cvmfs_http_proxy)
     except OSError as e:
-        logging.error("Could not execute cvmfs_talk: %s %s" % (e.strerror, e.errno))
+        logging.error("Could not execute cvmfs_talk: %s" % e.strerror)
+        sys.exit(e.errno)
 
