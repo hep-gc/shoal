@@ -125,6 +125,7 @@ def main():
 
     public_ip, private_ip = get_ip_addresses()
     external_ip = config.external_ip
+    dnsname = config.dnsname
 
     #set the data to the first valid IP address
     try:
@@ -147,6 +148,13 @@ def main():
     else:
         logging.error("Shoal-Agent was unable to find a public IP or external IP for this squid. Please set an external IP in shoal-agent config file.")
         sys.exit(1)
+
+
+    if dnsname: 
+        try:
+            data['hostname'] = dnsname
+        except KeyError:
+            pass
 
     # assumes only one interface is used by shoal-agent
     # the user specifying an interface to use takes priority
