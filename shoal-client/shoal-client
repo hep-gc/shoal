@@ -131,7 +131,7 @@ try:
     # data = json.loads(f.read())
     data = parseServerData(f.read())
 except (urllib2.URLError,ValueError), e:
-    logging.error("Unable to open URL: %s" % e)
+    logging.error("Unable to open URL %s : %s" % (server, e))
     sys.exit(1)
 logging.debug("Got data from %s" % server)
 
@@ -160,9 +160,11 @@ else:
         if output:
             logging.debug(output)
         if p.returncode:
-            logging.error("Failed to set CVMFS proxies")
+            logging.error("WARNING: CVMFS proxies may not have been set correctly for all repos")
+            sys.exit(p.returncode)
         else:
             logging.info("CVMFS proxies set to %s" % cvmfs_http_proxy)
     except OSError as e:
-        logging.error("Could not execute cvmfs_talk: %s %s" % (e.strerror, e.errno))
+        logging.error("Could not execute cvmfs_talk: %s" % e.strerror)
+        sys.exit(e.errno)
 
