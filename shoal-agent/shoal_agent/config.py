@@ -25,6 +25,7 @@ amqp_ca_cert = ''
 amqp_client_cert = ''
 amqp_client_key = ''
 external_ip = None
+dnsname = None
 interface = None
 interval = 30
 cloud = ''
@@ -141,6 +142,9 @@ if config_file.has_option("general", "squid_port"):
  
 if config_file.has_option("general", "external_ip"):
     external_ip = config_file.get("general", "external_ip")
+
+if config_file.has_option("general", "dnsname"):
+    dnsname = config_file.get("general", "dnsname")
 
 if config_file.has_option("general", "interface"):
     interface = config_file.get("general", "interface")
