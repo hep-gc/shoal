@@ -271,8 +271,8 @@ def _is_available(squid):
             file = requests.get(goodurl, proxies=proxy, timeout=2):
         except:
             squid.error = "DNS configuration error! Squid IP is OK, but squid URL is wrong."
+            logging.error(squid.error)
             return False
-
         return True
     else:
         if squid.domain_access and squid.global_access:
