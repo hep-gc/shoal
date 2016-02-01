@@ -223,6 +223,7 @@ def _is_available(squid):
     """
     ip = str(squid.public_ip or squid.private_ip)
     port = str(squid.squid_port)
+    hostname = squid.hostname
 
     paths = config.paths
     proxystring = "http://%s:%s" % (ip, port)
@@ -246,6 +247,7 @@ def _is_available(squid):
                 if line.startswith('N'):
                     if repo in line:
                         testflag = True
+                        goodurl = targeturl
             if testflag is False:
                 badflags = badflags + 1
                 logging.error("%s failed verification on: %s. Currently %s out of %s IPs failing" % (ip, targeturl, badflags, len(paths)))
@@ -259,14 +261,26 @@ def _is_available(squid):
             logging.info("Next...")
 
     if badpaths<len(paths) and badflags<len(paths):
+        #if all the IP is able to connect to the test URLs, then check the actual squid URL to make sure both IP and URL are good.
+        try:
+            proxystring = "http://%s:%s" % (hostname, port)
+            #set proxy
+            proxy = {
+                "http":proxystring,
+            }
+            file = requests.get(goodurl, proxies=proxy, timeout=2):
+        except:
+            squid.error = "DNS configuration error! Squid IP is OK, but squid URL is wrong."
+            return False
+
         return True
     else:
         if squid.domain_access and squid.global_access:
-            squid.error = "Configuration conflict detected! %s is configured for both Local Access Only and Global Access."  % (squid.hostname)
+            squid.error = "Configuration conflict detected! %s is configured for both Local Access Only and Global Access."  % (hostname)
 
         if squid.domain_access and not squid.global_access:
-            squid.error = "Squid is configured for Local Access Only. Cannot verify %s"  % (squid.hostname)
+            squid.error = "Squid is configured for Local Access Only. Cannot verify %s"  % (hostname)
         else:
-            squid.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. %s has been blacklisted" % (badpaths, len(paths), badflags, len(paths), squid.hostname)
+            squid.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. %s has been blacklisted" % (badpaths, len(paths), badflags, len(paths), hostname)
         logging.error(squid.error)
         return False        
