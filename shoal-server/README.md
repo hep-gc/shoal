@@ -11,11 +11,8 @@ Clients can use the Shoal Server RESTful API to retrieve a list of nearest squid
 - To retrieve a variable size of nearest verified squids you can use `http://localhost/nearestverified/<# of squids>`. For example to retrieve the closest 20 squid servers you can use:
  - `http://localhost/nearestverified/20`
 
-- To get a list of the default 5 nearest squids use:
- - `http://localhost/nearest`
-- To retrieve a variable size of nearest squids you can use `http://localhost/nearest/<# of squids>`. For example to retrieve the closest 20 squid servers you can use:
- - `http://localhost/nearest/20`
- 
+- The extension 'nearest' returns the same as 'nearestverified', specifically `http://localhost/nearestverified/20` is the same as `http://localhost/nearest/20`.  Previously these did different things, but their functionality has now been merged. Both are kept to maintain compatibility with previous versions of Shoal Client.
+
 - To get a list of all squids stored in shoal use:
   - `http://localhost/all`
  
