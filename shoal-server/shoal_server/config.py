@@ -5,6 +5,7 @@ import ConfigParser
 # Shoal Options Module
 """Setup shoal using config file.
    setup will look for a configuration file specified in the following order:
+     enviroment variable "SHOAL_SERVER_CONFIG"
      directory of shoal-server
      /etc/shoal/shoal_server.conf
      ~/.shoal/shoal_server.conf
@@ -65,7 +66,9 @@ paths = [
 ]
 
 # find config file by checking the directory of the calling script and sets path
-if  exists(abspath(sys.path[0]+"/shoal_server.conf")):
+if  exists(os.environ["SHOAL_SERVER_CONFIG"]):
+    path = os.environ["SHOAL_SERVER_CONFIG"]
+elif exists(abspath(sys.path[0]+"/shoal_server.conf")):
     path = abspath(sys.path[0]+"/shoal_server.conf")
 elif exists("/etc/shoal/shoal_server.conf"):
     path = "/etc/shoal/shoal_server.conf"
