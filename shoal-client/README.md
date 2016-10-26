@@ -24,7 +24,11 @@ First install [EPEL](http://fedoraproject.org/wiki/EPEL)
 
 Get the Shoal yum repository:
 
-    sudo curl http://shoal.heprc.uvic.ca/repo/shoal.repo -o /etc/yum.repos.d/shoal.repo
+    For SL6:
+    sudo curl http://shoal.heprc.uvic.ca/repo/shoal-sl6x.repo -o /etc/yum.repos.d/shoal.repo
+
+    For SL7:
+    sudo curl http://shoal.heprc.uvic.ca/repo/shoal-sl7x.repo -o /etc/yum.repos.d/shoal.repo
    
 Install the agent:
 
