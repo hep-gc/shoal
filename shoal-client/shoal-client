@@ -17,7 +17,6 @@ from urllib2 import urlopen
 from subprocess import Popen, PIPE
 
 server = config.shoal_server_url
-cvmfs_config = config.cvmfs_config
 default_http_proxy = config.default_squid_proxy
 
 data = None
