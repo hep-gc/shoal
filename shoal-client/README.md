@@ -32,7 +32,7 @@ Get the Shoal yum repository:
    
 Install the agent:
 
-	sudo rpm --import http://hepnetcanada.ca/pubkeys/igable.asc
+	sudo rpm --import http://shoal.heprc.uvic.ca/repo/pubkeys/heprc.asc
     sudo yum install shoal-client
 
 Configure the client to use a shoal server:

@@ -64,7 +64,7 @@ Get the Shoal yum repository:
    
 Install the server:
 
-    sudo rpm --import http://hepnetcanada.ca/pubkeys/igable.asc
+    sudo rpm --import http://shoal.heprc.uvic.ca/repo/pubkeys/heprc.asc
     sudo yum install shoal-server
     
 Configure the server and start it:
