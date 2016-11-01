@@ -22,6 +22,7 @@ default_http_proxy = config.default_squid_proxy
 data = None
 dump = False 
 closest_http_proxy = ''
+env_proxy = ''
 no_shoal_server = False
 
 #logging.basicConfig(filename="/var/log/shoal_client.log", format='%(asctime)s %(message)s')
@@ -125,6 +126,15 @@ get_args()
     stored in cvmfs_http_proxy, executes command to set CVMFS proxies if dump is not specified.
 """
 
+## try to load default value from env variable
+try:
+    logging.info("Checking Enviroment Variable for default proxy")
+    env_proxy = os.environ['HTTP_PROXY']
+    logging.info("Enviroment Variable located, adding: %s as default proxy" % env_proxy)
+
+except KeyError as e:
+    logging.error("No HTTP_PROXY enviroment variable found")
+
 ## read server data (if it can be read) into a dictionary called data
 try:
     f = urlopen(server)
@@ -137,6 +147,7 @@ except (urllib2.URLError,ValueError), e:
     # refactoring instead of injecting code here to reuse the proceeding code.
     #checkEnvVariable()
     #checkConfig()
+    logging.error("Unable to reach shoal-server, reverting to defaults")
     no_shoal_server = True
     #sys.exit(1)
 
@@ -145,6 +156,7 @@ if not no_shoal_server:
 
     ## iterate through the data dict and use all hostname and squid_port keys
     ## to create addresses for squids in closest_http_proxy
+    logging.info("Received data from server, processing.")
     for i in range(0, len(data)):
         try:
             closest_http_proxy += 'http://%s:%s;' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
@@ -152,11 +164,12 @@ if not no_shoal_server:
             logging.error("The data returned from '%s' was missing the key: %s. Please ensure the server is running the latest version of Shoal-Server." % (server, e))
             sys.exit(2)
 
-    cvmfs_http_proxy = "\"" + closest_http_proxy + default_http_proxy + "\""
+    cvmfs_http_proxy = "\"" + closest_http_proxy + default_http_proxy + env_proxy + "\""
     logging.debug("Data parsing complete.")
-
+    logging.info("Setting %s as proxy" % cvmfs_http_proxy)
     ## if dump, don't set CVMFS proxies
     if dump:
+        logging.info("Dumping proxy string")
         print cvmfs_http_proxy
     else:
         logging.debug("Executing 'cvmfs_talk proxy set %s'" % cvmfs_http_proxy)
@@ -180,19 +193,28 @@ if not no_shoal_server:
 #First check if there is a value in the env variable
 #Second check if there is a valid default in shoal_client.conf
 else:
-    try:
-        logging.info("Checking Enviroment Variable for default proxy")
-        env_proxy = os.environ['HTTP_PROXY']
-        logging.info("Enviroment Variable located setting: %s as proxy" % env_proxy)
-        '''
-         set proxy here
-        '''
-        sys.exit(1)
-    except KeyError as e:
-        logging.error("No HTTP_PROXY enviroment variable found")
 
-    try:
-        logging.info("Checking client config for default proxy")
-        sys.exit(1)
-    except:
-        sys.exit(1)
+
+    cvmfs_http_proxy = "\"" + default_http_proxy + env_proxy + "\""
+    logging.info("Setting %s as proxy" % cvmfs_http_proxy)
+    ## if dump, don't set CVMFS proxies
+    if dump:
+        logging.info("Dumping proxy string")
+        print cvmfs_http_proxy
+    else:
+        logging.debug("Executing 'cvmfs_talk proxy set %s'" % cvmfs_http_proxy)
+        try:
+            p = Popen(["cvmfs_talk", "proxy", "set", cvmfs_http_proxy], stdout=PIPE, stderr=PIPE)
+            output, errors = p.communicate()
+            if errors:
+                logging.error(errors)
+            if output:
+                logging.debug(output)
+            if p.returncode:
+                logging.error("WARNING: CVMFS proxies may not have been set correctly for all repos")
+                sys.exit(p.returncode)
+            else:
+                logging.info("CVMFS proxies set to %s" % cvmfs_http_proxy)
+        except OSError as e:
+            logging.error("Could not execute cvmfs_talk: %s" % e.strerror)
+            sys.exit(e.errno)
