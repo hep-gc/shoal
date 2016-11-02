@@ -1,6 +1,7 @@
 from os.path import join, expanduser, exists, abspath
 import sys
 import ConfigParser
+import os
 
 # Shoal Options Module
 """Setup shoal using config file.
@@ -66,8 +67,14 @@ paths = [
 ]
 
 # find config file by checking the directory of the calling script and sets path
-if  exists(os.environ["SHOAL_SERVER_CONFIG"]):
-    path = os.environ["SHOAL_SERVER_CONFIG"]
+srv_conf_path = ''
+try:
+    srv_conf_path = os.environ["SHOAL_SERVER_CONFIG"]
+except:
+    pass
+
+if  exists(srv_conf_path):
+    path = srv_conf_path
 elif exists(abspath(sys.path[0]+"/shoal_server.conf")):
     path = abspath(sys.path[0]+"/shoal_server.conf")
 elif exists("/etc/shoal/shoal_server.conf"):
