@@ -138,7 +138,7 @@ except KeyError as e:
 
 ## read server data (if it can be read) into a dictionary called data
 try:
-    f = urlopen(server)
+    f = urlopen(server, timeout = 1)
     # data = json.loads(f.read())
     data = parseServerData(f.read())
     logging.debug("Got data from %s" % server)
