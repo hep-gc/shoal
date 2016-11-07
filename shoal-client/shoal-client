@@ -164,7 +164,7 @@ if not no_shoal_server:
             logging.error("The data returned from '%s' was missing the key: %s. Please ensure the server is running the latest version of Shoal-Server." % (server, e))
             sys.exit(2)
 
-    cvmfs_http_proxy = "\"" + closest_http_proxy + default_http_proxy + env_proxy + "\""
+    cvmfs_http_proxy = "\"" + closest_http_proxy + env_proxy + default_http_proxy + "\""
     logging.debug("Data parsing complete.")
     logging.info("Setting %s as proxy" % cvmfs_http_proxy)
     ## if dump, don't set CVMFS proxies
@@ -195,7 +195,7 @@ if not no_shoal_server:
 else:
 
 
-    cvmfs_http_proxy = "\"" + default_http_proxy + env_proxy + "\""
+    cvmfs_http_proxy = "\"" + env_proxy + default_http_proxy + "\""
     logging.info("Setting %s as proxy" % cvmfs_http_proxy)
     ## if dump, don't set CVMFS proxies
     if dump:
