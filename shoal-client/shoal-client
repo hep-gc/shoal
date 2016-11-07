@@ -131,7 +131,8 @@ try:
     logging.info("Checking Enviroment Variable for default proxy")
     env_proxy = os.environ['HTTP_PROXY']
     logging.info("Enviroment Variable located, adding: %s as default proxy" % env_proxy)
-    env_proxy += ";"
+    if env_proxy != "":
+        env_proxy += ";"
 
 except KeyError as e:
     logging.error("No HTTP_PROXY enviroment variable found")
