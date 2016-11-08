@@ -269,7 +269,19 @@ def _is_available(squid):
                 "http":proxystring,
             }
             file = requests.get(goodurl, proxies=proxy, timeout=2)
-        except:
+        except ConnectionError:
+            squid.error = "DNS failure or refused connection."
+            logging.error(squid.error)
+            return False
+        except HTTPError:
+            squid.error = "Invalid HTTP response."
+            logging.error(squid.error)
+            return False
+        except Timeout:
+            squid.error = "Timeout out on: " + proxy
+            logging.error(squid.error)
+            return False
+        except RquestException:
             squid.error = "DNS configuration error! Squid IP is OK, but squid URL is wrong."
             logging.error(squid.error)
             return False
