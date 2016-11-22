@@ -578,7 +578,7 @@ class RabbitMQConsumer(Thread):
             
             public_ip = squids[squid]["ips"][0].split(':')[0]
             squid_port = squids[squid]["ips"][0].split(':')[1]
-            private_ip, external_ip = None
+            private_ip = external_ip = None
             load = 0
             geo_data = utilities.get_geolocation(public_ip)
             verified, globalaccess, domainaccess, drift_detected = False
