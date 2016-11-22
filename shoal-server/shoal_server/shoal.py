@@ -20,7 +20,7 @@ from shoal_server import utilities
 """
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, drift_detected, drift_time, max_load=122000, last_active=time()):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, drift_detected, drift_time, max_load=122000, last_active=time(), static=False):
         """
         constructor for SquidNode, time created is current time
         """
@@ -42,6 +42,7 @@ class SquidNode(object):
         self.drift_time = drift_time
         self.last_verified = 0
         self.error = 'All systems OK!'
+        self.static = static
 
     def update(self, load, drift_detected, drift_time):
         """
@@ -241,7 +242,8 @@ class RabbitMQConsumer(Thread):
         self._connection = None
         self._channel = None
         self._closing = False
-        self._consumer_tag = None 
+        self._consumer_tag = None
+        get_static_squids("unused.dummy.url") 
 
     def connect(self):
         """
@@ -549,7 +551,44 @@ class RabbitMQConsumer(Thread):
                 new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, drift_detected, drift_time, maxload, time_sent)
                 self.shoal[key] = new_squid
         self.acknowledge_message(basic_deliver.delivery_tag)
-        
+
+
+"""
+Retrieves a list of squids from cern and integrates them into shoal as "static squids"
+"""        
+    def get_static_squids(url):
+
+        static_squids_url = "http://wlcg-squid-monitor.cern.ch/grid-squids.json"
+
+        file = requests.get(static_squids_url, timeout=2)
+        jsontext = file.content
+        squids= json.loads(jsontext)
+        for squid in squids:
+            print(squid)
+            print(squids[squid]["name"])
+            print(squids[squid]["source"])
+            print(squids[squid]["ips"])
+            print("\n")
+
+            #needs try block for key errors
+
+            #Squid node variables
+            key = squid + squids[squid]["name"]
+            hostname = squid
+            
+            public_ip = squids[squid]["ips"][0].split(':')[0]
+            squid_port = squids[squid]["ips"][0].split(':')[1]
+            private_ip, external_ip = None
+            load = 0
+            geo_data = utilities.get_geolocation(public_ip)
+            verified, globalaccess, domainaccess, drift_detected = False
+            drift_time = 0
+            time_sent = time()
+            maxload = 1 #dummy value, will always be at load 0/1
+            static = True
+
+            new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, drift_detected, drift_time, maxload, time_sent)
+            self.shoal[key] = new_squid
         
 """
     SquidVerifier runs on an interval specified in the config file. Each interval it checks each
