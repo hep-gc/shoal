@@ -555,7 +555,7 @@ class RabbitMQConsumer(Thread):
     """
     Retrieves a list of squids from cern and integrates them into shoal as "static squids"
     """
-    def get_static_squids(url):
+    def get_static_squids(self, url):
 
         static_squids_url = "http://wlcg-squid-monitor.cern.ch/grid-squids.json"
 
