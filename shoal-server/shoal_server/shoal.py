@@ -243,7 +243,7 @@ class RabbitMQConsumer(Thread):
         self._channel = None
         self._closing = False
         self._consumer_tag = None
-        get_static_squids("unused.dummy.url") 
+        self.get_static_squids("unused.dummy.url") 
 
     def connect(self):
         """
