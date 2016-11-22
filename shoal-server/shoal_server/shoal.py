@@ -4,6 +4,7 @@ import os
 import web
 import json
 import urllib
+import requests
 import logging
 import pika
 import socket
