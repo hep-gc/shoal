@@ -552,10 +552,9 @@ class RabbitMQConsumer(Thread):
                 self.shoal[key] = new_squid
         self.acknowledge_message(basic_deliver.delivery_tag)
 
-
-"""
-Retrieves a list of squids from cern and integrates them into shoal as "static squids"
-"""        
+    """
+    Retrieves a list of squids from cern and integrates them into shoal as "static squids"
+    """
     def get_static_squids(url):
 
         static_squids_url = "http://wlcg-squid-monitor.cern.ch/grid-squids.json"
