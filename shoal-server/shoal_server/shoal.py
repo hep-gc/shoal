@@ -9,6 +9,7 @@ import logging
 import pika
 import socket
 import uuid
+import re
 
 from time import time, sleep
 from threading import Thread
