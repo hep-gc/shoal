@@ -78,18 +78,17 @@ $$(document).ready(function () {
                 $ agent_enabled = '✔' 
             $else:
                 $ agent_enabled = '✘'
-            $if squid.geo_data['country_name'] is None:
+            $if squid.geo_data is None:
+                $ latitude = 'Unknown'
+                $ longitude = 'Unknown'
                 $ country_name = 'Unknown'
+                $ city = 'Unknown'
             $else:
                 $ country_name = squid.geo_data['country_name']
-            $if squid.geo_data['latitude'] is None:
-                $ latitude = 'Unknown'
-            $else:
                 $ latitude = squid.geo_data['latitude']
-            $if squid.geo_data['longitude'] is None:
-                $ longitude = 'Unknown'
-            $else:
                 $ longitude = squid.geo_data['longitude']
+                $ city = $squid.geo_data['city']
+
 
             <tr class="$state squid-row$i squid-list">
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
@@ -97,10 +96,10 @@ $$(document).ready(function () {
                 <td class="hidden-phone">$squid.public_ip</td>
                 <td class="hidden-phone">$squid.private_ip</td>
                 <td>$squid.load kB/s</td>
-                <td>$squid.geo_data['city']</td>
-                <td class="hidden-phone">$squid.geo_data['country_name']</td>
-                <td class="hidden-phone">$squid.geo_data['latitude']</td>
-                <td class="hidden-phone">$squid.geo_data['longitude']</td>
+                <td>$city</td>
+                <td class="hidden-phone">$country_name</td>
+                <td class="hidden-phone">$latitude</td>
+                <td class="hidden-phone">$longitude</td>
                 <td class="hidden-phone">$(last_msg)s</td>
                 <td>$(hour)h$(minute)m$(second)s</td>
                 $if squid.drift_detected == True:
