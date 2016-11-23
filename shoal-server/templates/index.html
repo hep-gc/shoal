@@ -78,6 +78,8 @@ $$(document).ready(function () {
                 $ agent_enabled = '✔' 
             $else:
                 $ agent_enabled = '✘' 
+            $if last_msg is none:
+                $ last_msg = "N/A"
             <tr class="$state squid-row$i squid-list">
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
                 <td>$squid.hostname</td>
