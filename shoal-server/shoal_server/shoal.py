@@ -583,7 +583,7 @@ class RabbitMQConsumer(Thread):
             #Here we check if we are getting an actual IP or just a hostname
             #if it doesnt match the regex it is a hostname and we can resolve the real IP
             if re.match("\d+\.\d+.\d+.\d+:\d+", public_ip) is None:
-                actual_ip = socket.gethostbyname(hostname)
+                actual_ip = socket.gethostbyname(public_ip)
                 public_ip = actual_ip
 
             squid_port = squids[squid]["ips"][0].split(':')[1]
