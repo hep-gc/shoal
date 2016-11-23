@@ -48,7 +48,10 @@ $$(document).ready(function () {
       </thead>
       <tbody>
         $for i,squid in enumerate(shoal):
-            $ last_msg = int(now - squid.last_active)
+            $ if squid.last_active is not None:
+                $ last_msg = int(now - squid.last_active)
+            $ else:
+                $ last_msg = "N/A"
             $ alive_time = int(now - squid.created); 
             $ hour = int(alive_time/60/60)
             $ minute = (alive_time - hour*60*60) / 60
@@ -77,9 +80,8 @@ $$(document).ready(function () {
             $if squid.agent_enabled == True:
                 $ agent_enabled = '✔' 
             $else:
-                $ agent_enabled = '✘' 
-            $if last_msg is none:
-                $ last_msg = "N/A"
+                $ agent_enabled = '✘'
+
             <tr class="$state squid-row$i squid-list">
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
                 <td>$squid.hostname</td>
