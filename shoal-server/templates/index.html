@@ -42,6 +42,7 @@ $$(document).ready(function () {
           <th>Alive</th>
           <th>Clock Sync</th>
           <th>Verified</th>
+          <th>Agent Enabled</th>
           <th>Access Level</th>
        </tr>
       </thead>
@@ -73,6 +74,10 @@ $$(document).ready(function () {
                     $ state = 'warning'
             $if squid.drift_detected == True:
                 $ state = 'error'
+            $if squid.agent_enabled == True:
+                $ agent_enabled = '✔' 
+            $else:
+                $ agent_enabled = '✘' 
             <tr class="$state squid-row$i squid-list">
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
                 <td>$squid.hostname</td>
@@ -90,6 +95,7 @@ $$(document).ready(function () {
                 $else:
                     <td style="text-align: center;">✔</td>
                 <td style="text-align: center;">$verified</td>
+                <td style="text-align: center;">$agent_enabled</td>
                 <td>$access</td>
             </tr>
             <tr class="$state squid-panel$i" style="display:none">

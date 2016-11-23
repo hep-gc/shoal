@@ -21,7 +21,7 @@ from shoal_server import utilities
 """
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, drift_detected, drift_time, max_load=122000, last_active=time(), static=False):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, drift_detected, drift_time, max_load=122000, last_active=time(), agent_enabled=False):
         """
         constructor for SquidNode, time created is current time
         """
@@ -43,7 +43,7 @@ class SquidNode(object):
         self.drift_time = drift_time
         self.last_verified = 0
         self.error = 'All systems OK!'
-        self.static = static
+        self.agent_enabled = agent_enabled
 
     def update(self, load, drift_detected, drift_time):
         """
@@ -244,7 +244,7 @@ class RabbitMQConsumer(Thread):
         self._channel = None
         self._closing = False
         self._consumer_tag = None
-        self.get_static_squids("unused.dummy.url") 
+        self.get_no_agent_squids("unused.dummy.url") 
 
     def connect(self):
         """
@@ -466,7 +466,7 @@ class RabbitMQConsumer(Thread):
         """
         external_ip = public_ip = private_ip = None
         #assume global access unless otherwise indicated
-        globalaccess = domainaccess = True
+        globalaccess = domainaccess = agent_enabled = True
         drift_detected = False
         drift_time = 0
         curr = time()
@@ -549,14 +549,14 @@ class RabbitMQConsumer(Thread):
             if not geo_data:
                 logging.error("Unable to generate geo location data, discarding message")
             else:
-                new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, drift_detected, drift_time, maxload, time_sent)
+                new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, drift_detected, drift_time, maxload, time_sent, agent_enabled)
                 self.shoal[key] = new_squid
         self.acknowledge_message(basic_deliver.delivery_tag)
 
     """
     Retrieves a list of squids from cern and integrates them into shoal as "static squids"
     """
-    def get_static_squids(self, url):
+    def get_no_agent_squids(self, url):
 
         static_squids_url = "http://wlcg-squid-monitor.cern.ch/grid-squids.json"
 
