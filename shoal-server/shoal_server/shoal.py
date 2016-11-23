@@ -581,7 +581,7 @@ class RabbitMQConsumer(Thread):
             private_ip = external_ip = None
             load = 0
             geo_data = utilities.get_geolocation(public_ip)
-            verified, globalaccess, domainaccess, drift_detected = False
+            verified = globalaccess = domainaccess = drift_detected = False
             drift_time = 0
             time_sent = time()
             maxload = 1 #dummy value, will always be at load 0/1
