@@ -78,6 +78,18 @@ $$(document).ready(function () {
                 $ agent_enabled = '✔' 
             $else:
                 $ agent_enabled = '✘'
+            $if squid.geo_data['country_name'] is None:
+                $ country_name = 'Unknown'
+            $else:
+                $ country_name = squid.geo_data['country_name']
+            $if squid.geo_data['latitude'] is None:
+                $ latitude = 'Unknown'
+            $else:
+                $ latitude = squid.geo_data['latitude']
+            $if squid.geo_data['longitude'] is None:
+                $ longitude = 'Unknown'
+            $else:
+                $ longitude = squid.geo_data['longitude']
 
             <tr class="$state squid-row$i squid-list">
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
