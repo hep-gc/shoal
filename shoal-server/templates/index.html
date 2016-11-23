@@ -48,10 +48,7 @@ $$(document).ready(function () {
       </thead>
       <tbody>
         $for i,squid in enumerate(shoal):
-            $ if squid.last_active is not None:
-                $ last_msg = int(now - squid.last_active)
-            $ else:
-                $ last_msg = "N/A"
+            $ last_msg = int(now - squid.last_active) if squid.agent_enabled else 'N/A'
             $ alive_time = int(now - squid.created); 
             $ hour = int(alive_time/60/60)
             $ minute = (alive_time - hour*60*60) / 60
