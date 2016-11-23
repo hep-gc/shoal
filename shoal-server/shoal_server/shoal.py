@@ -564,11 +564,13 @@ class RabbitMQConsumer(Thread):
         jsontext = file.content
         squids= json.loads(jsontext)
         for squid in squids:
+            """ For testing
             print(squid)
             print(squids[squid]["name"])
             print(squids[squid]["source"])
             print(squids[squid]["ips"])
             print("\n")
+            """
 
             #needs try block for key errors
 
@@ -577,6 +579,12 @@ class RabbitMQConsumer(Thread):
             hostname = squid
             
             public_ip = squids[squid]["ips"][0].split(':')[0]
+            #Here we check if we are getting an actual IP or just a hostname
+            #if it doesnt match the regex it is a hostname and we can resolve the real IP
+            if re.match("\d+\.\d+.\d+.\d+:\d+", public_ip) is None:
+                actual_ip = socket.gethostbyname(hostname)
+                public_ip = actual_ip
+
             squid_port = squids[squid]["ips"][0].split(':')[1]
             private_ip = external_ip = None
             load = 0
