@@ -54,7 +54,7 @@ $$(document).ready(function () {
             $ minute = (alive_time - hour*60*60) / 60
             $ second = alive_time - hour*60*60 - minute*60
     
-            $if last_msg < squid_active_time/3:
+            $if last_msg < squid_active_time/3 or !squid.agent_enabled:
                 $ state = 'success'
             $elif last_msg >= squid_active_time/3 and last_msg < squid_active_time*2/3:
                 $ state = 'warning'
