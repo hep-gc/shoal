@@ -167,7 +167,7 @@ class ShoalUpdate(Thread):
         """
         curr = time()
         for squid in self.shoal.values():
-            if curr - squid.last_active > self.INACTIVE:
+            if (curr - squid.last_active > self.INACTIVE) and squid.agent_enabled:
                 self.shoal.pop(squid.key)
 
     def stop(self):
