@@ -103,7 +103,10 @@ $$(document).ready(function () {
                 <td class="hidden-phone">$country_name</td>
                 <td class="hidden-phone">$latitude</td>
                 <td class="hidden-phone">$longitude</td>
-                <td class="hidden-phone">$(last_msg)s</td>
+                $if squid.agent_enabled == False:
+                    <td class="hidden-phone">$(last_msg)</td>
+                $else:
+                    <td class="hidden-phone">$(last_msg)s</td>
                 $if squid.agent_enabled == False:
                     <td>Unknown</td>
                 $else:
