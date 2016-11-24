@@ -250,7 +250,6 @@ class RabbitMQConsumer(Thread):
         self._channel = None
         self._closing = False
         self._consumer_tag = None
-        #self.get_no_agent_squids("unused.dummy.url") 
 
     def connect(self):
         """
@@ -403,7 +402,7 @@ class RabbitMQConsumer(Thread):
 
     def on_cancelok(self, unused_frame):
         """
-        calls close channel
+        calls close channelhttp://www.teamliquid.net/
         """
         self.close_channel()
 
@@ -559,49 +558,9 @@ class RabbitMQConsumer(Thread):
                 self.shoal[key] = new_squid
         self.acknowledge_message(basic_deliver.delivery_tag)
 
-    """
-    Retrieves a list of squids from cern and integrates them into shoal as "static squids"
-    """
-    """
-    def get_no_agent_squids(self, url):
-
-        static_squids_url = "http://wlcg-squid-monitor.cern.ch/grid-squids.json"
-
-
-        file = requests.get(static_squids_url, timeout=2)
-        jsontext = file.content
-        squids= json.loads(jsontext)
-        for squid in squids:
-
-            #needs try block for key errors
-
-            #Squid node variables
-            key = squid + squids[squid]["name"]
-            hostname = squid
-            
-            public_ip = squids[squid]["ips"][0].split(':')[0]
-            #Here we check if we are getting an actual IP or just a hostname
-            #if it doesnt match the regex it is a hostname and we can resolve the real IP
-            if re.match("\d+\.\d+.\d+.\d+:\d+", public_ip) is None:
-                actual_ip = socket.gethostbyname(public_ip)
-                public_ip = actual_ip
-
-            squid_port = squids[squid]["ips"][0].split(':')[1]
-            private_ip = external_ip = None
-            load = 0
-            geo_data = utilities.get_geolocation(public_ip)
-            verified = globalaccess = domainaccess = drift_detected = False
-            drift_time = 0
-            time_sent = time()
-            maxload = 1 #dummy value, will always be at load 0/1
-            static = True
-
-            new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, drift_detected, drift_time, maxload, time_sent)
-            self.shoal[key] = new_squid
+    
 """
-
-"""
-    JsonSquidUpdater runs on an interval to refresh the list of squids in shoal that have no agent.
+    NoAgentSquidUpdater runs on an interval to refresh the list of squids in shoal that have no agent.
     The idea is to pop all of the no agent squids after each interval and import a new list from 
     the json dump at http://wlcg-squid-monitor.cern.ch/grid-squids.json
 """
@@ -647,10 +606,10 @@ class NoAgentSquidUpdater(Thread):
     """
     def get_no_agent_squids(self, url):
 
-        static_squids_url = "http://wlcg-squid-monitor.cern.ch/grid-squids.json"
+
         while(True and not self._closing):
             try:
-                file = requests.get(static_squids_url, timeout=2)
+                file = requests.get(url, timeout=2)
                 jsontext = file.content
                 squids= json.loads(jsontext)
                 logging.info("Retrived json squids, processing...")
