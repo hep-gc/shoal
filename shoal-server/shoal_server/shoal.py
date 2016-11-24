@@ -22,12 +22,7 @@ from shoal_server import utilities
 """
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, drift_detected, drift_time, max_load=122000, last_active=time(), try:
-                file = requests.get(static_squids_url, timeout=2)
-                jsontext = file.content
-                squids= json.loads(jsontext)
-            except e:
-                logging.error("Could not connect to JSON URL, trying again in %s seconds", JSON_INTERVAL)=False):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, drift_detected, drift_time, max_load=122000, last_active=time(), agent_enabled=False):
         """
         constructor for SquidNode, time created is current time
         """
