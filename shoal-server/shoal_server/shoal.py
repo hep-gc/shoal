@@ -565,12 +565,12 @@ class RabbitMQConsumer(Thread):
     the json dump at http://wlcg-squid-monitor.cern.ch/grid-squids.json
 """
 class NoAgentSquidUpdater(Thread):
-    #JSON_INTERVAL = config.json_interval
-    #JSON_URL = config.json_url
+    JSON_INTERVAL = config.json_interval
+    JSON_URL = config.json_url
 
     #temp hard coded till the config gets updated to reflect these chagnes.
-    JSON_URL = "http://wlcg-squid-monitor.cern.ch/grid-squids.json"
-    JSON_INTERVAL = 300    #5 mins
+    #JSON_URL = "http://wlcg-squid-monitor.cern.ch/grid-squids.json"
+    #JSON_INTERVAL = 300    #5 mins
 
     def __init__(self, shoal):
         Thread.__init__(self)

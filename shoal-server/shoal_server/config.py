@@ -37,6 +37,8 @@ webpy_cache = False
 log_file = '/var/log/shoal_server.log'
 error_reconnect_time = 30
 error_reconnect_attempts = 10
+json_url = "http://wlcg-squid-monitor.cern.ch/grid-squids.json"
+json_interval = 3600 
 
 homedir = expanduser('~')
 
@@ -174,6 +176,17 @@ if config_file.has_option("squid", "squid_distloadweight"):
         squid_distloadweight = config_file.getfloat("squid", "squid_distloadweight")
     except ValueError:
         print "Configuration file problem: squid_distloadweight must be a float value"
+        sys.exit(1)
+
+if config_file.has_option("agentless", "json_url"):
+    json_url = config_file.get("agentless", "json_url")
+
+
+if config_file.has_option("agentless", "json_interval"):
+    try:
+        json_interval = config_file.getint("agentless", "json_interval")
+    except ValueError:
+        print "Configuration file problem: json_interval must be a integer value"
         sys.exit(1)
 
 if config_file.has_option("rabbitmq", "amqp_server_url"):
