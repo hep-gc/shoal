@@ -623,7 +623,7 @@ class NoAgentSquidUpdater(Thread):
         """
         starts periodic task of getting json squids
         """
-        self.get_no_agent_squids(JSON_URL)
+        self.get_no_agent_squids(self.JSON_URL)
         
             
     def stop(self):
@@ -655,7 +655,7 @@ class NoAgentSquidUpdater(Thread):
                 squids= json.loads(jsontext)
                 logging.info("Retrived json squids, processing...")
             except e:
-                logging.error("Could not connect to JSON URL, trying again in %s seconds", JSON_INTERVAL)
+                logging.error("Could not connect to JSON URL, trying again in %s seconds", self.JSON_INTERVAL)
                 squids = None
             for squid in squids:
 
@@ -687,7 +687,7 @@ class NoAgentSquidUpdater(Thread):
 
             #
             logging.info("Finished Processing no agent squids, sleeping...")    
-            sleep(JSON_INTERVAL)
+            sleep(self.JSON_INTERVAL)
             self.trim_no_agent_squids()
         if self._closing:
             logging.info("self._closing is true, terminating")
