@@ -95,13 +95,19 @@ $$(document).ready(function () {
                 <td>$squid.hostname</td>
                 <td class="hidden-phone">$squid.public_ip</td>
                 <td class="hidden-phone">$squid.private_ip</td>
-                <td>$squid.load kB/s</td>
+                $if squid.agent_enabled == False:
+                    <td>Unknown</td>
+                $else:
+                    <td>$squid.load kB/s</td>
                 <td>$city</td>
                 <td class="hidden-phone">$country_name</td>
                 <td class="hidden-phone">$latitude</td>
                 <td class="hidden-phone">$longitude</td>
                 <td class="hidden-phone">$(last_msg)s</td>
-                <td>$(hour)h$(minute)m$(second)s</td>
+                $if squid.agent_enabled == False:
+                    <td>Unknown</td>
+                $else:
+                    <td>$(hour)h$(minute)m$(second)s</td>
                 $if squid.drift_detected == True:
                     <td style="text-align: center;"><b>$("%.1fs" % squid.drift_time)</b></td>
                 $else:
