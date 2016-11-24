@@ -648,7 +648,7 @@ class NoAgentSquidUpdater(Thread):
     def get_no_agent_squids(self, url):
 
         static_squids_url = "http://wlcg-squid-monitor.cern.ch/grid-squids.json"
-        while(True and not self._closing)
+        while(True and not self._closing):
             try:
                 file = requests.get(static_squids_url, timeout=2)
                 jsontext = file.content
