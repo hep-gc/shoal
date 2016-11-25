@@ -402,7 +402,7 @@ class RabbitMQConsumer(Thread):
 
     def on_cancelok(self, unused_frame):
         """
-        calls close channelhttp://www.teamliquid.net/
+        calls close channel
         """
         self.close_channel()
 
@@ -565,12 +565,9 @@ class RabbitMQConsumer(Thread):
     the json dump at http://wlcg-squid-monitor.cern.ch/grid-squids.json
 """
 class NoAgentSquidUpdater(Thread):
+
     JSON_INTERVAL = config.json_interval
     JSON_URL = config.json_url
-
-    #temp hard coded till the config gets updated to reflect these chagnes.
-    #JSON_URL = "http://wlcg-squid-monitor.cern.ch/grid-squids.json"
-    #JSON_INTERVAL = 300    #5 mins
 
     def __init__(self, shoal):
         Thread.__init__(self)
@@ -599,14 +596,18 @@ class NoAgentSquidUpdater(Thread):
             if not squid.agent_enabled:
                 self.shoal.pop(squid.key)
 
-    """
-    Retrieves a list of squids from cern and integrates them into shoal as "static squids"
-    Then sleeps for a configuration defined interval then trims them from the list and adds
-    them back 
-    """
+
     def get_no_agent_squids(self, url):
-
-
+        """
+        Retrieves a list of squids from cern and integrates them into shoal as "static squids"
+        Then sleeps for a configuration defined interval then trims them from the list and adds
+        them back 
+        """
+        
+        # Each loop we try to get the json packet from the config specified URL
+        # Next the old no-agent squids are removed before the new json set is proccessed
+        # Each squid is processed and added to the shoal list before the loop finally
+        # sleeps for the config defined interval (default 3600 seconds = 1 hr)
         while(True and not self._closing):
             try:
                 file = requests.get(url, timeout=2)
