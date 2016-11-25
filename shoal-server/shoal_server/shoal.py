@@ -322,7 +322,7 @@ class RabbitMQConsumer(Thread):
         self.open_channel()
 
     def reconnect(self):
-        """logging
+        """
         stops current IO loop and then reconnects
         """
         # This is the old connection IOLoop instance, stop its ioloop
