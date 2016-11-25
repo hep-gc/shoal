@@ -617,9 +617,6 @@ class NoAgentSquidUpdater(Thread):
                 logging.error("Could not connect to JSON URL, trying again in %s seconds", self.JSON_INTERVAL)
                 squids = None
             for squid in squids:
-
-                #needs try block for key errors
-
                 #Squid node variables
                 key = squid + squids[squid]["name"]
                 hostname = squid
@@ -638,13 +635,14 @@ class NoAgentSquidUpdater(Thread):
                 verified = globalaccess = domainaccess = drift_detected = False
                 drift_time = 0
                 time_sent = time()
-                maxload = 1 #dummy value, will always be at load 0/1 and is ignored by the server for no agent squids
+                #dummy value, will always be ignored when serving and displaying no agent squids
+                maxload = 1 
                 static = True
 
                 new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, drift_detected, drift_time, maxload, time_sent)
                 self.shoal[key] = new_squid
 
-            #
+            
             logging.info("Finished Processing no agent squids, sleeping...")    
             sleep(self.JSON_INTERVAL)
             self.trim_no_agent_squids()
