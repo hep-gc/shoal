@@ -623,7 +623,7 @@ class NoAgentSquidUpdater(Thread):
                 key = squid + squids[squid]["name"]
                 hostname = squid
                 
-                for ip in squids[squid]["ips"]
+                for ip in squids[squid]["ips"]:
                     public_ip = ip.split(':')[0]
                     #Here we check if we are getting an actual IP or just a hostname
                     #if it doesnt match the regex it is a hostname and we can resolve the real IP
