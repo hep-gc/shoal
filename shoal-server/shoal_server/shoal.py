@@ -620,11 +620,13 @@ class NoAgentSquidUpdater(Thread):
                 squids = None
             for squid in squids:
                 #Squid node variables
-                key = squid + squids[squid]["name"]
                 hostname = squid
                 
                 for ip in squids[squid]["ips"]:
                     public_ip = ip.split(':')[0]
+                    #only unique member is the ip, so lets use ip+host as key
+                    key = squid + public_ip
+
                     #Here we check if we are getting an actual IP or just a hostname
                     #if it doesnt match the regex it is a hostname and we can resolve the real IP
                     if re.match("\d+\.\d+.\d+.\d+:\d+", public_ip) is None:
