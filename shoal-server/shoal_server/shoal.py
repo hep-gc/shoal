@@ -603,7 +603,7 @@ class NoAgentSquidUpdater(Thread):
         Then sleeps for a configuration defined interval then trims them from the list and adds
         them back 
         """
-        
+
         # Each loop we try to get the json packet from the config specified URL
         # Next the old no-agent squids are removed before the new json set is proccessed
         # Each squid is processed and added to the shoal list before the loop finally
@@ -623,26 +623,27 @@ class NoAgentSquidUpdater(Thread):
                 key = squid + squids[squid]["name"]
                 hostname = squid
                 
-                public_ip = squids[squid]["ips"][0].split(':')[0]
-                #Here we check if we are getting an actual IP or just a hostname
-                #if it doesnt match the regex it is a hostname and we can resolve the real IP
-                if re.match("\d+\.\d+.\d+.\d+:\d+", public_ip) is None:
-                    actual_ip = socket.gethostbyname(public_ip)
-                    public_ip = actual_ip
+                for ip in squids[squid]["ips"]
+                    public_ip = ip.split(':')[0]
+                    #Here we check if we are getting an actual IP or just a hostname
+                    #if it doesnt match the regex it is a hostname and we can resolve the real IP
+                    if re.match("\d+\.\d+.\d+.\d+:\d+", public_ip) is None:
+                        actual_ip = socket.gethostbyname(public_ip)
+                        public_ip = actual_ip
 
-                squid_port = squids[squid]["ips"][0].split(':')[1]
-                private_ip = external_ip = None
-                load = 0
-                geo_data = utilities.get_geolocation(public_ip)
-                verified = globalaccess = domainaccess = drift_detected = False
-                drift_time = 0
-                time_sent = time()
-                #dummy value, will always be ignored when serving and displaying no agent squids
-                maxload = 1 
-                static = True
+                    squid_port = squids[squid]["ips"][0].split(':')[1]
+                    private_ip = external_ip = None
+                    load = 0
+                    geo_data = utilities.get_geolocation(public_ip)
+                    verified = globalaccess = domainaccess = drift_detected = False
+                    drift_time = 0
+                    time_sent = time()
+                    #dummy value, will always be ignored when serving and displaying no agent squids
+                    maxload = 1 
+                    static = True
 
-                new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, drift_detected, drift_time, maxload, time_sent)
-                self.shoal[key] = new_squid
+                    new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, drift_detected, drift_time, maxload, time_sent)
+                    self.shoal[key] = new_squid
 
             
             logging.info("Finished Processing no agent squids, sleeping...")    
