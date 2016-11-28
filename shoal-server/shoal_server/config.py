@@ -37,7 +37,7 @@ webpy_cache = False
 log_file = '/var/log/shoal_server.log'
 error_reconnect_time = 30
 error_reconnect_attempts = 10
-json_url = "http://wlcg-squid-monitor.cern.ch/grid-squids.json"
+json_url = ("http://wlcg-squid-monitor.cern.ch/grid-squids.json", " http://wlcg-squid-monitor.cern.ch/worker-proxies.json")
 json_interval = 3600 
 
 homedir = expanduser('~')
