@@ -598,6 +598,16 @@ class NoAgentSquidUpdater(Thread):
             if not squid.agent_enabled:
                 self.shoal.pop(squid.key)
 
+    def check_shoal_for_ip(self, ip):
+        """
+        Checks if a given ip is in shoal
+        Return True if a match is found, else False
+        """
+        for squid in self.shoal.values():
+            if ip in shoal.public_ip:
+                return True
+        return False
+
 
     def get_no_agent_squids(self, urls):
         """
@@ -637,6 +647,11 @@ class NoAgentSquidUpdater(Thread):
                             if re.match("\d+\.\d+.\d+.\d+:\d+", public_ip) is None:
                                 actual_ip = socket.gethostbyname(public_ip)
                                 public_ip = actual_ip
+
+                            #stop at this point and check if we already have this IP in shoal
+                             if self.check_shoal_for_ip(public_ip):
+                                #if we find it, skip to next IP to avoid duplicates
+                                continue
 
                             squid_port = squids[squid]["ips"][0].split(':')[1]
                             private_ip = external_ip = None
@@ -685,6 +700,10 @@ class NoAgentSquidUpdater(Thread):
                                             logging.error("failed to get ip for %s", public_ip)
                                             logging.error(e)
                                             continue
+                                    #stop at this point and check if we already have this IP in shoal
+                                    if self.check_shoal_for_ip(public_ip):
+                                        #if we find it, skip to next IP to avoid duplicates
+                                        continue
 
                                     squid_port = ip.split(':')[1]
                                     private_ip = external_ip = None
