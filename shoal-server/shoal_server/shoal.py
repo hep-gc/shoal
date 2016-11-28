@@ -681,7 +681,7 @@ class NoAgentSquidUpdater(Thread):
                                         try:
                                             actual_ip = socket.gethostbyname(public_ip)
                                             public_ip = actual_ip
-                                        except gaierror as e:
+                                        except socket.gaierror as e:
                                             logging.error("failed to get ip for %s", public_ip)
                                             logging.error(e)
 
