@@ -612,7 +612,6 @@ class NoAgentSquidUpdater(Thread):
         # sleeps for the config defined interval (default 3600 seconds = 1 hr)
         while(True and not self._closing):
             for url in urls:
-                logging.error(url)
                 if "grid-squids" in url:
                 #process grid-squids.json
                     try:
@@ -679,8 +678,12 @@ class NoAgentSquidUpdater(Thread):
                                     #for the worker-proxies file this should pretty much never be satisfied but
                                     #it provides flexibility so it doesn't hurt to keep it
                                     if re.match("\d+\.\d+.\d+.\d+:\d+", public_ip) is None:
-                                        actual_ip = socket.gethostbyname(public_ip)
-                                        public_ip = actual_ip
+                                        try:
+                                            actual_ip = socket.gethostbyname(public_ip)
+                                            public_ip = actual_ip
+                                        except gaierror as e:
+                                            logging.error("failed to get ip for %s", public_ip)
+                                            logging.error(e)
 
                                     squid_port = ip.split(':')[1]
                                     private_ip = external_ip = None
