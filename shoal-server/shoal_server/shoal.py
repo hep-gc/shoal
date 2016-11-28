@@ -610,6 +610,7 @@ class NoAgentSquidUpdater(Thread):
         # sleeps for the config defined interval (default 3600 seconds = 1 hr)
         while(True and not self._closing):
             for url in urls:
+                logging.error(url)
                 if "grid-squids" in url:
                 #process grid-squids.json
                     try:
