@@ -684,6 +684,7 @@ class NoAgentSquidUpdater(Thread):
                                         except socket.gaierror as e:
                                             logging.error("failed to get ip for %s", public_ip)
                                             logging.error(e)
+                                            continue
 
                                     squid_port = ip.split(':')[1]
                                     private_ip = external_ip = None
