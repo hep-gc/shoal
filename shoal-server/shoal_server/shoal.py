@@ -597,7 +597,7 @@ class NoAgentSquidUpdater(Thread):
                 self.shoal.pop(squid.key)
 
 
-    def get_no_agent_squids(self, url):
+    def get_no_agent_squids(self, urls):
         """
         Retrieves a list of squids from cern and integrates them into shoal as "static squids"
         Then sleeps for a configuration defined interval then trims them from the list and adds
@@ -609,47 +609,97 @@ class NoAgentSquidUpdater(Thread):
         # Each squid is processed and added to the shoal list before the loop finally
         # sleeps for the config defined interval (default 3600 seconds = 1 hr)
         while(True and not self._closing):
-            try:
-                file = requests.get(url, timeout=2)
-                jsontext = file.content
-                squids= json.loads(jsontext)
-                logging.info("Retrived json squids, processing...")
-                self.trim_no_agent_squids()
-            except e:
-                logging.error("Could not connect to JSON URL, trying again in %s seconds", self.JSON_INTERVAL)
-                squids = None
-            for squid in squids:
-                #Squid node variables
-                hostname = squid
-                
-                for ip in squids[squid]["ips"]:
-                    public_ip = ip.split(':')[0]
-                    #only unique member is the ip, so lets use ip+host as key
-                    key = squid + public_ip
+            for url in urls:
+                if "grid-squids" in url:
+                #process grid-squids.json
+                    try:
+                        file = requests.get(url, timeout=2)
+                        jsontext = file.content
+                        squids= json.loads(jsontext)
+                        logging.info("Retrived json squids, processing...")
+                        self.trim_no_agent_squids()
+                    except e:
+                        logging.error("Could not connect to grid-squids URL, trying again in %s seconds", self.JSON_INTERVAL)
+                        squids = None
+                    for squid in squids:
+                        #Squid node variables
+                        hostname = squid
+                        
+                        for ip in squids[squid]["ips"]:
+                            public_ip = ip.split(':')[0]
+                            #only unique member is the ip, so lets use ip+host as key
+                            key = squid + public_ip
 
-                    #Here we check if we are getting an actual IP or just a hostname
-                    #if it doesnt match the regex it is a hostname and we can resolve the real IP
-                    if re.match("\d+\.\d+.\d+.\d+:\d+", public_ip) is None:
-                        actual_ip = socket.gethostbyname(public_ip)
-                        public_ip = actual_ip
+                            #Here we check if we are getting an actual IP or just a hostname
+                            #if it doesnt match the regex it is a hostname and we can resolve the real IP
+                            if re.match("\d+\.\d+.\d+.\d+:\d+", public_ip) is None:
+                                actual_ip = socket.gethostbyname(public_ip)
+                                public_ip = actual_ip
 
-                    squid_port = squids[squid]["ips"][0].split(':')[1]
-                    private_ip = external_ip = None
-                    load = 0
-                    geo_data = utilities.get_geolocation(public_ip)
-                    verified = globalaccess = domainaccess = drift_detected = False
-                    drift_time = 0
-                    time_sent = time()
-                    #dummy value, will always be ignored when serving and displaying no agent squids
-                    maxload = 1 
-                    static = True
+                            squid_port = squids[squid]["ips"][0].split(':')[1]
+                            private_ip = external_ip = None
+                            load = 0
+                            geo_data = utilities.get_geolocation(public_ip)
+                            verified = globalaccess = domainaccess = drift_detected = False
+                            drift_time = 0
+                            time_sent = time()
+                            #dummy value, will always be ignored when serving and displaying no agent squids
+                            maxload = 1 
+                            static = True
 
-                    new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, drift_detected, drift_time, maxload, time_sent)
-                    self.shoal[key] = new_squid
+                            new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, drift_detected, drift_time, maxload, time_sent)
+                            self.shoal[key] = new_squid
 
-            
+                elif "worker-proxies" in url:
+                    #process worker-proxies.json
+                    try:
+                        file = requests.get(url, timeout=2)
+                        jsontext = file.content
+                        squids= json.loads(jsontext)
+                        logging.info("Retrived json squids, processing...")
+                    except e:
+                        logging.error("Could not connect to worker-proxies URL, trying again in %s seconds", self.JSON_INTERVAL)
+                        squids = None
+                    for squid in squids:
+                        #Squid node variables
+                        hostname = squid
+                        
+                        for proxy in squids[squid]["proxies"]:
+                            try:
+                                for ip in proxy["default"]:
+                                    public_ip = ip.split(':')[0]
+                                    #only unique member is the ip, so lets use ip+host as key
+                                    key = squid + public_ip
+
+                                    #Here we check if we are getting an actual IP or just a hostname
+                                    #if it doesnt match the regex it is a hostname and we can resolve the real IP
+                                    #for the worker-proxies file this should pretty much never be satisfied but
+                                    #it provides flexibility so it doesn't hurt to keep it
+                                    if re.match("\d+\.\d+.\d+.\d+:\d+", public_ip) is None:
+                                        actual_ip = socket.gethostbyname(public_ip)
+                                        public_ip = actual_ip
+
+                                    squid_port = ip.split(':')[1]
+                                    private_ip = external_ip = None
+                                    load = 0
+                                    geo_data = utilities.get_geolocation(public_ip)
+                                    verified = globalaccess = domainaccess = drift_detected = False
+                                    drift_time = 0
+                                    time_sent = time()
+                                    #dummy value, will always be ignored when serving and displaying no agent squids
+                                    maxload = 1 
+                                    static = True
+
+                                    new_squid = SquidNode(key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, globalaccess, domainaccess, drift_detected, drift_time, maxload, time_sent)
+                                    self.shoal[key] = new_squid
+
+                            except KeyError as e:
+                                continue
+
+
             logging.info("Finished Processing no agent squids, sleeping...")    
             sleep(self.JSON_INTERVAL)
+
         if self._closing:
             logging.info("self._closing is true, terminating")
 
