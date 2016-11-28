@@ -11,6 +11,8 @@ import socket
 import uuid
 import re
 
+from ast import literal_eval as make_tuple
+
 from time import time, sleep
 from threading import Thread
 
@@ -579,7 +581,7 @@ class NoAgentSquidUpdater(Thread):
         """
         starts periodic task of getting json squids
         """
-        self.get_no_agent_squids(self.JSON_URL)
+        self.get_no_agent_squids(make_tuple(self.JSON_URL))
         
             
     def stop(self):
