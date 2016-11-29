@@ -604,7 +604,7 @@ class NoAgentSquidUpdater(Thread):
         Return True if a match is found, else False
         """
         for squid in self.shoal.values():
-            if ip in shoal.public_ip:
+            if ip in squid.public_ip:
                 return True
         return False
 
@@ -649,7 +649,7 @@ class NoAgentSquidUpdater(Thread):
                                 public_ip = actual_ip
 
                             #stop at this point and check if we already have this IP in shoal
-                             if self.check_shoal_for_ip(public_ip):
+                            if self.check_shoal_for_ip(public_ip):
                                 #if we find it, skip to next IP to avoid duplicates
                                 continue
 
