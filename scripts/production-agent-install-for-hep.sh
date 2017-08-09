@@ -2,13 +2,13 @@
 
 #
 # This script installs shoal onto SL6 and configures
-# it to connect to the production shoal instance used 
+# it to connect to the production shoal instance used
 # by the ATLAS Cloud group.
 #
 # Author Ian Gable <igable@uvic.ca>
 #
 
-curl http://shoal.heprc.uvic.ca/repo/shoal.repo -o /etc/yum.repos.d/shoal.repo
+curl http://shoal.heprc.uvic.ca/repo/shoal-sl6x.repo -o /etc/yum.repos.d/shoal.repo
 
 # importing RPM signing key for Shoal RPMs
 rpm --import http://hepnetcanada.ca/pubkeys/igable.asc
