@@ -208,11 +208,17 @@ if not no_shoal_server:
     cvmfs_http_proxy = "\"" + closest_http_proxy + default_http_proxy + "\""
     logging.debug("Data parsing complete.")
 
+    if dump:
+        if not frontier:
+            cvmfs_http_proxy = "\"" + closest_http_proxy + env_proxy + default_http_proxy + "\""
+        logging.info("Dumping proxy string")
+        print cvmfs_http_proxy
 
-    if frontier:
+    elif frontier:
         #retrieve frontier env variable and insert new squids
-        frontier_var = os.getenv("FRONTIER_SERVER")
-        if frontier_var == None:
+        try:
+            frontier_var = os.getenv("FRONTIER_SERVER")
+        except:
             logging.error("FRONTIER_SERVER env variable unset, unable to run with --frontier option")
             sys.exit(1)
         frontier_output = ""
@@ -222,14 +228,11 @@ if not no_shoal_server:
             frontier_output += srvr
         print frontier_output
 
-    cvmfs_http_proxy = "\"" + closest_http_proxy + env_proxy + default_http_proxy + "\""
-    logging.debug("Data parsing complete.")
-    logging.info("Setting %s as proxy" % cvmfs_http_proxy)
-    ## if dump, don't set CVMFS proxies
-    if dump:
-        logging.info("Dumping proxy string")
-        print cvmfs_http_proxy
     else:
+        cvmfs_http_proxy = "\"" + closest_http_proxy + env_proxy + default_http_proxy + "\""
+        logging.debug("Data parsing complete.")
+        logging.info("Setting %s as proxy" % cvmfs_http_proxy)
+
         logging.debug("Executing 'cvmfs_talk proxy set %s'" % cvmfs_http_proxy)
         try:
             p = Popen(["cvmfs_talk", "proxy", "set", cvmfs_http_proxy], stdout=PIPE, stderr=PIPE)
