@@ -16,7 +16,7 @@ from optparse import OptionParser
 from urllib2 import urlopen
 from subprocess import Popen, PIPE
 
-syslog.openlog(ident="shoal-client")
+syslog.openlog("shoal-client")
 
 server = config.shoal_server_url
 default_http_proxy = config.default_squid_proxy
