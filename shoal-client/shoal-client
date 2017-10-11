@@ -42,16 +42,16 @@ def get_args():
     p = OptionParser()
     p.add_option("-s", "--server", action="store", type="string", dest="server", 
                  help="Also needs string for specifying the shoal server to use. " +
-                      "Takes precedence over the option in config file")
+                      "Takes precedence over the option in config file.")
     p.add_option("-d", "--dump", action="store_true", dest="dump",
                  help="Print closest proxies to terminal for debugging "+ 
-                      "instead of overwriting the CVMFS config file")
+                      "instead of executing a cvfms-talk command to update the active configuration.")
     p.add_option("-f", "--frontier", action="store_true", dest="frontier",
-                 help="Edits frontier enviroment variable instead of" +
-                       "over writing the CVMFS config file")
+                 help="Outputs a string suitable for use as a frontier proxy eviroment variable" +
+                       "instead of executing a cvfms-talk command to update the active configuration.")
     p.add_option("-n", "--squids", action="store", type="int", dest="numsquids",
-                 help="Specifies the number of squids to insert into" +
-                       "the frontier environment variable")
+                 help="Specifies the number of squids to retrieve" +
+                       "from the shoal-server (default is 2).")
     (options, args) = p.parse_args()
 
     if options.server:

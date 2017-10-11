@@ -35,7 +35,7 @@ instructions:
 
 For people familiar with it, everything is available from PyPI.
 
-##License
+## License
 
 This program is free software; you can redistribute it and/or modify it under the terms of either:
 
