@@ -1,5 +1,5 @@
-#Shoal Client README
-#Version: v0.6.X
+# Shoal Client README
+# Version: v0.6.X
 
 shoal-client will configure cvmfs to use the closest squid server to you by contacting the shoal server
 and then editing your local cvmfs config file, typically `/etc/cvmfs/default.local`.
@@ -8,14 +8,19 @@ shoal-client is a simple python script typically configured to run with cron to 
 periodically. Before setting the cronjob in place make sure that shoal-client is
 configured correctly (see Usage below).
 
-##Installation
+With the release of v0.6.4 the shoal-client now offers support for frontier. Running the shoal-client
+with the --frontier or -f option will produce an output string instead of attempting to update the
+proxies via cvmfs-talk. See Usage below for more information.
+
+
+## Installation
 
 **Note**: Requires Python 2.4+
 
 **Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if installed 
 root permissions.
 
-###Recommended Instalation Method: Use yum (est. ~5 min)
+### Recommended Instalation Method: Use yum (est. ~5 min)
 
 First install [EPEL](http://fedoraproject.org/wiki/EPEL) 
 
@@ -50,23 +55,23 @@ A complete shoal_client.conf file for ATLAS can be obtained by:
     sudo curl http://shoal.heprc.uvic.ca/repo/shoal_client.conf -o /etc/shoal/shoal_client.conf
 
     
-##Usage
+## Usage
 
 Confirm the that you configured shoal-client as expected by checking the output of `shoal-client --dump`
-This is what will be written to `/etc/cvmfs/default.local` when you run `shoal-client`. For example you will see 
+The output is a list of servers that will be set as proxies using cvfms-talk. For example you will see 
 something like the following:
-
-<pre>
-CVMFS_REPOSITORIES=atlas.cern.ch,atlas-condb.cern.ch,atlas-nightlies.cern.ch,sft.cern.ch
-CVMFS_QUOTA_LIMIT=10000
-CVMFS_HTTP_PROXY="[[DYNAMIC SQUID HOSTNAMES APPENDED HERE]];http://chrysaor.westgrid.ca:3128;http://cernvm-webfs.atlas-canada.ca:3128;DIRECT"
-</pre>
+"http://squid.example1.com:3128;http://squid.example2.com:3128;http://squid.example3.com:3128;http://squid.example4.com:3128;http://squid.example5.org:3128;DIRECT"
 
 If the output looks resonable now set a crontab entry to run shoal say every 30 minutes:
 
     crontab -e
     0,30 * * * * /usr/bin/shoal-client
 
+New in version 0.6.4 is the --frontier option that will produce an output string suitable for frontier.
+Users will need to use a simple script that runs shoal-client and uses the output to set the proxies.
+An example script can be found [here](https://github.com/hep-gc/shoal/blob/master/shoal-client/scripts/frontier_set.sh) in the shoal-client/scripts directory.
+Example output when running `shoal-client --frontier`:
+`(serverurl=http://PresetServer.ca:3128)(proxyurl=http://PROXY.FROM.SHOAL.1:3128)(proxyurl=http://PROXY.FROM.SHOAL.2:3128)`
 
 ## Other Installation Methods
 
