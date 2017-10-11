@@ -78,7 +78,7 @@ Example output when running `shoal-client --frontier`:
 | --- | --- |
 | -d or --dump | Print closest proxies to terminal for testing or debugging. |
 | -s `hostname` or --server `hostname`| Specifies URL of the desired shoal-server to contact. Takes precedence over the option in config file. |
-| -n or --squids | Specifies the number of squids to retrieve from the shoal-server |
+| -n `int` or --squids `int` | Specifies the number of squids to retrieve from the shoal-server |
 | -f or --frontier| Outputs a string appropriate for use as the frontier proxy enviroment variable instead of using cvmfs-talk to update the active proxy configuration|
 
 
