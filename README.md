@@ -10,7 +10,7 @@ Shoal-server keeps a list of squids in memory and removes any squid which has no
 The IPs of all squid servers are geo-referenced. Clients contact the squid server using a REST interface to 
 retrieve an ordered list of the nearest squids. The diagram below should give you some idea how this works:
 
- ![shoal diagram](https://raw.github.com/hep-gc/shoal/gh-pages/shoal_diagram.png)
+ ![shoal diagram](https://raw.githubusercontent.com/hep-gc/shoal/master/gh-pages/shoal_diagram.png)
 
 ## Components
 
