@@ -2,7 +2,7 @@
 # Version: v0.6.X
 
 shoal-client will configure cvmfs to use the closest squid server to you by contacting the shoal server
-and then editing your local cvmfs config file, typically `/etc/cvmfs/default.local`.
+and using cvfms-talk to update the active proxy configuration.
 
 shoal-client is a simple python script typically configured to run with cron to check for new squids 
 periodically. Before setting the cronjob in place make sure that shoal-client is
