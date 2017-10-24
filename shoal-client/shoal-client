@@ -188,7 +188,7 @@ if not no_shoal_server:
                 sys.exit(2)
 
     else:
-        for i in range(0, len(data)):
+        for i in range(0, numsquids):
             try:
                 closest_http_proxy += 'http://%s:%s;' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
             except KeyError, e:
