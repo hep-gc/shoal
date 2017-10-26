@@ -113,7 +113,7 @@ def checkDomain(req_ip, squid_ip):
             reader = geoip2.database.Reader(GEODOMAIN_DB)
             req_domain = reader.domain(req_ip)
             squid_domain = reader.domain(squid_ip)
-            if req_domain.domain == squid_domain.domain:
+            if (req_domain.domain == squid_domain.domain) and squid_domain is not None:
                 return True
             else:
                  return False
