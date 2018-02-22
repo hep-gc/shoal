@@ -23,7 +23,7 @@ root permissions.
 ### Recommended Instalation Method: Use yum (est. ~5 min)
 
 First install [EPEL](http://fedoraproject.org/wiki/EPEL) 
-
+cvmfs_talk proxy info
     sudo yum install epel-release
     sudo yum update
 
@@ -59,7 +59,7 @@ A complete shoal_client.conf file for ATLAS can be obtained by:
 
 Confirm the that you configured shoal-client as expected by checking the output of `shoal-client --dump`
 The output is a list of servers that will be set as proxies using cvfms-talk. For example you will see 
-something like the following:
+something like the following:cvmfs_talk proxy info
 `http://squid.example1.com:3128;http://squid.example2.com:3128;http://squid.example3.com:3128;http://squid.example4.com:3128;http://squid.example5.org:3128;DIRECT`
 
 If the output looks resonable now set a crontab entry to run shoal say every 30 minutes:
@@ -81,6 +81,9 @@ Example output when running `shoal-client --frontier`:
 | -n `int` or --squids `int` | Specifies the number of squids to retrieve from the shoal-server |
 | -f or --frontier| Outputs a string appropriate for use as the frontier proxy enviroment variable instead of using cvmfs-talk to update the active proxy configuration|
 
+Shoal client now uses the cvmfs_talk protocol. To view the list of returned squids issue:
+
+     cvmfs_talk proxy info
 
 ## Other Installation Methods
 
