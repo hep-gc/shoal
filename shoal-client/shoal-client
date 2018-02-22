@@ -4,17 +4,13 @@
 """
 import urllib2
 import sys
-# import json
 import re
 import os
 import syslog
-import time
+from optparse import OptionParser
+from subprocess import Popen, PIPE
 
 from shoal_client import config as config
-
-from optparse import OptionParser
-from urllib2 import urlopen
-from subprocess import Popen, PIPE
 
 syslog.openlog("shoal-client")
 
@@ -24,7 +20,7 @@ default_http_proxy = config.default_squid_proxy
 data = None
 frontier = False
 numsquids = 2
-dump = False 
+dump = False
 closest_http_proxy = ''
 env_proxy = ''
 no_shoal_server = False
@@ -40,18 +36,18 @@ def get_args():
     global numsquids
 
     p = OptionParser()
-    p.add_option("-s", "--server", action="store", type="string", dest="server", 
+    p.add_option("-s", "--server", action="store", type="string", dest="server",
                  help="Also needs string for specifying the shoal server to use. " +
-                      "Takes precedence over the option in config file.")
+                 "Takes precedence over the option in config file.")
     p.add_option("-d", "--dump", action="store_true", dest="dump",
-                 help="Print closest proxies to terminal for debugging "+ 
-                      "instead of executing a cvfms-talk command to update the active configuration.")
+                 help="Print closest proxies to terminal for debugging "+
+                 "instead of executing a cvfms-talk command to update the active configuration.")
     p.add_option("-f", "--frontier", action="store_true", dest="frontier",
                  help="Outputs a string suitable for use as a frontier proxy eviroment variable" +
-                       "instead of executing a cvfms-talk command to update the active configuration.")
+                 "instead of executing a cvfms-talk command to update the active configuration.")
     p.add_option("-n", "--squids", action="store", type="int", dest="numsquids",
                  help="Specifies the number of squids to retrieve" +
-                       "from the shoal-server (default is 2).")
+                 "from the shoal-server (default is 2).")
     (options, args) = p.parse_args()
 
     if options.server:
@@ -78,9 +74,7 @@ def convertServerData(val):
             else:
                 return unicode(val.strip("\""))
 
-# TODO is this parser sufficient or should a full JSON parser be implemented?
-# Seperating out the list of properties should be done but does support
-#  for arbitrary json strings add anything?
+
 def parseServerData(jsonStr):
     """
         creates a multidimensional server data dictionary indexed by
@@ -91,19 +85,19 @@ def parseServerData(jsonStr):
 
     # TODO should load this from a config file as it has to match the server
     # Nested properties (i.e geo_data) needs to be handled separately
-    dataTypes    = ["load",        "distance", "squid_port", "last_active", "created",      \
-                    "external_ip", "hostname", "public_ip",  "private_ip"]
+    dataTypes = ["load", "distance", "squid_port", "last_active", "created", \
+                 "external_ip", "hostname", "public_ip", "private_ip"]
 
-    geoDataTypes = ["city",       "region_name",   "area_code",    "time_zone", "dma_code", \
-                    "metro_code", "country_code3", "latitude",     "postal_code",           \
-                    "longitude",  "country_code",  "country_name", "continent"]
+    geoDataTypes = ["city", "region_name", "area_code", "time_zone", "dma_code", \
+                    "metro_code", "country_code3", "latitude", "postal_code", \
+                    "longitude", "country_code", "country_name", "continent"]
 
     # don't really care about data here
     # it is just a simple way to get number of nearest squids
     p = re.compile("\"" + dataTypes[0] + "\": ([^,}]+)")
     numNearestSquids = len(p.findall(jsonStr))
     ## compiles regex "load": ([^,}]+), although it doesn't really matter that fact that it's a load
-    ## this will find the number of above matches in jsonStr and return into numNearestSquids  
+    ## this will find the number of above matches in jsonStr and return into numNearestSquids
     ## therefore each match in json is a 'nearest' squid
 
     # initalize the dictionaries
@@ -116,8 +110,8 @@ def parseServerData(jsonStr):
 
     # TODO probably don't need seperate regexes
     # test using geodata one for both
-    ## for each item in dataTypes, compile a regex for that item and find all the matches with jsonStr
-    ## and put those matches in dataList.
+    # for each item in dataTypes, compile a regex for that item and find all
+    # the matches with jsonStr and put those matches in dataList.
     for dataType in dataTypes:
         p = re.compile("\"" + dataType + "\": ([^,]+)[,|}]")
         dataList = p.findall(jsonStr)
@@ -135,16 +129,18 @@ def parseServerData(jsonStr):
 
 get_args()
 
-"""
-    Reads data from a URL from a Shoal server, parses it, prepares a list of proxies
-    stored in cvmfs_http_proxy, executes command to set CVMFS proxies if dump is not specified.
-"""
+
+    # reads data from a URL from a Shoal server, parses it, prepares a list of proxies
+    # stored in cvmfs_http_proxy, executes command to set CVMFS proxies if dump is not specified.
+
 
 ## try to load default value from env variable
 try:
     syslog.syslog(syslog.LOG_INFO, "Checking Enviroment Variable for default proxy")
     env_proxy = os.environ['HTTP_PROXY']
-    syslog.syslog(syslog.LOG_INFO, "Enviroment Variable located, adding: %s as default proxy" % env_proxy)
+    syslog.syslog(
+        syslog.LOG_INFO,
+        "Enviroment Variable located, adding: %s as default proxy" % env_proxy)
     if env_proxy != "":
         env_proxy += ";"
 
@@ -157,12 +153,12 @@ try:
     #this goes direct to avoid any bad configuration
     proxy_handler = urllib2.ProxyHandler({})
     opener = urllib2.build_opener(proxy_handler)
-    f = opener.open(server, timeout = 1)
+    f = opener.open(server, timeout=1)
     # data = json.loads(f.read())
     data = parseServerData(f.read())
     syslog.syslog(syslog.LOG_DEBUG, "Got data from %s" % server)
-except (urllib2.URLError,ValueError), e:
-    # This is where the client now exits if it can't reach shoal, might be worth 
+except (urllib2.URLError, ValueError), e:
+    # This is where the client now exits if it can't reach shoal, might be worth
     # refactoring instead of injecting code here to reuse the proceeding code.
     #checkEnvVariable()
     #checkConfig()
@@ -184,7 +180,11 @@ if not no_shoal_server:
             try:
                 closest_http_proxy += '(proxyurl=http://%s:%s)' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
             except KeyError, e:
-                syslog.syslog(syslog.LOG_ERR, "The data returned from '%s' was missing the key: %s. Please ensure the server is running the latest version of Shoal-Server." % (server, e))
+                syslog.syslog(
+                    syslog.LOG_ERR,
+                    "The data returned from '%s' was missing the key: %s. "
+                    "Please ensure the server is running the latest version "
+                    "of Shoal-Server." % (server, e))
                 sys.exit(2)
 
     else:
@@ -192,17 +192,19 @@ if not no_shoal_server:
             try:
                 closest_http_proxy += 'http://%s:%s;' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
             except KeyError, e:
-                syslog.syslog(syslog.LOG_ERR, "The data returned from '%s' was missing the key: %s. Please ensure the server is running the latest version of Shoal-Server." % (server, e))
+                syslog.syslog(
+                    syslog.LOG_ERR,
+                    "The data returned from '%s' was missing the key: %s. Please ensure the "
+                    "server is running the latest version of Shoal-Server." % (server, e))
                 sys.exit(2)
-     
 
     #need to reformat default string for frontier nodes
     if frontier:
-        new_defaults=''
-        tmpproxies=default_http_proxy.split(';')
+        new_defaults = ''
+        tmpproxies = default_http_proxy.split(';')
         for proxy in tmpproxies:
-            new_defaults+= '(proxyurl=%s)' % proxy
-        default_http_proxy=new_defaults
+            new_defaults += '(proxyurl=%s)' % proxy
+        default_http_proxy = new_defaults
 
 
     cvmfs_http_proxy = "\"" + closest_http_proxy + default_http_proxy + "\""
@@ -219,11 +221,13 @@ if not no_shoal_server:
         try:
             frontier_var = os.getenv("FRONTIER_SERVER", "")
         except:
-            syslog.syslog(syslog.LOG_ERR, "FRONTIER_SERVER env variable unset, unable to run with --frontier option")
+            syslog.syslog(
+                syslog.LOG_ERR,
+                "FRONTIER_SERVER env variable unset, unable to run with --frontier option")
             sys.exit(1)
         frontier_output = ""
         server_list = re.findall('(\(.*?\))', frontier_var)
-        server_list.insert(1,closest_http_proxy)
+        server_list.insert(1, closest_http_proxy)
         for srvr in server_list:
             frontier_output += srvr
         print frontier_output
@@ -242,7 +246,9 @@ if not no_shoal_server:
             if output:
                 syslog.syslog(syslog.LOG_DEBUG, output)
             if p.returncode:
-                syslog.syslog(syslog.LOG_ERR, "WARNING: CVMFS proxies may not have been set correctly for all repos")
+                syslog.syslog(
+                    syslog.LOG_ERR,
+                    "WARNING: CVMFS proxies may not have been set correctly for all repos")
                 sys.exit(p.returncode)
             else:
                 syslog.syslog(syslog.LOG_INFO, "CVMFS proxies set to %s" % cvmfs_http_proxy)
@@ -271,7 +277,9 @@ else:
             if output:
                 syslog.syslog(syslog.LOG_DEBUG, output)
             if p.returncode:
-                syslog.syslog(syslog.LOG_ERR, "WARNING: CVMFS proxies may not have been set correctly for all repos")
+                syslog.syslog(
+                    syslog.LOG_ERR,
+                    "WARNING: CVMFS proxies may not have been set correctly for all repos")
                 sys.exit(p.returncode)
             else:
                 syslog.syslog(syslog.LOG_INFO, "CVMFS proxies set to %s" % cvmfs_http_proxy)
