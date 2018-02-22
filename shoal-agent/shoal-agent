@@ -8,46 +8,45 @@
 
 import sys
 import json
-import pika
 import time
-import netifaces
 import uuid
 import signal
 import socket
 import logging
-import urllib
-import urllib2
 
+import netifaces
+import pika
 
 from shoal_agent import config
 
 # Time interval to send data
 INTERVAL = config.interval
-privAddressList = ['172.' + str(x) for x in range(16,32)] + ['10.', '192.168.']
+privAddressList = ['172.' + str(x) for x in range(16, 32)] + ['10.', '192.168.']
 PRIVATE_ADDRESS = tuple(privAddressList)
 LOG_FORMAT = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
 
 def SIGTERM_handler(signal, frame):
-    """
-        Catches sigterm sent by the start-stop script when running shoal agent as a service. Allows logging be
-    """
+
+    # Catches sigterm sent by the start-stop script when running shoal agent as a service.
+
     logging.info("shoal-agent exiting")
     sys.exit(0)
 
 def amqp_send(data, topics=['info']):
-    """
-        amqp_send sends the passed in data to the rabbitMQ exchange with a routing key that is a concatenation of all items in topics separated by periods
-        This method on each call reads SSL certificate/key files, establishes a connection to the AMQP server, sends the data then closes the connection.
-    """
+
+    # amqp_send sends the passed in data to the rabbitMQ exchange with a routing key that is
+    # a concatenation of all items in topics separated by periods This method on each call
+    # reads SSL certificate/key files, establishes a connection to the AMQP server, sends the
+    # data then closes the connection.
+
     routing_key = ''.join(topics)
     logging.info('AMQP routing key: {0}'.format(routing_key))
-  
-    connection = pika.BlockingConnection(pika.ConnectionParameters
-                                         (
-                                          host=config.amqp_server_url,
-                                          port=config.amqp_port,
-                                         ),
-                                        )
+
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(
+            host=config.amqp_server_url,
+            port=config.amqp_port,)
+        ,)
     channel = connection.channel()
     channel.basic_publish(exchange=config.amqp_exchange,
                           routing_key=routing_key,
@@ -56,10 +55,10 @@ def amqp_send(data, topics=['info']):
     connection.close()
 
 def get_load_data(interface):
-    """
-        get_load_data returns the outgoing kilobytes per second of the passed in interface
-        note this is UNIX specifc 
-    """
+
+    # get_load_data returns the outgoing kilobytes per second of the passed in interface
+    # note this is UNIX specifc
+
     path = '/sys/class/net/{0}/statistics/tx_bytes'.format(interface)
     logging.info("Path to '{0}' load data: {1}".format(interface, path))
     try:
@@ -71,11 +70,11 @@ def get_load_data(interface):
             tx2 = int(tx.read())
         # get kilobytes
         return (tx2 - tx1) / 1024
-    except IOError as e:
+    except IOError:
         logging.error("Path '{0}' does not exist. Please change NIC to monitor in configuration file.".format(path))
         sys.exit(1)
-    except Exception as e:
-        logging.error(e)
+    except Exception as exc:
+        logging.error(exc)
         sys.exit(1)
 
 def get_ip_addresses():
@@ -91,37 +90,38 @@ def get_ip_addresses():
                     private[interface] = link['addr']
                 elif not link['addr'].startswith('127.'):
                     public[interface] = link['addr']
-        except Exception as e:
+        except Exception:
             # This is intentionally left blank
-            # Not all interfaces returned form netifaces.interfaces have an internet address (some are ethernet or MAC)
-            # This code only looks for adresses with proper internet adresses
-            # Note IPV6 addresses are not checked and netifaces.AF_INET6 needs to be used to get those 
-            # (Note this currently does not work on all platforms unlike AF_INET/IPV4)
-            # For more information on netifaces, see the readme at https://github.com/raphdg/netifaces
+            # Not all interfaces returned form netifaces.interfaces have an internet address
+            # (some are ethernet or MAC) This code only looks for adresses with proper internet
+            # adresses. Note IPV6 addresses are not checked and netifaces.AF_INET6 needs to be
+            # used to get those (Note this currently does not work on all platforms unlike
+            # AF_INET/IPV4) For more information on netifaces, see the readme at
+            # https://github.com/raphdg/netifaces
             continue
     logging.info('Public IPs found: {0}, Private IPs found: {1}'.format(public, private))
     return public, private
 
 def main():
-    """
-        Sets up uuid, hostname, squid_port, public/private/external ip, and interface
-        Establishes connection and publishes the load and ip of the squid server using a json formatted amqp message at regular intervals
-    """
+    # Sets up uuid, hostname, squid_port, public/private/external ip, and interface
+    # Establishes connection and publishes the load and ip of the squid server using
+    # a json formatted amqp message at regular intervals
+
     try:
         logging.basicConfig(level=config.logging_level, format=LOG_FORMAT, filename=config.log_file)
-    except IOError as e:
-        print "Could not set logging file. Please check config file.", e
+    except IOError as exc:
+        print "Could not set logging file. Please check config file.", exc
         sys.exit(1)
 
     data = {
-            'uuid': uuid.uuid1().hex,
-            'hostname': socket.gethostname(),
-            'squid_port': config.squid_port,
-            'verified': config.verified,
-            'max_load': config.max_load,
-            'global_access': config.global_access,
-            'domain_access': config.domain_access
-           }
+        'uuid': uuid.uuid1().hex,
+        'hostname': socket.gethostname(),
+        'squid_port': config.squid_port,
+        'verified': config.verified,
+        'max_load': config.max_load,
+        'global_access': config.global_access,
+        'domain_access': config.domain_access
+    }
 
     public_ip, private_ip = get_ip_addresses()
     external_ip = config.external_ip
@@ -130,10 +130,10 @@ def main():
     #set the data to the first valid IP address
     try:
         data['private_ip'] = private_ip.values()[0]
-    except IndexError as e:
+    except IndexError:
         pass
 
-    if public_ip: 
+    if public_ip:
         try:
             data['public_ip'] = public_ip.values()[0]
             data['hostname'] = socket.gethostbyaddr(public_ip.values()[0])[0]
@@ -146,11 +146,12 @@ def main():
             #not sure this is needed, if the key doesn't exist it will be created
             pass
     else:
-        logging.error("Shoal-Agent was unable to find a public IP or external IP for this squid. Please set an external IP in shoal-agent config file.")
+        logging.error("Shoal-Agent was unable to find a public IP or external IP for this squid."
+                      " Please set an external IP in shoal-agent config file.")
         sys.exit(1)
 
 
-    if dnsname: 
+    if dnsname:
         try:
             data['hostname'] = dnsname
         except KeyError:
@@ -165,7 +166,8 @@ def main():
     elif private_ip:
         interface = private_ip.keys()[0]
     else:
-        logging.error("Unable to automatically detect interface to monitor, please set the interface to monitor in configuration file.")
+        logging.error("Unable to automatically detect interface to monitor, please "
+                      "set the interface to monitor in configuration file.")
         sys.exit(1)
 
     # enable the sigterm signal handler to log before exit
@@ -175,16 +177,17 @@ def main():
     while True:
         # only time/load are expected to change
         # private/public/external IPs are kept constant while shoal-agent is running
-        # the load is read only from a single interface either user specified or the first valid one netifaces finds
+        # the load is read only from a single interface either user specified or the
+        # first valid one netifaces finds
         try:
             data['timestamp'] = time.time()
             data['load'] = get_load_data(interface)
             try:
                 amqp_send(json.dumps(data))
                 logging.debug("heartbeat sent to shoal-server sucessfully")
-            except Exception as e:
-                logging.error("Could not connect to AMQP Server. Attempting to connect in {0}s...".format(INTERVAL))          
-                logging.error(e)
+            except Exception as exc:
+                logging.error("Could not connect to AMQP Server. Attempting to connect in {0}s...".format(INTERVAL))
+                logging.error(exc)
             time.sleep(INTERVAL)
         except KeyboardInterrupt, KeyError:
             logging.info("shoal-agent exiting")
@@ -193,4 +196,3 @@ def main():
 if __name__ == '__main__':
     print "starting shoal-agent"
     main()
-
