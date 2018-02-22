@@ -1,18 +1,19 @@
-import web
-import re
+
 import json
 import operator
-import config
 import math
-
 from time import time
+
+import web
+
+import shoal_server.config as config
 from shoal_server import utilities
-from __version__ import version
+from shoal_server.__version__ import version
 
 t_globals = dict(
-  datestr=web.datestr,
-  version=version,
-  squid_active_time=config.squid_inactive_time,
+    datestr=web.datestr,
+    version=version,
+    squid_active_time=config.squid_inactive_time,
 )
 
 CACHE = config.webpy_cache
@@ -29,7 +30,7 @@ class nearest:
     def GET(self, count):
         web.header('Content-Type', 'application/json')
         return view_nearest(count)
-    
+
 class nearestverified:
     def GET(self, count):
         web.header('Content-Type', 'application/json')
@@ -46,7 +47,7 @@ class wpad:
         # note view_wpad does not return a string
         data = str(view_wpad())
         web.header('Content-Type', 'application/x-ns-proxy-autoconfig')
-        web.header('Content-Length',len(data))
+        web.header('Content-Length', len(data))
         return data
 
 def view_index(size):
@@ -56,12 +57,11 @@ def view_index(size):
     """
     params = web.input()
     page = params.page if hasattr(params, 'page') else 1
-    sorted_shoal = sorted(web.shoal.values(), key=operator.attrgetter('last_active')) 
+    sorted_shoal = sorted(web.shoal.values(), key=operator.attrgetter('last_active'))
     sorted_shoal.reverse()
     total = len(sorted_shoal)
     page = int(page)
 
-      
     try:
         size = int(size)
     except (ValueError, TypeError):
@@ -90,10 +90,10 @@ def view_nearest(count):
 
     ip = web.ctx['ip']
 
-    squids = utilities.get_nearest_squids(ip,count)
+    squids = utilities.get_nearest_squids(ip, count)
     if squids:
         squid_json = {}
-        for i,squid in enumerate(squids):
+        for i, squid in enumerate(squids):
             squid_json[i] = squid[0].jsonify()
             squid_json[i]['distance'] = squid[1]
         return json.dumps(squid_json)
@@ -111,10 +111,10 @@ def view_nearest_verified(count):
 
     ip = web.ctx['ip']
 
-    squids = utilities.get_nearest_verified_squids(ip,count)
+    squids = utilities.get_nearest_verified_squids(ip, count)
     if squids:
         squid_json = {}
-        for i,squid in enumerate(squids):
+        for i, squid in enumerate(squids):
             squid_json[i] = squid[0].jsonify()
             squid_json[i]['distance'] = squid[1]
         return json.dumps(squid_json)
@@ -128,7 +128,7 @@ def view_allsquids():
     squids = utilities.get_all_squids()
     if squids:
         squid_json = {}
-        for i,squid in enumerate(squids):
+        for i, squid in enumerate(squids):
             squid_json[i] = squid.jsonify()
         return json.dumps(squid_json)
     else:

@@ -3,7 +3,6 @@ import os
 import sys
 import logging
 
-from threading import Thread
 from time import sleep
 from shoal_server import config
 from shoal_server.shoal import ThreadMonitor, WebpyServer
@@ -55,6 +54,7 @@ if __name__ == '__main__':
     try:
         os.chdir(shoal_dir)
     except OSError as e:
-        print "{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server config file to the location of the shoal-server static files.".format(shoal_dir)
+        print "{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server " \
+              "config file to the location of the shoal-server static files.".format(shoal_dir)
         sys.exit(1)
     main()
