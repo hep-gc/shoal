@@ -176,8 +176,12 @@ def download_geolitecity():
                      "Check contents of %s for possible errors.", (GEOLITE_DB + '.gz'))
         sys.exit(1)
 
-    with open(GEOLITE_DB, 'w') as f:
-        f.write(content)
+    try:
+        with open(GEOLITE_DB, 'w') as f:
+            f.write(content)
+    except Exception as exc:
+        logger.error("Unable to open Geolite city database for writing..")
+        logger.error(exc)
 
     if check_geolitecity_need_update():
         logger.error('GeoLiteCity database failed to update.')
