@@ -171,9 +171,15 @@ def download_geolitecity():
         sys.exit(1)
     try:
         content = gzip.open(GEOLITE_DB + '.gz').read()
-        last_line = content.splitlines()[-1]
-        # Line format example: GEO-533LITE 20180327 Build 1 Copyright (c) 2018 MaxMind Inc All Rights Reserved
-        update_date = last_line.split()[1]
+        lines = content.splitlines()
+        last_line = lines[-1]
+        tokens = last_line.split()
+        i=0
+        for token in tokens:
+            if "GEO-533LITE" in token:
+                update_date = tokens[i+1]
+                break
+            i= i+1
     except Exception:
         logger.error("GeoLiteCity.dat file was not properly downloaded. "
                      "Check contents of %s for possible errors.", (GEOLITE_DB + '.gz'))
@@ -191,7 +197,14 @@ def download_geolitecity():
             return
         else:
             #compare the dates
-            old_update_date = old_last_line.split()[-1]
+            tokens = old_last_line.split()
+            i=0
+            for token in tokens:
+                if "GEO-533LITE" in token:
+                    old_update_date = tokens[i+1]
+                    break
+                i= i+1
+
             if not int(update_date) > int(old_update_date):
                 #no need to update
                 logger.info("Downloaded database is not newer than local copy, aborting update")
