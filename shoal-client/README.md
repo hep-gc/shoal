@@ -2,7 +2,7 @@
 # Version: v0.6.X
 
 shoal-client will configure cvmfs to use the closest squid server to you by contacting the shoal server
-and using cvfms-talk to update the active proxy configuration.
+and using cvmfs-talk to update the active proxy configuration.
 
 shoal-client is a simple python script typically configured to run with cron to check for new squids 
 periodically. Before setting the cronjob in place make sure that shoal-client is
@@ -58,7 +58,7 @@ A complete shoal_client.conf file for ATLAS can be obtained by:
 ## Usage
 
 Confirm the that you configured shoal-client as expected by checking the output of `shoal-client --dump`
-The output is a list of servers that will be set as proxies using cvfms-talk. For example you will see 
+The output is a list of servers that will be set as proxies using cvmfs-talk. For example you will see 
 something like the following:cvmfs_talk proxy info
 `http://squid.example1.com:3128;http://squid.example2.com:3128;http://squid.example3.com:3128;http://squid.example4.com:3128;http://squid.example5.org:3128;DIRECT`
 
