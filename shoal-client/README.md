@@ -23,7 +23,7 @@ root permissions.
 ### Recommended Instalation Method: Use yum (est. ~5 min)
 
 First install [EPEL](http://fedoraproject.org/wiki/EPEL) 
-cvmfs_talk proxy info
+
     sudo yum install epel-release
     sudo yum update
 
