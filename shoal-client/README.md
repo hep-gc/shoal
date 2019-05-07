@@ -88,12 +88,12 @@ Shoal client now uses the cvmfs_talk protocol. To view the list of returned squi
 
 ## Other Installation Methods
 
-###Using Pip
+### Using Pip
 
 1. `pip install shoal-client`
 2. Check settings in `shoal_client.conf` update as needed.
 
-###Using Git
+### Using Git
 1. `git clone git://github.com/hep-gc/shoal.git`
 2. `cd shoal/shoal-client/`
 3. `python setup.py install`
