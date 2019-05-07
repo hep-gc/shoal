@@ -65,7 +65,6 @@ something like the following:
 
 If the output looks resonable now set a crontab entry to run shoal say every 30 minutes:
 
-    crontab -e
     0,30 * * * * /usr/bin/shoal-client
 
 New in version 0.6.4 is the --frontier option that will produce an output string suitable for frontier.
