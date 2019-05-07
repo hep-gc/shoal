@@ -59,8 +59,9 @@ A complete shoal_client.conf file for ATLAS can be obtained by:
 
 Confirm the that you configured shoal-client as expected by checking the output of `shoal-client --dump`
 The output is a list of servers that will be set as proxies using cvmfs-talk. For example you will see 
-something like the following:cvmfs_talk proxy info
-`http://squid.example1.com:3128;http://squid.example2.com:3128;http://squid.example3.com:3128;http://squid.example4.com:3128;http://squid.example5.org:3128;DIRECT`
+something like the following:
+
+    http://squid.example1.com:3128;http://squid.example2.com:3128;http://squid.example3.com:3128;http://squid.example4.com:3128;http://squid.example5.org:3128;DIRECT
 
 If the output looks resonable now set a crontab entry to run shoal say every 30 minutes:
 
@@ -71,7 +72,8 @@ New in version 0.6.4 is the --frontier option that will produce an output string
 Users will need to use a simple script that runs shoal-client and uses the output to set the proxies.
 An example script can be found [here](https://github.com/hep-gc/shoal/blob/master/shoal-client/scripts/frontier_set.sh) in the shoal-client/scripts directory.
 Example output when running `shoal-client --frontier`:
-`(serverurl=http://PresetServer.ca:3128)(proxyurl=http://PROXY.FROM.SHOAL.1:3128)(proxyurl=http://PROXY.FROM.SHOAL.2:3128)`
+
+    (serverurl=http://PresetServer.ca:3128)(proxyurl=http://PROXY.FROM.SHOAL.1:3128)(proxyurl=http://PROXY.FROM.SHOAL.2:3128)
 
 ### Flags and Options
 | Option | Description |
