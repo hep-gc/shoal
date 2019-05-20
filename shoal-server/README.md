@@ -38,8 +38,8 @@ The new release of shoal has several new optional features
   - `/var/www/shoal/static/db/`
 
 ## Installation
- _**Note**: Requires you have a working RabbitMQ AMQP Server, and Python 2.6+_
-_Recommended to use a system wide install (sudo), but works in a virtualenv with tweaks_
+ _**Note**: Requires you have a working RabbitMQ AMQP Server, and Python 2.6+_.
+_Recommended to use a system wide install (sudo), but works in a virtualenv with tweaks_.
 
 _**Note**: Shoal static files will be located either at `~/shoal_server/` or `/var/shoal/` if sudo was used_
 
@@ -75,7 +75,8 @@ Configure the server and start it:
     visit localhost
 
 ### Using Pip
-_**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details.
+_**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details._
+
 _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and apache with a working version of mod_wsgi_
 
 1. `pip install shoal-server`
@@ -95,7 +96,8 @@ _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and ap
 5. Visit `http://localhost`
 
 ### Using Git (requires manual file placemet)
-_**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details.
+_**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details._
+
 _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and apache with a working version of mod_wsgi_
 
 1. `git clone git://github.com/hep-gc/shoal.git`
