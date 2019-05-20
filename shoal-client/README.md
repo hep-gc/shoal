@@ -44,8 +44,8 @@ Configure the client to use a shoal server:
 
     vim /etc/shoal/shoal_client.conf
 
-If you are using a shoal sever that has verification enabled make sure the configuration is set to
-the verifiednearest URL
+If you are using a shoal server that has verification enabled make sure the configuration is set to
+the nearestverified URL.
 
 
 ### Hint for the ATLAS Experiment Users:
