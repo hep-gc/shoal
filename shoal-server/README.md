@@ -7,7 +7,7 @@
 Clients can use the Shoal Server RESTful API to retrieve a list of nearest squids. Assuming Shoal Server is running on `localhost` the following commands can be used:
 
 - To get a list of the default 5 nearest verified squids use:
-  - 'http:localhost/nearestverified'
+  - `http:localhost/nearestverified`
 - To retrieve a variable size of nearest verified squids you can use `http://localhost/nearestverified/<# of squids>`. For example to retrieve the closest 20 squid servers you can use:
   - `http://localhost/nearestverified/20`
 
