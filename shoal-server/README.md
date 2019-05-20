@@ -72,7 +72,8 @@ Configure the server and start it:
     vim /etc/shoal/shoal_server.conf
     #If the server is to be external facing be sure to open port 80 for apache
     service apachctl start
-    visit localhost
+
+Visit `http://localhost`
 
 ### Using Pip
 _**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details._
