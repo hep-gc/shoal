@@ -91,7 +91,7 @@ _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and ap
 3. Check settings in `shoal_server.conf` update as needed. Make sure RabbitMQ server is running.
 
 4. Run the Apache service `service httpd start
-  - _First run make take a few seconds to start as it needs to download the GeoLiteCity database (~12MB)._
+  - _First run may take a few seconds to start as it needs to download the GeoLiteCity database (~12MB)._
 
 5. Visit `http://localhost`
 
@@ -113,6 +113,6 @@ _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and ap
 	
 5. Check settings in `shoal_server.conf` update as needed. Make sure RabbitMQ server is running.
 6. Run the apache service `service httpd start`
- - _First run make take a few seconds to start as it needs to download the GeoLiteCity database (~12MB)._
+  - _First run may take a few seconds to start as it needs to download the GeoLiteCity database (~12MB)._
  
 7. Visit `http://localhost`
