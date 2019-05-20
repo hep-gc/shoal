@@ -37,7 +37,7 @@ The new release of shoal has several new optional features
 - **GeoIP2 Domain database will have to be manually placed in the proper directory default:**
   - `/var/www/shoal/static/db/`
 
-##Installation
+## Installation
  _**Note**: Requires you have a working RabbitMQ AMQP Server, and Python 2.6+_
 _Recommended to use a system wide install (sudo), but works in a virtualenv with tweaks_
 
