@@ -45,7 +45,7 @@ _**Note**: Shoal static files will be located either at `~/shoal_server/` or `/v
 
 _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if sudo was used_
 
-###Recommended Method: Use yum (Apache) (est. ~10 min)
+### Recommended Method: Use yum (Apache) (est. ~10 min)
 The Yum rpm will Install all the dependencies including apache and configure them for shoal.
 **The Yum install does NOT [install the rabbitmq-server](https://www.rabbitmq.com/install-rpm.html) which will be required if one is not already running somewhere.**
 
