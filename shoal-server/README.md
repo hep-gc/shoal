@@ -1,9 +1,9 @@
 # Shoal Server README
 # Version: v0.7.X
-##Services
+## Services
 **Shoal Server** provides two services that can be utilized by clients.
 
-###RESTful API
+### RESTful API
 Clients can use the Shoal Server RESTful API to retrieve a list of nearest squids. Assuming Shoal Server is running on `localhost` the following commands can be used:
 
 - To get a list of the default 5 nearest verified squids use:
@@ -16,13 +16,13 @@ Clients can use the Shoal Server RESTful API to retrieve a list of nearest squid
 - To get a list of all squids stored in shoal use:
   - `http://localhost/all`
  
-###WPAD
+### WPAD
 Shoal Server has a basic implementation of the [WPAD](http://en.wikipedia.org/wiki/Web_Proxy_Autodiscovery_Protocol) standard.
 
 - To retrieve a WPAD file containing the 5 closest squids you can visit:
   - `http://localhost/wpad.dat`
 
-###Optional Features
+### Optional Features
 The new release of shoal has several new optional features
 - Verification
   - The new verification feature ids toggleable in the shoal_server configuration file
@@ -37,7 +37,7 @@ The new release of shoal has several new optional features
 - **GeoIP2 Domain database will have to be manually placed in the proper directory default:**
   - `/var/www/shoal/static/db/`
 
-##Installation
+## Installation
  _**Note**: Requires you have a working RabbitMQ AMQP Server, and Python 2.6+_
 _Recommended to use a system wide install (sudo), but works in a virtualenv with tweaks_
 
@@ -74,7 +74,7 @@ Configure the server and start it:
     service apachctl start
     visit localhost
 
-###Using Pip
+### Using Pip
 _**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details.
 _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and apache with a working version of mod_wsgi_
 
@@ -94,7 +94,7 @@ _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and ap
 
 5. Visit `http://localhost`
 
-###Using Git (requires manual file placemet)
+### Using Git (requires manual file placemet)
 _**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details.
 _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and apache with a working version of mod_wsgi_
 
