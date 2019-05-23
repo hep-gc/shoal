@@ -96,6 +96,23 @@ def view_nearest(count):
         for i, squid in enumerate(squids):
             squid_json[i] = squid[0].jsonify()
             squid_json[i]['distance'] = squid[1]
+            geo_obj = squid_json[i]['geo_data']
+            geo_dict = {
+                "city":   geo_obj.city.name,
+                "region_code":  geo_obj.subdivisions.most_specific.iso_code,
+                #"area_code":    ???,
+                "time_zone":    geo_obj.location.time_zone,
+                #"dma_code":     ???,
+                "metro_code":   geo_obj.location.metro_code,
+                #"country_code3":???,
+                "latitude":     geo_obj.location.latitude,
+                "longitude":    geo_obj.location.latitude,
+                "postal_code":  geo_obj.postal.code,
+                "country_code": geo_obj.country.iso_code,
+                "country_name": geo_obj.country.name,
+                "continent":    geo_obj.continent.code
+            }
+            squid_json[i]['geo_data'] = geo_dict
         return json.dumps(squid_json)
     else:
         return json.dumps(None)
@@ -117,6 +134,23 @@ def view_nearest_verified(count):
         for i, squid in enumerate(squids):
             squid_json[i] = squid[0].jsonify()
             squid_json[i]['distance'] = squid[1]
+            geo_obj = squid_json[i]['geo_data']
+            geo_dict = {
+                "city":   geo_obj.city.name,
+                "region_code":  geo_obj.subdivisions.most_specific.iso_code,
+                #"area_code":    ???,
+                "time_zone":    geo_obj.location.time_zone,
+                #"dma_code":     ???,
+                "metro_code":   geo_obj.location.metro_code,
+                #"country_code3":???,
+                "latitude":     geo_obj.location.latitude,
+                "longitude":    geo_obj.location.latitude,
+                "postal_code":  geo_obj.postal.code,
+                "country_code": geo_obj.country.iso_code,
+                "country_name": geo_obj.country.name,
+                "continent":    geo_obj.continent.code
+            }
+            squid_json[i]['geo_data'] = geo_dict
         return json.dumps(squid_json)
     else:
         return json.dumps(None)
@@ -130,6 +164,23 @@ def view_allsquids():
         squid_json = {}
         for i, squid in enumerate(squids):
             squid_json[i] = squid.jsonify()
+            geo_obj = squid_json[i]['geo_data']
+            geo_dict = {
+                "city":   geo_obj.city.name,
+                "region_code":  geo_obj.subdivisions.most_specific.iso_code,
+                #"area_code":    ???,
+                "time_zone":    geo_obj.location.time_zone,
+                #"dma_code":     ???,
+                "metro_code":   geo_obj.location.metro_code,
+                #"country_code3":???,
+                "latitude":     geo_obj.location.latitude,
+                "longitude":    geo_obj.location.latitude,
+                "postal_code":  geo_obj.postal.code,
+                "country_code": geo_obj.country.iso_code,
+                "country_name": geo_obj.country.name,
+                "continent":    geo_obj.continent.code
+            }
+            squid_json[i]['geo_data'] = geo_dict
         return json.dumps(squid_json)
     else:
         return json.dumps(None)

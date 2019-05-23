@@ -1,7 +1,7 @@
 import sys
 import os
 import logging
-import gzip
+import tarfile
 import re
 from time import time
 from math import radians, cos, sin, asin, sqrt
@@ -14,7 +14,7 @@ import web
 
 import shoal_server.config as config
 
-GEOLITE_DB = os.path.join(config.geolitecity_path, "GeoLiteCity.dat")
+GEOLITE_DB = os.path.join(config.geolitecity_path, "GeoLiteCity.mmdb")
 GEOLITE_URL = config.geolitecity_url
 GEOLITE_UPDATE = config.geolitecity_update
 GEODOMAIN_DB = os.path.join(config.geodomain_path, "GeoIP2-Domain.mmdb")
@@ -26,11 +26,19 @@ def get_geolocation(ip):
     """
         Given an IP return all its geographical information (using GeoLiteCity.dat)
     """
+    """  OLD .DAT IMPLEMENTATION
     try:
         gi = pygeoip.GeoIP(GEOLITE_DB)
         return gi.record_by_addr(ip)
     except Exception as exc:
         logger.error(exc)
+        return None
+    """
+    try:
+        reader = geoip2.database.Reader(GEOLITE_DB)
+        return reader.city(ip)
+    except Exception as exc:
+        logger.exception(exc)
         return None
 
 def get_nearest_squids(ip, count=10):
@@ -54,8 +62,8 @@ def get_nearest_verified_squids(ip, count=10):
         return None
 
     try:
-        r_lat = request_data['latitude']
-        r_long = request_data['longitude']
+        r_lat = request_data.location.latitude
+        r_long = request_data.location.longitude
     except KeyError as exc:
         logger.error("Could not read request data:")
         logger.error(exc)
@@ -81,8 +89,8 @@ def get_nearest_verified_squids(ip, count=10):
         # if there is no global access but the requester is from the same domain
         if ((squid.verified or not config.squid_verification) and squid.global_access) or checkDomain(ip, squid.public_ip):
 
-            s_lat = float(squid.geo_data['latitude'])
-            s_long = float(squid.geo_data['longitude'])
+            s_lat = float(squid.geo_data.location.latitude)
+            s_long = float(squid.geo_data.location.longitude)
 
             distance = haversine(r_lat, r_long, s_lat, s_long)
             distancecost = distance/(earthrad * 3.14159265359) * (w)
@@ -170,19 +178,19 @@ def download_geolitecity():
         logger.error("Could not download the database. - %s", exc)
         sys.exit(1)
     try:
-        content = gzip.open(GEOLITE_DB + '.gz').read()
+        fname = GEOLITE_DB + '.gz'
+        tar = tarfile.open(fname, "r:gz")
+        tar.extractall()
+        dir_name = tar.getmembers()[0].name #only 1 member of this tar and it is a directory containing all the files
+        tar.close()
+        db_path = os.path.join(config.geolitecity_path, dir_name)
+        db_path = os.path.join(db_path, "GeoLite2-City.mmdb")
+        os.rename(db_path, GEOLITE_DB)
+        
     except Exception:
         logger.error("GeoLiteCity.dat file was not properly downloaded. "
                      "Check contents of %s for possible errors.", (GEOLITE_DB + '.gz'))
         sys.exit(1)
-
-    try:
-        with open(GEOLITE_DB, 'w') as f:
-            f.write(content)
-    except Exception as exc:
-        logger.error("Unable to open Geolite city database for writing..")
-        logger.error(exc)
-
     if check_geolitecity_need_update():
         logger.error('GeoLiteCity database failed to update.')
 
