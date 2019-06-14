@@ -12,6 +12,8 @@ import pygeoip
 import geoip2.database
 import web
 
+import socket
+
 import shoal_server.config as config
 
 GEOLITE_DB = os.path.join(config.geolitecity_path, "GeoLiteCity.mmdb")
@@ -111,6 +113,14 @@ def get_all_squids():
 
     return squids
 
+def lookupDomain(temp_ip):
+    name = socket.getfqdn(temp_ip)
+    if name == temp_ip:
+       	return None
+    domain = name.split('.')
+    return domain[-2]+'.'+domain[-1]
+
+
 def checkDomain(req_ip, squid_ip):
     """
     Check if two ips come from the same domain
@@ -120,9 +130,13 @@ def checkDomain(req_ip, squid_ip):
     if os.path.exists(GEODOMAIN_DB):
         try:
             reader = geoip2.database.Reader(GEODOMAIN_DB)
-            req_domain = reader.domain(req_ip)
-            squid_domain = reader.domain(squid_ip)
-            if (req_domain.domain == squid_domain.domain) and squid_domain.domain is not None:
+            req_domain = reader.domain(req_ip).domain
+            squid_domain = reader.domain(squid_ip).domain
+            if req_domain is None:
+                req_domain = lookupDomain(req_ip)
+            if squid_domain is None:
+                squid_domain = lookupDomain(squid_ip)
+            if (req_domain == squid_domain) and squid_domain is not None:
                 return True
             else:
                 return False
@@ -135,6 +149,7 @@ def checkDomain(req_ip, squid_ip):
                       "to shoal-server/static/db before installation and ensure the path in "
                       "the config file is correct")
         return False
+
 
 def haversine(lat1, lon1, lat2, lon2):
     """
