@@ -506,11 +506,18 @@ class RabbitMQConsumer(Thread):
         except KeyError:
             maxload = config.squid_max_load
         try:
-            globalaccess = bool('True' in data['global_access'])
+            # it seems these can contain proper booleans now and strings
+            if isinstance(data['global_access'], (bool)):
+                globalaccess = data['global_access']
+            else:
+                globalaccess = bool('True' in data['global_access'])
         except KeyError:
             pass
         try:
-            domainaccess = bool('True' in data['domain_access'])
+            if isinstance(data['domain_access'], (bool)):
+                domainaccess = data['domain_access']
+            else:
+                domainaccess = bool('True' in data['domain_access'])
         except KeyError:
             pass
 
