@@ -67,11 +67,11 @@ A complete shoal_agent.conf file for ATLAS can be obtained by:
   3. Use either Pip OR checkout from Github:
     * Using Pip: `pip install shoal-agent` 
     * Using Github: `git clone https://github.com/hep-gc/shoal/trunk/shoal-agent` and `python setup.py install`
-  4. Move configuration files from `/usr/share/shoal-agent/` to their proper locations:
-    * `/usr/share/shoal-agent/conf/shoal_agent.conf` --> `/etc/shoal/shoal_agent.conf`
-    * `/usr/share/shoal-agent/conf/shoal-agent.init` --> `/etc/init.d/shoal-agent`
-    * `/usr/share/shoal-agent/conf/shoal-agent.logrotate` --> `/etc/logrotate.d/shoal-agent`
-    * `/usr/share/shoal-agent/conf/shoal-agent.sysconfig` --> `/etc/sysconfig/shoal/shoal-agent`
-    * `/usr/share/shoal-agent/conf/shoal-agent.service` --> `/usr/lib/systemd/system/shoal-agent.service` (if necessary)
+  4. Move configuration files from `/usr/share/shoal-agent/` to their proper locations:   
+    * `/usr/share/shoal-agent/conf/shoal_agent.conf` --> `/etc/shoal/shoal_agent.conf`   
+    * `/usr/share/shoal-agent/conf/shoal-agent.init` --> `/etc/init.d/shoal-agent`   
+    * `/usr/share/shoal-agent/conf/shoal-agent.logrotate` --> `/etc/logrotate.d/shoal-agent`    
+    * `/usr/share/shoal-agent/conf/shoal-agent.sysconfig` --> `/etc/sysconfig/shoal/shoal-agent`   
+    * `/usr/share/shoal-agent/conf/shoal-agent.service` --> `/usr/lib/systemd/system/shoal-agent.service` (if necessary)   
   5. Modify the settings in `shoal_agent.conf` as needed.
   6. Start shoal agent: `service shoal-agent start`
