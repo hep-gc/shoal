@@ -20,39 +20,10 @@ proxies via cvmfs-talk. See Usage below for more information.
 **Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if installed 
 root permissions.
 
-### Recommended Instalation Method: Use yum (est. ~5 min)
+### Recommended Instalation Method: Use pip
 
-First install [EPEL](http://fedoraproject.org/wiki/EPEL) 
-cvmfs_talk proxy info
-    sudo yum install epel-release
-    sudo yum update
-
-Get the Shoal yum repository:
-
-    For SL6:
-    sudo curl http://shoal.heprc.uvic.ca/repo/shoal-sl6x.repo -o /etc/yum.repos.d/shoal.repo
-
-    For SL7:
-    sudo curl http://shoal.heprc.uvic.ca/repo/shoal-sl7x.repo -o /etc/yum.repos.d/shoal.repo
-   
-Install the agent:
-
-	sudo rpm --import http://shoal.heprc.uvic.ca/repo/pubkeys/heprc.asc
-    sudo yum install shoal-client
-
-Configure the client to use a shoal server:
-
-    vim /etc/shoal/shoal_client.conf
-
-If you are using a shoal sever that has verification enabled make sure the configuration is set to
-the verifiednearest URL
-
-
-### Hint for the ATLAS Experiment Users:
-
-A complete shoal_client.conf file for ATLAS can be obtained by:
-
-    sudo curl http://shoal.heprc.uvic.ca/repo/shoal_client.conf -o /etc/shoal/shoal_client.conf
+1. `pip install shoal-client`
+2. Check settings in `shoal_client.conf` update as needed.
 
     
 ## Usage
@@ -86,11 +57,6 @@ Shoal client now uses the cvmfs_talk protocol. To view the list of returned squi
      cvmfs_talk proxy info
 
 ## Other Installation Methods
-
-###Using Pip
-
-1. `pip install shoal-client`
-2. Check settings in `shoal_client.conf` update as needed.
 
 ###Using Git
 1. `git clone git://github.com/hep-gc/shoal.git`
