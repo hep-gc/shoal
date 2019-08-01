@@ -39,8 +39,7 @@ In either case, the Shoal agent does not require root privilege to run. The init
 ### Other Methods
   1. [Install EPEL](http://fedoraproject.org/wiki/EPEL)
   2. `yum install python-pika python-netifaces`
-  3. Checkout from Github:
-    * Github: `git clone https://github.com/hep-gc/shoal/trunk/shoal-agent` and `python setup.py install`
+  3. Checkout from Github: `git clone https://github.com/hep-gc/shoal/trunk/shoal-agent` and `python setup.py install`
   4. Move configuration files from `/usr/share/shoal-agent/` to their proper locations:
   * `/usr/share/shoal-agent/conf/shoal_agent.conf` --> `/etc/shoal/shoal_agent.conf`
   * `/usr/share/shoal-agent/conf/shoal-agent.init` --> `/etc/init.d/shoal-agent`
