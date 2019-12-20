@@ -29,6 +29,8 @@ In either case, the Shoal agent does not require root privilege to run. The init
   * `/usr/share/shoal-agent/shoal-agent.sysconfig` --> `/etc/sysconfig/shoal/shoal-agent`
   * `/usr/share/shoal-agent/shoal-agent.service` --> `/usr/lib/systemd/system/shoal-agent.service` (if necessary)
   3. Modify the settings in `shoal_agent.conf` as needed.
+  5. Create the user and group `shoal`
+  6. Create a log file for shoal `/var/log/shoal_agent.log` owned by `shoal:shoal` with `0644`
   4. Start shoal agent: `service shoal-agent start`
   
   
