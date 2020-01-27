@@ -123,8 +123,8 @@ def checkSubnet(req_ip, squid_ip):
     and end address of subnet
     """
     squid_req = get_location(squid_ip)
-    subnet = ipaddress.IPv4Network(str(squid_ip)+'/'+str(squid_req.traits._prefix_len),False)
-    return ipaddress.IPv4Address(req_ip) in subnet
+    subnet = ipaddress.ip_network(str(squid_ip)+'/'+str(squid_req.traits._prefix_len),False)
+    return ipaddress.ip_address(req_ip) in subnet
 
 
 def haversine(lat1, lon1, lat2, lon2):
