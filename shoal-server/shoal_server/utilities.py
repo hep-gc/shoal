@@ -10,6 +10,7 @@ from urllib import urlretrieve
 import requests
 import pygeoip
 import geoip2.database
+import ipaddress
 import web
 
 import socket
@@ -89,7 +90,7 @@ def get_nearest_verified_squids(ip, count=10):
 
         # check if squid is verified or if verification is turned off in the config. or
         # if there is no global access but the requester is from the same domain
-        if ((squid.verified or not config.squid_verification) and squid.global_access) or checkDomain(ip, squid.public_ip):
+        if ((squid.verified or not config.squid_verification) and squid.global_access) or checkSubnet(ip, squid.public_ip):
 
             s_lat = float(squid.geo_data.location.latitude)
             s_long = float(squid.geo_data.location.longitude)
@@ -113,42 +114,17 @@ def get_all_squids():
 
     return squids
 
-def lookupDomain(temp_ip):
-    name = socket.getfqdn(temp_ip)
-    if name == temp_ip:
-       	return None
-    domain = name.split('.')
-    return domain[-2]+'.'+domain[-1]
-
-
-def checkDomain(req_ip, squid_ip):
+def checkSubnet(req_ip, squid_ip):
     """
-    Check if two ips come from the same domain
-    If no database file is detected produce an error message and continue
-    functioning without the domain lookup feature
+    Check if two ips come from the same subnet, subnet is coming from the
+    new, free database we are using from here
+    https://db-ip.com/db/download/ip-to-city-lite
+    which on top of entries of previous database also contains start
+    and end address of subnet
     """
-    if os.path.exists(GEODOMAIN_DB):
-        try:
-            reader = geoip2.database.Reader(GEODOMAIN_DB)
-            req_domain = reader.domain(req_ip).domain
-            squid_domain = reader.domain(squid_ip).domain
-            if req_domain is None:
-                req_domain = lookupDomain(req_ip)
-            if squid_domain is None:
-                squid_domain = lookupDomain(squid_ip)
-            if (req_domain == squid_domain) and squid_domain is not None:
-                return True
-            else:
-                return False
-        except Exception as exc:
-            logging.error(exc)
-            logging.error("IP not found in database - could not find second level domain name")
-            return False
-    else:
-        logging.error("No geoDomain database file detected. Add the database file "
-                      "to shoal-server/static/db before installation and ensure the path in "
-                      "the config file is correct")
-        return False
+    squid_req = get_location(squid_ip)
+    subnet = ipaddress.IPv4Network(str(squid_ip)+'/'+str(squid_req.traits._prefix_len),False)
+    return ipaddress.IPv4Address(req_ip) in subnet
 
 
 def haversine(lat1, lon1, lat2, lon2):
