@@ -305,7 +305,7 @@ def _is_available(squid):
                 "http":proxystring,
             }
             file = requests.get(goodurl, proxies=proxy, timeout=2)
-        except requstss.ConnectionError:
+        except requests.ConnectionError:
             squid.error = "DNS failure or refused connection."
             logging.error(squid.error)
             return False
