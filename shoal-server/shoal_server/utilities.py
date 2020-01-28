@@ -129,13 +129,13 @@ def checkDomain(req_ip, squid_ip):
     """
     if os.path.exists(GEODOMAIN_DB):
         try:
-            reader = geoip2.database.Reader(GEODOMAIN_DB)
-            req_domain = reader.domain(req_ip).domain
-            squid_domain = reader.domain(squid_ip).domain
-            if req_domain is None:
-                req_domain = lookupDomain(req_ip)
-            if squid_domain is None:
-                squid_domain = lookupDomain(squid_ip)
+            #reader = geoip2.database.Reader(GEODOMAIN_DB)
+            #req_domain = reader.domain(req_ip).domain
+            #squid_domain = reader.domain(squid_ip).domain
+            #if req_domain is None:
+            req_domain = lookupDomain(req_ip)
+            #if squid_domain is None:
+            squid_domain = lookupDomain(squid_ip)
             if (req_domain == squid_domain) and squid_domain is not None:
                 return True
             else:
@@ -236,7 +236,7 @@ def verify(squid):
         if squid.global_access or squid.domain_access:
 
             if not _is_available(squid):
-                logging.info("Failed Verification: %s ", str(squid.public_ip or squid.private_ip))
+                logging.warning("Failed Verification: %s ", str(squid.public_ip or squid.private_ip))
                 squid.verified = False
             else:
                 logging.info("VERIFIED:%s ", str(squid.public_ip or squid.private_ip))
@@ -305,19 +305,19 @@ def _is_available(squid):
                 "http":proxystring,
             }
             file = requests.get(goodurl, proxies=proxy, timeout=2)
-        except ConnectionError:
+        except requstss.ConnectionError:
             squid.error = "DNS failure or refused connection."
             logging.error(squid.error)
             return False
-        except HTTPError:
+        except requests.HTTPError:
             squid.error = "Invalid HTTP response."
             logging.error(squid.error)
             return False
-        except Timeout:
+        except requests.Timeout:
             squid.error = "Timeout out on: " + proxy
             logging.error(squid.error)
             return False
-        except RquestException:
+        except requests.RequestException:
             squid.error = "DNS configuration error! Squid IP is OK, but squid URL is wrong."
             logging.error(squid.error)
             return False
