@@ -60,7 +60,7 @@ def get_nearest_verified_squids(ip, count=10):
     """
     request_data = get_geolocation(ip)
     if not request_data:
-        print "no geolocation"
+        print ("no geolocation")
         return None
 
     try:
