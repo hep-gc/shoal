@@ -225,11 +225,12 @@ if not no_shoal_server:
                 syslog.LOG_ERR,
                 "FRONTIER_SERVER env variable unset, unable to run with --frontier option")
             sys.exit(1)
-        frontier_output = ""
-        server_list = re.findall('(\(.*?\))', frontier_var)
-        server_list.insert(1, closest_http_proxy)
-        for srvr in server_list:
-            frontier_output += srvr
+        (frontier_output, replacements) = re.subn(r'(\(.*?\))(\(proxyurl.*?\))',
+                                                  r'\1' + closest_http_proxy + r'\2',
+                                                  frontier_var, 1)
+        # if no replacmeents, then there was no proxyurl to begin with
+        if replacements == 0:
+            frontier_output = frontier_output + closest_http_proxy
         print frontier_output
 
     else:
