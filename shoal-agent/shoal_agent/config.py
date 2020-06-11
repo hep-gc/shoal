@@ -49,9 +49,7 @@ max_load = 122000
 homedir = expanduser('~')
 
 # find config file by checking the directory of the calling script and sets path
-if exists(abspath(sys.path[0]+"/shoal_agent.conf")):
-    path = abspath(sys.path[0]+"/shoal_agent.conf")
-elif exists(abspath(dirname(sys.path[0])+"/shoal_agent.conf")):
+if exists(abspath(dirname(sys.path[0])+"/shoal_agent.conf")):
     path = abspath(dirname(sys.path[0])+"/shoal_agent.conf")
 elif exists("/etc/shoal/shoal_agent.conf"):
     path = "/etc/shoal/shoal_agent.conf"
