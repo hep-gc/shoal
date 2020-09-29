@@ -1,6 +1,11 @@
 # Shoal Agent README
 # Version: v0.9.X
 
+
+## Important to know about the configuration
+## 
+
+
 ## Basic Commands
 With the basic `shoal_agent` init script you can do the following:
 
