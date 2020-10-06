@@ -35,6 +35,30 @@ instructions:
 
 For people familiar with it, everything is available from PyPI.
 
+## Development Roadmap
+
+### Agent
+#### Version 0.9.10
+- Smart//Autoconfiguration to reduce poorly configured shoal-agents
+
+#### Version 0.9.11
+- Better network bandwith and traffic monitoring for server usage
+
+
+### Client
+#### Version 0.6.6
+- Client side testing of served squids
+
+
+### Server
+#### Version 0.7.8
+- python 3 support
+
+#### Version 0.7.9
+- Improved squid verification proccess (exit test after # of failures)
+- Logging & log level configuration
+
+
 ## License
 
 This program is free software; you can redistribute it and/or modify it under the terms of either:
