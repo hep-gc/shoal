@@ -75,7 +75,7 @@ Configure the server and start it:
     visit localhost
 
 ### Using Pip
-_**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details.
+_**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details._  
 _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and apache with a working version of mod_wsgi_
 
 1. `pip install shoal-server`
@@ -95,22 +95,37 @@ _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and ap
 5. Visit `http://localhost`
 
 ### Using Git (requires manual file placemet)
-_**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details.
+_**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details._  
 _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and apache with a working version of mod_wsgi_
 
 1. `git clone git://github.com/hep-gc/shoal.git`
-2. `cd shoal/shoal-server/`
+1. `cd shoal/shoal-server/`
 2.5 (optional) Make sure domain database is in /shoal-server/static/db/ prior to next step or it will not have the domain lookup functionality
-3. `python setup.py install`
-4. Move data and configuration files from `/usr/share/shoal-server/` to their proper locations:
-	- `/usr/share/shoal-server/conf/shoal_server.conf` --> `/etc/shoal/shoal_server.conf`   (file)
-	- `/usr/share/shoal-server/conf/shoal-server.logrotate --> `/etc/logrotate.d/shoal-server` (file)
-	- `/usr/share/shoal-server/scripts/` --> `/var/www/shoal/scripts/` (folder)
-	- `/usr/share/shoal-server/static/`  --> `/var/www/shoal/static/` (folder)
-	- `/usr/share/shoal-server/templates/` --> `/var/www/shoal/templates/` (folder)
-	
-5. Check settings in `shoal_server.conf` update as needed. Make sure RabbitMQ server is running.
-6. Run the apache service `service httpd start`
- - _First run make take a few seconds to start as it needs to download the GeoLiteCity database (~12MB)._
- 
-7. Visit `http://localhost`
+1. `python setup.py install`
+1. Move data and configuration files to their proper locations:
+	- `conf/shoal_server.conf` --> `/etc/shoal/shoal_server.conf`   (file)
+	- `conf/shoal-server.logrotate` --> `/etc/logrotate.d/shoal-server` (file)
+	- `conf/scripts/` --> `/var/www/shoal/scripts/` (folder)
+	- `static/`  --> `/var/www/shoal/static/` (folder)
+	- `templates/` --> `/var/www/shoal/templates/` (folder)
+1. Check settings in `shoal_server.conf` update as needed. Make sure RabbitMQ server is running. Run RabbitMQ server:
+	```
+	$ sudo systemctl start rabbitmq-server 
+	```
+1. Run the apache service
+	```
+	$ sudo service httpd start 
+	```
+    _Note: First run make take a few seconds to start as it needs to download the GeoLiteCity database (~12MB)._
+1. Visit `http://localhost`, if set up the server in VM, access to the web page using `http://floating_ip_address`, should see a page says shoal server site is wroking properly  
+1. Copy shoal.conf file to `/etc/httpd/conf.d` (for setting up the apache)
+	```
+	$ sudo cp conf/shoal.conf /etc/httpd/conf.d/ 
+	```
+1. Restart the web server should see the page now says "List of Active Squids", and the list is empty
+	```
+	$ sudo service httpd restart
+	```
+1. Update the RabbitMQ Server url to be production shoal site, in /etc/shoal.shoal_server.conf, update amqp_server_url = shoal.hep
+1. Restart the web server again, should see a list of active squids now  
+  _Note: need to add the GeoLiteCity.mmdb file to /var/www/shoal/GeoLiteCity.mmdb if the file is missing_
