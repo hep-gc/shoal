@@ -1,6 +1,6 @@
 from os.path import join, expanduser, exists, abspath
 import sys
-import ConfigParser
+import configparser
 
 # Shoal Options Module
 """Setup shoal using config file.
@@ -78,7 +78,7 @@ else:
     sys.exit(1)
 
 # Read config file from the given path above
-config_file = ConfigParser.ConfigParser()
+config_file = configparser.ConfigParser()
 try:
     config_file.read(path)
 except IOError:
@@ -86,7 +86,7 @@ except IOError:
            "problem reading %s. Check that it is readable," \
            "and that it exists. " % path , file=sys.stderr)
     raise
-except ConfigParser.ParsingError:
+except configparser.ParsingError:
     print ("Configuration file problem: Couldn't " \
            "parse your file. Check for spaces before or after variables.", file=sys.stderr)
     raise
