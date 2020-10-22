@@ -96,7 +96,14 @@ _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and ap
 
 ### Using Git (requires manual file placemet)
 _**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details._  
-_**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and apache with a working version of mod_wsgi_
+_**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and apache with a working version of mod_wsgi_  
+_**Reference Reading**:_
+  - [Install RabbitMQ Server on CentOS 7](https://www.howtoforge.com/tutorial/how-to-install-rabbitmq-server-on-centos-7/)
+  - Install Apache
+    ```
+    $ sudo yum install httpd
+    ```
+  - [Install mod_wsgi](https://www.ionos.com/community/hosting/python/use-mod-wsgi-to-run-python-as-a-web-application-on-centos-7/)
 
 1. `git clone git://github.com/hep-gc/shoal.git`
 1. `cd shoal/shoal-server/`
@@ -121,6 +128,23 @@ _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and ap
 1. Copy shoal.conf file to `/etc/httpd/conf.d` (for setting up the apache)
 	```
 	$ sudo cp conf/shoal.conf /etc/httpd/conf.d/ 
+	```
+1. Update owner of /var/www directory to apache
+	```
+	$ sudo chown -R apache.apache /var/www
+	```
+1. If there is no file /var/log/shoal_server.log, create on and change the owner to apache
+	```
+	$ cd /var/log
+	$ touch shoal_server.log
+	$ chown -R apache.apache /var/log/shoal_server.log
+	```
+1. Might need to [disable the SELinux permanently](https://www.cyberciti.biz/faq/disable-selinux-on-centos-7-rhel-7-fedora-linux/), but make sure to double check
+	```
+	$ sestatus (check the status of selinux)
+	$ sudo vi /etc/selinux/config (and then set SELINUX=disabled)
+	(if disable it temporarily)
+	$ sudo setenforce Permissive
 	```
 1. Restart the web server should see the page now says "List of Active Squids", and the list is empty
 	```
