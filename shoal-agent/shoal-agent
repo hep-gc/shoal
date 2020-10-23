@@ -5,6 +5,7 @@
 # You may distribute under the terms of either the GNU General Public
 # License or the Apache v2 License.
 
+from __future__ import print_function
 
 import sys
 import json
@@ -110,7 +111,7 @@ def main():
     try:
         logging.basicConfig(level=config.logging_level, format=LOG_FORMAT, filename=config.log_file)
     except IOError as exc:
-        print "Could not set logging file. Please check config file.", exc
+        print("Could not set logging file. Please check config file.", exc)
         sys.exit(1)
 
     data = {
@@ -129,14 +130,14 @@ def main():
 
     #set the data to the first valid IP address
     try:
-        data['private_ip'] = private_ip.values()[0]
+        data['private_ip'] = list(private_ip.values())[0]
     except IndexError:
         pass
 
     if public_ip:
         try:
-            data['public_ip'] = public_ip.values()[0]
-            data['hostname'] = socket.gethostbyaddr(public_ip.values()[0])[0]
+            data['public_ip'] = list(public_ip.values())[0]
+            data['hostname'] = socket.gethostbyaddr(list(public_ip.values())[0])[0]
         except IndexError:
             pass
     elif external_ip:
@@ -162,9 +163,9 @@ def main():
     if config.interface:
         interface = config.interface
     elif public_ip:
-        interface = public_ip.keys()[0]
+        interface = list(public_ip.keys())[0]
     elif private_ip:
-        interface = private_ip.keys()[0]
+        interface = list(private_ip.keys())[0]
     else:
         logging.error("Unable to automatically detect interface to monitor, please "
                       "set the interface to monitor in configuration file.")
@@ -189,10 +190,13 @@ def main():
                 logging.error("Could not connect to AMQP Server. Attempting to connect in {0}s...".format(INTERVAL))
                 logging.error(exc)
             time.sleep(INTERVAL)
-        except KeyboardInterrupt, KeyError:
+        except KeyboardInterrupt:
+            logging.info("shoal-agent exiting")
+            sys.exit()
+        except KeyError:
             logging.info("shoal-agent exiting")
             sys.exit()
 
 if __name__ == '__main__':
-    print "starting shoal-agent"
+    print("starting shoal-agent")
     main()

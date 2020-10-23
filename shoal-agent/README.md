@@ -1,6 +1,16 @@
 # Shoal Agent README
 # Version: v0.9.X
 
+
+## Important to know about the configuration
+There a 3 possible configurations:
+* local
+* private
+* global   
+
+local and private modes usable when a squid is only for own machines, e.g. VMs on an own cloud. The difference is that for "private" the squid function will not be verified by the shoal server, while for "local" it would. Both would only be given to a shoal-client running in the same subnet.   
+When a squid is configured as global, then it must be accessible by the shoal-server or it can not be verified. Unverified global squids will not be given out to any shoal client!
+
 ## Basic Commands
 With the basic `shoal_agent` init script you can do the following:
 

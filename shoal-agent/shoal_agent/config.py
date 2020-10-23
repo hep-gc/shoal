@@ -1,7 +1,12 @@
-from os.path import exists, join, expanduser, abspath
+from __future__ import print_function
+
+from os.path import exists, join, expanduser, abspath, dirname
 import sys
-import ConfigParser
 import logging
+try:
+    import configparser
+except ImportError:  # python < 3
+    import ConfigParser as configparser
 
 # Shoal Options Module
 
@@ -44,34 +49,38 @@ max_load = 122000
 homedir = expanduser('~')
 
 # find config file by checking the directory of the calling script and sets path
-if  exists(abspath(sys.path[0]+"/shoal_agent.conf")):
-    path = abspath(sys.path[0]+"/shoal_agent.conf")
+if exists(abspath(dirname(sys.path[0])+"/shoal_agent.conf")):
+    path = abspath(dirname(sys.path[0])+"/shoal_agent.conf")
 elif exists("/etc/shoal/shoal_agent.conf"):
     path = "/etc/shoal/shoal_agent.conf"
 elif exists(abspath(homedir + "/.shoal/shoal_agent.conf")):
     path = abspath(homedir + "/.shoal/shoal_agent.conf")
 else:
-    print >> sys.stderr, "Configuration file problem: There doesn't " \
-                          "seem to be a configuration file. " \
-                          "You can specify one in /etc/shoal/shoal_agent.conf"
+    print( "Configuration file problem: There doesn't " \
+              "seem to be a configuration file. " \
+              "You can specify one in /etc/shoal/shoal_agent.conf",
+           file=sys.stderr)
     sys.exit(1)
 
 # Read config file from the given path above
-config_file = ConfigParser.ConfigParser()
+config_file = configparser.ConfigParser()
 try:
     config_file.read(path)
 except IOError:
-    print >> sys.stderr, "Configuration file problem: There was a " \
-                          "problem reading %s. Check that it is readable," \
-                          "and that it exists. " % path
+    print("Configuration file problem: There was a " \
+          "problem reading %s. Check that it is readable," \
+          "and that it exists. " % path,
+          file=sys.stderr)
     raise
-except ConfigParser.ParsingError:
-    print >> sys.stderr, "Configuration file problem: Couldn't " \
-                         "parse your file. Check for spaces before or after variables."
+except configparser.ParsingError:
+    print("Configuration file problem: Couldn't " \
+          "parse your file. Check for spaces before or after variables.",
+          file=sys.stderr)
+
     raise
 except:
-    print "Configuration file problem: There is something wrong with " \
-          "your config file."
+    print("Configuration file problem: There is something wrong with " \
+          "your config file.")
     raise
 
 # sets defaults to the options in the config file
@@ -82,8 +91,8 @@ if config_file.has_option("rabbitmq", "amqp_port"):
     try:
         amqp_port = config_file.getint("rabbitmq", "amqp_port")
     except ValueError:
-        print "Configuration file problem: amqp_port must be an " \
-              "integer value."
+        print("Configuration file problem: amqp_port must be an " \
+              "integer value.")
         sys.exit(1)
 
 if config_file.has_option("rabbitmq", "use_ssl") and config_file.getboolean("rabbitmq", "use_ssl"):
@@ -93,8 +102,8 @@ if config_file.has_option("rabbitmq", "use_ssl") and config_file.getboolean("rab
         amqp_client_cert = abspath(config_file.get("rabbitmq", "amqp_client_cert"))
         amqp_client_key  = abspath(config_file.get("rabbitmq", "amqp_client_key"))
     except Exception as e:
-        print "Configuration file problem: could not load SSL certs"
-        print e
+        print("Configuration file problem: could not load SSL certs")
+        print(e)
         sys.exit(1)
 
 if config_file.has_option("rabbitmq", "amqp_virtual_host"):
@@ -107,8 +116,8 @@ if config_file.has_option("general", "interval"):
     try:
         interval = config_file.getint("general", "interval")
     except ValueError:
-        print "Configuration file problem: interval must be an " \
-              "integer value."
+        print("Configuration file problem: interval must be an " \
+              "integer value.")
         sys.exit(1)
 
 if config_file.has_option("general", "cloud"):
@@ -129,15 +138,15 @@ if config_file.has_option("logging", "logging_level"):
     try:
         logging_level = logLevels[temp]
     except KeyError:
-        print "Configuration file problem: Invalid logging level"
+        print("Configuration file problem: Invalid logging level")
         sys.exit(1)
 
 if config_file.has_option("general", "squid_port"):
     try:
         squid_port = config_file.getint("general", "squid_port")
     except ValueError:
-        print "Configuration file problem: squid_port must be an " \
-              "integer value."
+        print("Configuration file problem: squid_port must be an " \
+              "integer value.")
         sys.exit(1)
  
 if config_file.has_option("general", "external_ip"):
