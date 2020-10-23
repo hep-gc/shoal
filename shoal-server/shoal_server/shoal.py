@@ -597,7 +597,8 @@ class SquidVerifier(Thread):
         INTERVAL = config.squid_verify_interval
         self.running = True
         while self.running:
-            for squid in web.shoal.values():
+            for squid_key in list(web.shoal):
+                squid = web.shoal[squid_key]
                 current_time = time()
                 # In an ideal scenario shoal would continuously try to verify those
                 # that are not verified. However since many squids use old agents
