@@ -5,7 +5,7 @@ import tarfile
 import re
 from time import time
 from math import radians, cos, sin, asin, sqrt
-from urllib import urlretrieve
+from urllib.request import urlretrieve
 
 import requests
 import pygeoip
