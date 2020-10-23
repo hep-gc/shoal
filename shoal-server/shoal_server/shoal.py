@@ -225,7 +225,7 @@ class RabbitMQConsumer(Thread):
         # and uses values from config file
 
         Thread.__init__(self)
-        self.host = "{0}/{1}".format(config.amqp_server_url, urllib.quote_plus(config.amqp_virtual_host))
+        self.host = "{0}/{1}".format(config.amqp_server_url, urllib.parse.quote_plus(config.amqp_virtual_host))
         self.shoal = shoal
         self._connection = None
         self._channel = None
