@@ -156,7 +156,9 @@ class ShoalUpdate(Thread):
         updates and pops squid from shoal if it's inactive
         """
         curr = time()
-        for squid in self.shoal.values():
+        squid_key_list = list(self.shoal)
+        for squid_key in squid_key_list:
+            squid = self.shoal[squid_key]
             if curr - squid.last_active > self.INACTIVE:
                 self.shoal.pop(squid.key)
 
