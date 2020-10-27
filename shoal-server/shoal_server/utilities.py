@@ -274,8 +274,8 @@ def _is_available(squid):
             file = requests.get(targeturl, proxies=proxies, timeout=2)
             f = file.content
             for line in f.splitlines():
-                if line.startswith('N'):
-                    if repo in line:
+                if line.startswith(bytes('N', 'utf-8')):
+                    if bytes(repo, 'utf-8') in line:
                         testflag = True
                         goodurl = targeturl
             if testflag is False:
@@ -288,9 +288,7 @@ def _is_available(squid):
             # specified in the config and all fit the pattern.
             badpaths = badpaths + 1
             #logging.error(sys.exc_info()[1])
-            logging.error(
-                "Timeout or proxy error on %s repo. Currently %s out of %s repos failing",
-                targeturl, badpaths, len(paths))
+            logging.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing", targeturl, badpaths, len(paths))
         finally:
             #Keep going
             logging.info("Next...")
