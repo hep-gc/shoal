@@ -50,8 +50,8 @@ $$(document).ready(function () {
             $ last_msg = int(now - squid.last_active)
             $ alive_time = int(now - squid.created); 
             $ hour = int(alive_time/60/60)
-            $ minute = (alive_time - hour*60*60) / 60
-            $ second = alive_time - hour*60*60 - minute*60
+            $ minute = int((alive_time - hour*60*60) / 60)
+            $ second = int(alive_time - hour*60*60 - minute*60)
     
             $if last_msg < squid_active_time/3:
                 $ state = 'success'
