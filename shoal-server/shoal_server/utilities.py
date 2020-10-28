@@ -263,36 +263,42 @@ def _is_available(squid):
     }
     badpaths = 0
     badflags = 0
+    # first test the ip with all the urls
     for targeturl in paths:
         #if a url checks out testflag set to true, otherwise fails verification at end of loop
         testflag = False
-        try:
-            logging.info("Trying %s", targeturl)
-            repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
-            if repo is None:
-                repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
-            file = requests.get(targeturl, proxies=proxies, timeout=2)
-            f = file.content
-            for line in f.splitlines():
-                if line.startswith(bytes('N', 'utf-8')):
-                    if bytes(repo, 'utf-8') in line:
-                        testflag = True
-                        goodurl = targeturl
-            if testflag is False:
-                badflags = badflags + 1
-                logging.error(
-                    "%s failed verification on: %s. Currently %s out of %s IPs failing",
-                    ip, targeturl, badflags, len(paths))
-        except:
-            # note that this would catch any RE errors aswell but they are
-            # specified in the config and all fit the pattern.
-            badpaths = badpaths + 1
-            #logging.error(sys.exc_info()[1])
-            logging.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing", targeturl, badpaths, len(paths))
-        finally:
-            #Keep going
-            logging.info("Next...")
+        if badpaths < 4:
+            try:
+                logging.info("Trying %s", targeturl)
+                repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+                if repo is None:
+                    repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+                file = requests.get(targeturl, proxies=proxies, timeout=2)
+                f = file.content
+                for line in f.splitlines():
+                    if line.startswith(bytes('N', 'utf-8')):
+                        if bytes(repo, 'utf-8') in line:
+                            testflag = True
+                            goodurl = targeturl
+                if testflag is False:
+                    badflags = badflags + 1
+                    logging.error(
+                        "%s failed verification on: %s. Currently %s out of %s IPs failing",
+                        ip, targeturl, badflags, len(paths))
+            except:
+                # note that this would catch any RE errors aswell but they are
+                # specified in the config and all fit the pattern.
+                badpaths = badpaths + 1
+                #logging.error(sys.exc_info()[1])
+                logging.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing", targeturl, badpaths, len(paths))
+            finally:
+                #Keep going
+                logging.info("Next...")
+        else:
+            logging.error('%s repos failing, squid failed on verification')
+            return False
 
+    # second test the hostname with the squal url 
     if badpaths < len(paths) and badflags < len(paths):
         #if all the IP is able to connect to the test URLs, then check the
         # actual squid URL to make sure both IP and URL are good.
