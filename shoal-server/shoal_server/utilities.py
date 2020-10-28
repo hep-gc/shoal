@@ -295,7 +295,7 @@ def _is_available(squid):
                 #Keep going
                 logging.info("Next...")
         else:
-            logging.error('%s repos failing, squid failed on verification')
+            logging.error('%s repos failing, squid failed on verification', badpaths)
             return False
 
     # second test the hostname with the squal url 
