@@ -21,9 +21,10 @@ GEOLITE_URL = config.geolitecity_url
 GEOLITE_UPDATE = config.geolitecity_update
 GEODOMAIN_DB = os.path.join(config.geodomain_path, "GeoIP2-Domain.mmdb")
 
-logger = logging.getLogger('shoal_server')
 level = logging.getLevelName(config.logging_level)
-logging.getLogger("requests").setLevel(level)
+logger = logging.getLogger('shoal_server')
+logger.setLevel(level)
+logging.getLogger("requests").setLevel(logging.WARNING)
 
 def get_geolocation(ip):
     """
@@ -142,11 +143,11 @@ def checkDomain(req_ip, squid_ip):
             else:
                 return False
         except Exception as exc:
-            logging.error(exc)
-            logging.error("IP not found in database - could not find second level domain name")
+            logger.error(exc)
+            logger.error("IP not found in database - could not find second level domain name")
             return False
     else:
-        logging.error("No geoDomain database file detected. Add the database file "
+        logger.error("No geoDomain database file detected. Add the database file "
                       "to shoal-server/static/db before installation and ensure the path in "
                       "the config file is correct")
         return False
@@ -237,13 +238,13 @@ def verify(squid):
         if squid.global_access or squid.domain_access:
 
             if not _is_available(squid):
-                logging.warning("Failed Verification: %s ", str(squid.public_ip or squid.private_ip))
+                logger.warning("Failed Verification: %s ", str(squid.public_ip or squid.private_ip))
                 squid.verified = False
             else:
-                logging.info("VERIFIED:%s ", str(squid.public_ip or squid.private_ip))
+                logger.info("VERIFIED:%s ", str(squid.public_ip or squid.private_ip))
                 squid.verified = True
     except TypeError:
-        logging.info("VERIFIED: %s", str(squid.public_ip or squid.private_ip))
+        logger.info("VERIFIED: %s", str(squid.public_ip or squid.private_ip))
         squid.verified = True
 
 def _is_available(squid):
@@ -270,7 +271,7 @@ def _is_available(squid):
         testflag = False
         if badpaths < 4:
             try:
-                logging.info("Trying %s", targeturl)
+                logger.info("Trying %s", targeturl)
                 repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
                 if repo is None:
                     repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
@@ -283,7 +284,7 @@ def _is_available(squid):
                             goodurl = targeturl
                 if testflag is False:
                     badflags = badflags + 1
-                    logging.error(
+                    logger.error(
                         "%s failed verification on: %s. Currently %s out of %s IPs failing",
                         ip, targeturl, badflags, len(paths))
             except:
@@ -291,12 +292,12 @@ def _is_available(squid):
                 # specified in the config and all fit the pattern.
                 badpaths = badpaths + 1
                 #logging.error(sys.exc_info()[1])
-                logging.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing", targeturl, badpaths, len(paths))
+                logger.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing", targeturl, badpaths, len(paths))
             finally:
                 #Keep going
-                logging.info("Next...")
+                logger.info("Next...")
         else:
-            logging.error('%s repos failing, squid failed on verification', badpaths)
+            logger.error('%s repos failing, squid failed on verification', badpaths)
             return False
 
     # second test the hostname with the squal url 
@@ -312,19 +313,19 @@ def _is_available(squid):
             file = requests.get(goodurl, proxies=proxy, timeout=2)
         except requests.ConnectionError:
             squid.error = "DNS failure or refused connection."
-            logging.error(squid.error)
+            logger.error(squid.error)
             return False
         except requests.HTTPError:
             squid.error = "Invalid HTTP response."
-            logging.error(squid.error)
+            logger.error(squid.error)
             return False
         except requests.Timeout:
             squid.error = "Timeout out on: " + proxy
-            logging.error(squid.error)
+            logger.error(squid.error)
             return False
         except requests.RequestException:
             squid.error = "DNS configuration error! Squid IP is OK, but squid URL is wrong."
-            logging.error(squid.error)
+            logger.error(squid.error)
             return False
         return True
     else:
@@ -337,5 +338,5 @@ def _is_available(squid):
         else:
             squid.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. %s has " \
                           "been blacklisted" % (badpaths, len(paths), badflags, len(paths), hostname)
-        logging.error(squid.error)
+        logger.error(squid.error)
         return False        
