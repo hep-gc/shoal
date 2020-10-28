@@ -22,7 +22,8 @@ GEOLITE_UPDATE = config.geolitecity_update
 GEODOMAIN_DB = os.path.join(config.geodomain_path, "GeoIP2-Domain.mmdb")
 
 logger = logging.getLogger('shoal_server')
-logging.getLogger("requests").setLevel(logging.WARNING)
+level = logging.getLevelName(config.logging_level)
+logging.getLogger("requests").setLevel(level)
 
 def get_geolocation(ip):
     """

@@ -35,6 +35,7 @@ amqp_client_cert = ''
 amqp_client_key  = ''
 webpy_cache = False
 log_file = '/var/log/shoal_server.log'
+logging_level = 'WARNING'
 error_reconnect_time = 30
 error_reconnect_attempts = 10
 
@@ -217,6 +218,9 @@ if config_file.has_option("webpy", "webpy_cache"):
 
 if config_file.has_option("logging", "log_file"):
     log_file = config_file.get("logging", "log_file")
+
+if config_file.has_option("logging", "logging_level"):
+    logging_level = config_file.get("logging", "logging_level")
 
 if config_file.has_option("error", "error_reconnect_time"):
     try:
