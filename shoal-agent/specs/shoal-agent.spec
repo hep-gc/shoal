@@ -1,6 +1,6 @@
 %define name shoal-agent
-%define version 0.9.7
-%define unmangled_version 0.9.7
+%define version 0.9.9
+%define unmangled_version 0.9.9
 %define release 1
 
 Summary: A squid cache publishing and advertising tool designed to work in fast changing environments

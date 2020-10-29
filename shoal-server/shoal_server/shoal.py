@@ -244,6 +244,8 @@ class RabbitMQConsumer(Thread):
                 sslOptions["ca_certs"] = config.amqp_ca_cert
                 sslOptions["certfile"] = config.amqp_client_cert
                 sslOptions["keyfile"] = config.amqp_client_key
+            else:
+                sslOptions = None
         except Exception as exc:
             logging.error("Could not read SSL files")
             logging.error(exc)
@@ -256,11 +258,11 @@ class RabbitMQConsumer(Thread):
                     pika.ConnectionParameters(
                         host=config.amqp_server_url,
                         port=config.amqp_port,
-                        ssl=config.use_ssl,
+                        #ssl=config.use_ssl,
                         ssl_options=sslOptions
                         ),
-                    self.on_connection_open,
-                    stop_ioloop_on_close=False)
+                    self.on_connection_open)
+                    #stop_ioloop_on_close=False)
                 return connection
             except pika.exceptions.AMQPConnectionError as exc:
                 failedConnectionAttempts += 1
@@ -288,7 +290,7 @@ class RabbitMQConsumer(Thread):
         """
         self._connection.add_on_close_callback(self.on_connection_closed)
 
-    def on_connection_closed(self, connection, reply_code, reply_text):
+    def on_connection_closed(self, connection, reply_text):
         """
         stops IO connection loop
         """
@@ -297,8 +299,7 @@ class RabbitMQConsumer(Thread):
             self._connection.ioloop.stop()
         else:
             logging.warning(
-                'Connection closed, reopening in 5 seconds: (%s) %s',
-                reply_code,
+                'Connection closed, reopening in 5 seconds: %s',
                 reply_text)
             self._connection.add_timeout(5, self.reconnect)
 
@@ -327,11 +328,11 @@ class RabbitMQConsumer(Thread):
         """
         self._channel.add_on_close_callback(self.on_channel_closed)
 
-    def on_channel_closed(self, channel, reply_code, reply_text):
+    def on_channel_closed(self, channel, reply_text):
         """
         closes connection on channel
         """
-        logging.warning('Channel was closed: (%s) %s', reply_code, reply_text)
+        logging.warning('Channel was closed: %s', reply_text)
         self._connection.close()
 
     def on_channel_open(self, channel):
@@ -346,9 +347,9 @@ class RabbitMQConsumer(Thread):
         """
         establishes exchange
         """
-        self._channel.exchange_declare(self.on_exchange_declareok,
-                                       exchange_name,
-                                       self.EXCHANGE_TYPE)
+        self._channel.exchange_declare(callback=self.on_exchange_declareok,
+                                       exchange=exchange_name,
+                                       exchange_type=self.EXCHANGE_TYPE)
 
     def on_exchange_declareok(self, unused_frame):
         """
@@ -360,14 +361,14 @@ class RabbitMQConsumer(Thread):
         """
         establishes queue, automatically deletes after disconnecting
         """
-        self._channel.queue_declare(self.on_queue_declareok, queue_name, auto_delete=True)
+        self._channel.queue_declare(callback=self.on_queue_declareok, queue=queue_name, auto_delete=True)
 
     def on_queue_declareok(self, method_frame):
         """
         callback for queue
         """
-        self._channel.queue_bind(self.on_bindok, self.QUEUE,
-                                 self.EXCHANGE, self.ROUTING_KEY)
+        self._channel.queue_bind(callback=self.on_bindok, queue=self.QUEUE,
+                                 exchange=self.EXCHANGE, routing_key=self.ROUTING_KEY)
 
     def add_on_cancel_callback(self):
         """
@@ -406,8 +407,8 @@ class RabbitMQConsumer(Thread):
         starts consuming registered callbacks
         """
         self.add_on_cancel_callback()
-        self._consumer_tag = self._channel.basic_consume(self.on_message,
-                                                         self.QUEUE)
+        self._consumer_tag = self._channel.basic_consume(on_message_callback=self.on_message,
+                                                         queue=self.QUEUE)
 
     def on_bindok(self, unused_frame):
         """
@@ -434,6 +435,7 @@ class RabbitMQConsumer(Thread):
         try:
             self._connection = self.connect()
         except Exception as exc:
+            logging.error(exc)
             logging.error("Unable to connect ot RabbitMQ Server. %s", exc)
             sys.exit(1)
         try:
@@ -504,11 +506,18 @@ class RabbitMQConsumer(Thread):
         except KeyError:
             maxload = config.squid_max_load
         try:
-            globalaccess = bool('True' in data['global_access'])
+            # it seems these can contain proper booleans now and strings
+            if isinstance(data['global_access'], (bool)):
+                globalaccess = data['global_access']
+            else:
+                globalaccess = bool('True' in data['global_access'])
         except KeyError:
             pass
         try:
-            domainaccess = bool('True' in data['domain_access'])
+            if isinstance(data['domain_access'], (bool)):
+                domainaccess = data['domain_access']
+            else:
+                domainaccess = bool('True' in data['domain_access'])
         except KeyError:
             pass
 

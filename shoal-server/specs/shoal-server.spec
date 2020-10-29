@@ -11,7 +11,7 @@ Source0: %{name}-%{unmangled_version}.tar.gz
 License: 'GPL3' or 'Apache 2'
 Group: Development/Libraries
 BuildArch: noarch
-Vendor: Ian Gable <igable@uvic.ca>
+Vendor: UVic HEPRC <rsobie@uvic.ca>
 Requires: pygeoip >= 0.2.5 pika >= 0.9.11 web.py >= 0.3 python-requests >= 1.1.0 geoip2 >= 0.6.0 maxminddb >= 1.1.1 python-ipaddr >= 2.1.9 httpd >= 2.2.15 mod_wsgi >= 3.2
 Url: http://github.com/hep-gc/shoal
 

@@ -38,8 +38,10 @@ The new release of shoal has several new optional features
   - `/var/www/shoal/static/db/`
 
 ## Installation
+
  _**Note**: Requires you have a working RabbitMQ AMQP Server, and Python 2.6+_.
 _Recommended to use a system wide install (sudo), but works in a virtualenv with tweaks_.
+
 
 _**Note**: Shoal static files will be located either at `~/shoal_server/` or `/var/shoal/` if sudo was used_
 
@@ -83,8 +85,8 @@ _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and ap
 1. `pip install shoal-server`
 
 2. Move data and configuration files from `/usr/share/shoal-server/` to their proper locations:
-	- `/usr/share/shoal-server/conf/shoal_server.conf` --> `/etc/shoal/shoal_server.conf`   (file)
-	- `/usr/share/shoal-server/conf/shoal-server.logrotate --> `/etc/logrotate.d/shoal-server` (file)
+	- `/usr/share/shoal-server/shoal_server.conf` --> `/etc/shoal/shoal_server.conf`   (file)
+	- `/usr/share/shoal-server/shoal-server.logrotate --> `/etc/logrotate.d/shoal-server` (file)
 	- `/usr/share/shoal-server/scripts/` --> `/var/www/shoal/scripts/` (folder)
 	- `/usr/share/shoal-server/static/`  --> `/var/www/shoal/static/` (folder)
 	- `/usr/share/shoal-server/templates/` --> `/var/www/shoal/templates/` (folder)
@@ -97,23 +99,51 @@ _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and ap
 5. Visit `http://localhost`
 
 ### Using Git (requires manual file placemet)
+
 _**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details._
 
 _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and apache with a working version of mod_wsgi_
 
+_**Reference Reading**:_
+  - [Install RabbitMQ Server on CentOS 7](https://www.howtoforge.com/tutorial/how-to-install-rabbitmq-server-on-centos-7/)
+
+  - [Install mod_wsgi](https://www.ionos.com/community/hosting/python/use-mod-wsgi-to-run-python-as-a-web-application-on-centos-7/)
+
+
 1. `git clone git://github.com/hep-gc/shoal.git`
-2. `cd shoal/shoal-server/`
-2.5 (optional) Make sure domain database is in /shoal-server/static/db/ prior to next step or it will not have the domain lookup functionality
-3. `python setup.py install`
-4. Move data and configuration files from `/usr/share/shoal-server/` to their proper locations:
+1. `cd shoal/shoal-server/`
+1. (optional) Make sure domain database is in /shoal-server/static/db/ prior to next step or it will not have the domain lookup functionality
+1. `python setup.py install`
+1. Move data and configuration files from `/usr/share/shoal-server/` to their proper locations:
 	- `/usr/share/shoal-server/conf/shoal_server.conf` --> `/etc/shoal/shoal_server.conf`   (file)
-	- `/usr/share/shoal-server/conf/shoal-server.logrotate --> `/etc/logrotate.d/shoal-server` (file)
+	- `/usr/share/shoal-server/conf/shoal-server.logrotate` --> `/etc/logrotate.d/shoal-server` (file)
 	- `/usr/share/shoal-server/scripts/` --> `/var/www/shoal/scripts/` (folder)
 	- `/usr/share/shoal-server/static/`  --> `/var/www/shoal/static/` (folder)
 	- `/usr/share/shoal-server/templates/` --> `/var/www/shoal/templates/` (folder)
+	- `/usr/share/shoal-server/conf/shoal.conf`   --> `/etc/httpd/conf.d/` (file)
 	
-5. Check settings in `shoal_server.conf` update as needed. Make sure RabbitMQ server is running.
-6. Run the apache service `service httpd start`
-  - _First run may take a few seconds to start as it needs to download the GeoLiteCity database (~12MB)._
+1. Check settings in `shoal_server.conf` update as needed. Make sure RabbitMQ server is running: `systemctl restart rabbitmq-server`
  
-7. Visit `http://localhost`
+1. Update owner of /var/www directory to apache
+	```
+	$ sudo chown -R apache.apache /var/www
+	```
+1. If there is no file /var/log/shoal_server.log, create on and change the owner to apache
+	```
+	$ cd /var/log
+	$ touch shoal_server.log
+	$ chown -R apache.apache /var/log/shoal_server.log
+	```
+1. Might need to [disable the SELinux permanently](https://www.cyberciti.biz/faq/disable-selinux-on-centos-7-rhel-7-fedora-linux/), but make sure to double check
+	```
+	$ sestatus (check the status of selinux)
+	$ sudo vi /etc/selinux/config (and then set SELINUX=disabled)
+	(if disable it temporarily)
+	$ sudo setenforce Permissive
+	```
+1. Restart the web server should see the page now says "List of Active Squids", and the list is empty
+	```
+	$ sudo service httpd restart
+	```
+ 
+1. Visit `http://localhost`

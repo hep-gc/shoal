@@ -1,7 +1,7 @@
 import sys
 import os
 import logging
-import gzip
+import tarfile
 import re
 from time import time
 from math import radians, cos, sin, asin, sqrt
@@ -12,9 +12,11 @@ import pygeoip
 import geoip2.database
 import web
 
+import socket
+
 import shoal_server.config as config
 
-GEOLITE_DB = os.path.join(config.geolitecity_path, "GeoLiteCity.dat")
+GEOLITE_DB = os.path.join(config.geolitecity_path, "GeoLiteCity.mmdb")
 GEOLITE_URL = config.geolitecity_url
 GEOLITE_UPDATE = config.geolitecity_update
 GEODOMAIN_DB = os.path.join(config.geodomain_path, "GeoIP2-Domain.mmdb")
@@ -26,11 +28,19 @@ def get_geolocation(ip):
     """
         Given an IP return all its geographical information (using GeoLiteCity.dat)
     """
+    """  OLD .DAT IMPLEMENTATION
     try:
         gi = pygeoip.GeoIP(GEOLITE_DB)
         return gi.record_by_addr(ip)
     except Exception as exc:
         logger.error(exc)
+        return None
+    """
+    try:
+        reader = geoip2.database.Reader(GEOLITE_DB)
+        return reader.city(ip)
+    except Exception as exc:
+        logger.exception(exc)
         return None
 
 def get_nearest_squids(ip, count=10):
@@ -54,8 +64,8 @@ def get_nearest_verified_squids(ip, count=10):
         return None
 
     try:
-        r_lat = request_data['latitude']
-        r_long = request_data['longitude']
+        r_lat = request_data.location.latitude
+        r_long = request_data.location.longitude
     except KeyError as exc:
         logger.error("Could not read request data:")
         logger.error(exc)
@@ -81,8 +91,8 @@ def get_nearest_verified_squids(ip, count=10):
         # if there is no global access but the requester is from the same domain
         if ((squid.verified or not config.squid_verification) and squid.global_access) or checkDomain(ip, squid.public_ip):
 
-            s_lat = float(squid.geo_data['latitude'])
-            s_long = float(squid.geo_data['longitude'])
+            s_lat = float(squid.geo_data.location.latitude)
+            s_long = float(squid.geo_data.location.longitude)
 
             distance = haversine(r_lat, r_long, s_lat, s_long)
             distancecost = distance/(earthrad * 3.14159265359) * (w)
@@ -103,6 +113,14 @@ def get_all_squids():
 
     return squids
 
+def lookupDomain(temp_ip):
+    name = socket.getfqdn(temp_ip)
+    if name == temp_ip:
+       	return None
+    domain = name.split('.')
+    return domain[-2]+'.'+domain[-1]
+
+
 def checkDomain(req_ip, squid_ip):
     """
     Check if two ips come from the same domain
@@ -111,10 +129,14 @@ def checkDomain(req_ip, squid_ip):
     """
     if os.path.exists(GEODOMAIN_DB):
         try:
-            reader = geoip2.database.Reader(GEODOMAIN_DB)
-            req_domain = reader.domain(req_ip)
-            squid_domain = reader.domain(squid_ip)
-            if (req_domain.domain == squid_domain.domain) and squid_domain.domain is not None:
+            #reader = geoip2.database.Reader(GEODOMAIN_DB)
+            #req_domain = reader.domain(req_ip).domain
+            #squid_domain = reader.domain(squid_ip).domain
+            #if req_domain is None:
+            req_domain = lookupDomain(req_ip)
+            #if squid_domain is None:
+            squid_domain = lookupDomain(squid_ip)
+            if (req_domain == squid_domain) and squid_domain is not None:
                 return True
             else:
                 return False
@@ -127,6 +149,7 @@ def checkDomain(req_ip, squid_ip):
                       "to shoal-server/static/db before installation and ensure the path in "
                       "the config file is correct")
         return False
+
 
 def haversine(lat1, lon1, lat2, lon2):
     """
@@ -170,19 +193,19 @@ def download_geolitecity():
         logger.error("Could not download the database. - %s", exc)
         sys.exit(1)
     try:
-        content = gzip.open(GEOLITE_DB + '.gz').read()
+        fname = GEOLITE_DB + '.gz'
+        tar = tarfile.open(fname, "r:gz")
+        tar.extractall()
+        dir_name = tar.getmembers()[0].name #only 1 member of this tar and it is a directory containing all the files
+        tar.close()
+        db_path = os.path.join(config.geolitecity_path, dir_name)
+        db_path = os.path.join(db_path, "GeoLite2-City.mmdb")
+        os.rename(db_path, GEOLITE_DB)
+        
     except Exception:
         logger.error("GeoLiteCity.dat file was not properly downloaded. "
                      "Check contents of %s for possible errors.", (GEOLITE_DB + '.gz'))
         sys.exit(1)
-
-    try:
-        with open(GEOLITE_DB, 'w') as f:
-            f.write(content)
-    except Exception as exc:
-        logger.error("Unable to open Geolite city database for writing..")
-        logger.error(exc)
-
     if check_geolitecity_need_update():
         logger.error('GeoLiteCity database failed to update.')
 
@@ -213,7 +236,7 @@ def verify(squid):
         if squid.global_access or squid.domain_access:
 
             if not _is_available(squid):
-                logging.info("Failed Verification: %s ", str(squid.public_ip or squid.private_ip))
+                logging.warning("Failed Verification: %s ", str(squid.public_ip or squid.private_ip))
                 squid.verified = False
             else:
                 logging.info("VERIFIED:%s ", str(squid.public_ip or squid.private_ip))
@@ -282,19 +305,19 @@ def _is_available(squid):
                 "http":proxystring,
             }
             file = requests.get(goodurl, proxies=proxy, timeout=2)
-        except ConnectionError:
+        except requests.ConnectionError:
             squid.error = "DNS failure or refused connection."
             logging.error(squid.error)
             return False
-        except HTTPError:
+        except requests.HTTPError:
             squid.error = "Invalid HTTP response."
             logging.error(squid.error)
             return False
-        except Timeout:
+        except requests.Timeout:
             squid.error = "Timeout out on: " + proxy
             logging.error(squid.error)
             return False
-        except RquestException:
+        except requests.RequestException:
             squid.error = "DNS configuration error! Squid IP is OK, but squid URL is wrong."
             logging.error(squid.error)
             return False
