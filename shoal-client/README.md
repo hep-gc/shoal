@@ -2,7 +2,7 @@
 # Version: v0.6.X
 
 shoal-client will configure cvmfs to use the closest squid server to you by contacting the shoal server
-and using cvfms-talk to update the active proxy configuration.
+and using cvmfs-talk to update the active proxy configuration.
 
 shoal-client is a simple python script typically configured to run with cron to check for new squids 
 periodically. Before setting the cronjob in place make sure that shoal-client is
@@ -29,20 +29,21 @@ root permissions.
 ## Usage
 
 Confirm the that you configured shoal-client as expected by checking the output of `shoal-client --dump`
-The output is a list of servers that will be set as proxies using cvfms-talk. For example you will see 
-something like the following:cvmfs_talk proxy info
-`http://squid.example1.com:3128;http://squid.example2.com:3128;http://squid.example3.com:3128;http://squid.example4.com:3128;http://squid.example5.org:3128;DIRECT`
+The output is a list of servers that will be set as proxies using cvmfs-talk. For example you will see 
+something like the following:
+
+    http://squid.example1.com:3128;http://squid.example2.com:3128;http://squid.example3.com:3128;http://squid.example4.com:3128;http://squid.example5.org:3128;DIRECT
 
 If the output looks resonable now set a crontab entry to run shoal say every 30 minutes:
 
-    crontab -e
     0,30 * * * * /usr/bin/shoal-client
 
 New in version 0.6.4 is the --frontier option that will produce an output string suitable for frontier.
 Users will need to use a simple script that runs shoal-client and uses the output to set the proxies.
 An example script can be found [here](https://github.com/hep-gc/shoal/blob/master/shoal-client/scripts/frontier_set.sh) in the shoal-client/scripts directory.
 Example output when running `shoal-client --frontier`:
-`(serverurl=http://PresetServer.ca:3128)(proxyurl=http://PROXY.FROM.SHOAL.1:3128)(proxyurl=http://PROXY.FROM.SHOAL.2:3128)`
+
+    (serverurl=http://PresetServer.ca:3128)(proxyurl=http://PROXY.FROM.SHOAL.1:3128)(proxyurl=http://PROXY.FROM.SHOAL.2:3128)
 
 ### Flags and Options
 | Option | Description |
@@ -57,6 +58,12 @@ Shoal client now uses the cvmfs_talk protocol. To view the list of returned squi
      cvmfs_talk proxy info
 
 ## Other Installation Methods
+
+### Using Pip
+
+1. `pip install shoal-client`
+2. Check settings in `shoal_client.conf` update as needed.
+
 
 ### Using Git
 1. `git clone git://github.com/hep-gc/shoal.git`
