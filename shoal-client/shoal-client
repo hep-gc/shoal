@@ -2,7 +2,8 @@
 """
     Very simple client script used to get nearest squid server using the RESTful API.
 """
-import urllib2
+import urllib.request
+import urllib.error
 import sys
 import re
 import os
@@ -10,7 +11,7 @@ import syslog
 from optparse import OptionParser
 from subprocess import Popen, PIPE
 from multiprocessing import Process, Queue
-import Queue as Q
+import queue as Q
 
 from shoal_client import config as config
 
@@ -27,6 +28,7 @@ dump = False
 closest_http_proxy = ''
 env_proxy = ''
 no_shoal_server = False
+unicode = str
 
 
 def get_local_squid(q):
@@ -43,11 +45,11 @@ def get_local_squid(q):
         try:
             data, addr = s.recvfrom(1024) #wait for a packet
             if data.startswith(MAGIC):
-                # print "got service announcement from", data[len(MAGIC):]
+                # print("got service announcement from", data[len(MAGIC):])
                 q.put(data[len(MAGIC):])
             break
         except:
-            # print "got a timeout"
+            # print("got a timeout")
             break
 
 
@@ -120,7 +122,7 @@ def parseServerData(jsonStr):
     # don't really care about data here
     # it is just a simple way to get number of nearest squids
     p = re.compile("\"" + dataTypes[0] + "\": ([^,}]+)")
-    numNearestSquids = len(p.findall(jsonStr))
+    numNearestSquids = len(p.findall(jsonStr.decode('utf-8')))
     ## compiles regex "load": ([^,}]+), although it doesn't really matter that fact that it's a load
     ## this will find the number of above matches in jsonStr and return into numNearestSquids
     ## therefore each match in json is a 'nearest' squid
@@ -139,14 +141,14 @@ def parseServerData(jsonStr):
     # the matches with jsonStr and put those matches in dataList.
     for dataType in dataTypes:
         p = re.compile("\"" + dataType + "\": ([^,]+)[,|}]")
-        dataList = p.findall(jsonStr)
+        dataList = p.findall(jsonStr.decode('utf-8'))
         for i, val in enumerate(dataList):
             outDict[unicode(str(i))][unicode(dataType)] = convertServerData(val)
     ## outDict is a multidimensional dict that now holds a val in each dataType per i
     ## same as above just for geoDataTypes
     for geoDataType in geoDataTypes:
         p = re.compile("\"" + geoDataType + "\": (\"[^\"]*|[^,]*)")
-        dataList = p.findall(jsonStr)
+        dataList = p.findall(jsonStr.decode('utf-8'))
         for i, val in enumerate(dataList):
             outDict[unicode(str(i))][unicode("geo_data")][unicode(geoDataType)] = convertServerData(val)
     ## outDict in geo_data for each geoDataType holds a val
@@ -176,13 +178,13 @@ except KeyError as e:
 try:
     #if there is a bad proxy set we will never reach shoal-server
     #this goes direct to avoid any bad configuration
-    proxy_handler = urllib2.ProxyHandler({})
-    opener = urllib2.build_opener(proxy_handler)
+    proxy_handler = urllib.request.ProxyHandler({})
+    opener = urllib.request.build_opener(proxy_handler)
     f = opener.open(server, timeout=1)
     # data = json.loads(f.read())
     data = parseServerData(f.read())
     syslog.syslog(syslog.LOG_DEBUG, "Got data from %s" % server)
-except (urllib2.URLError, ValueError), e:
+except (urllib.error.URLError, ValueError) as e:
     # This is where the client now exits if it can't reach shoal, might be worth
     # refactoring instead of injecting code here to reuse the proceeding code.
     #checkEnvVariable()
@@ -200,7 +202,7 @@ if not frontier:
        local_squid = q.get(block=True, timeout=90)
     except Q.Empty:
        #continue
-       #print "timeout !"
+       #print("timeout !")
        pass
     p.join()
 
@@ -218,20 +220,20 @@ if not no_shoal_server:
         for i in range(0, numsquids):
             try:
                 closest_http_proxy += '(proxyurl=http://%s:%s)' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
-            except KeyError, e:
+            except KeyError as e:
                 syslog.syslog(
                     syslog.LOG_ERR,
                     "The data returned from '%s' was missing the key: %s. "
                     "Please ensure the server is running the latest version "
                     "of Shoal-Server." % (server, e))
-                print os.getenv("FRONTIER_SERVER", "")
-		sys.exit(2)
+                print(os.getenv("FRONTIER_SERVER", ""))
+                sys.exit(2)
 
     else:
         for i in range(0, numsquids):
             try:
                 closest_http_proxy += 'http://%s:%s;' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
-            except KeyError, e:
+            except KeyError as e:
                 syslog.syslog(
                     syslog.LOG_ERR,
                     "The data returned from '%s' was missing the key: %s. Please ensure the "
@@ -256,7 +258,7 @@ if not no_shoal_server:
         if not frontier:
             cvmfs_http_proxy = "\"" + closest_http_proxy + env_proxy + default_http_proxy + "\""
         syslog.syslog(syslog.LOG_INFO, "Dumping proxy string")
-        print cvmfs_http_proxy
+        print(cvmfs_http_proxy)
 
     elif frontier:
         #retrieve frontier env variable and insert new squids
@@ -273,7 +275,7 @@ if not no_shoal_server:
         # if no replacmeents, then there was no proxyurl to begin with
         if replacements == 0:
             frontier_output = frontier_output + closest_http_proxy
-        print frontier_output
+        print(frontier_output)
 
     else:
         cvmfs_http_proxy = closest_http_proxy + env_proxy + default_http_proxy
@@ -309,7 +311,7 @@ else:
     ## if dump, don't set CVMFS proxies
     if dump:
         syslog.syslog(syslog.LOG_INFO, "Dumping proxy string")
-        print cvmfs_http_proxy
+        print(cvmfs_http_proxy)
     else:
         syslog.syslog(syslog.LOG_DEBUG, "Executing 'cvmfs_talk proxy set %s'" % cvmfs_http_proxy)
         try:
@@ -333,7 +335,8 @@ else:
 """
     Very simple client script used to get nearest squid server using the RESTful API.
 """
-import urllib2
+import urllib.request
+import urllib.error
 import sys
 import re
 import os
@@ -341,7 +344,7 @@ import syslog
 from optparse import OptionParser
 from subprocess import Popen, PIPE
 from multiprocessing import Process, Queue
-import Queue as Q
+import queue as Q
 
 from shoal_client import config as config
 
@@ -374,11 +377,11 @@ def get_local_squid(q):
         try:
             data, addr = s.recvfrom(1024) #wait for a packet
             if data.startswith(MAGIC):
-                # print "got service announcement from", data[len(MAGIC):]
+                # print("got service announcement from", data[len(MAGIC):])
                 q.put(data[len(MAGIC):])
             break
         except:
-            # print "got a timeout"
+            # print("got a timeout")
             break
 
 
@@ -451,7 +454,7 @@ def parseServerData(jsonStr):
     # don't really care about data here
     # it is just a simple way to get number of nearest squids
     p = re.compile("\"" + dataTypes[0] + "\": ([^,}]+)")
-    numNearestSquids = len(p.findall(jsonStr))
+    numNearestSquids = len(p.findall(jsonStr.decode('utf-8')))
     ## compiles regex "load": ([^,}]+), although it doesn't really matter that fact that it's a load
     ## this will find the number of above matches in jsonStr and return into numNearestSquids
     ## therefore each match in json is a 'nearest' squid
@@ -470,14 +473,14 @@ def parseServerData(jsonStr):
     # the matches with jsonStr and put those matches in dataList.
     for dataType in dataTypes:
         p = re.compile("\"" + dataType + "\": ([^,]+)[,|}]")
-        dataList = p.findall(jsonStr)
+        dataList = p.findall(jsonStr.decode('utf-8'))
         for i, val in enumerate(dataList):
             outDict[unicode(str(i))][unicode(dataType)] = convertServerData(val)
     ## outDict is a multidimensional dict that now holds a val in each dataType per i
     ## same as above just for geoDataTypes
     for geoDataType in geoDataTypes:
         p = re.compile("\"" + geoDataType + "\": (\"[^\"]*|[^,]*)")
-        dataList = p.findall(jsonStr)
+        dataList = p.findall(jsonStr.decode('utf-8'))
         for i, val in enumerate(dataList):
             outDict[unicode(str(i))][unicode("geo_data")][unicode(geoDataType)] = convertServerData(val)
     ## outDict in geo_data for each geoDataType holds a val
@@ -507,13 +510,13 @@ except KeyError as e:
 try:
     #if there is a bad proxy set we will never reach shoal-server
     #this goes direct to avoid any bad configuration
-    proxy_handler = urllib2.ProxyHandler({})
-    opener = urllib2.build_opener(proxy_handler)
+    proxy_handler = urllib.request.ProxyHandler({})
+    opener = urllib.request.build_opener(proxy_handler)
     f = opener.open(server, timeout=1)
     # data = json.loads(f.read())
     data = parseServerData(f.read())
     syslog.syslog(syslog.LOG_DEBUG, "Got data from %s" % server)
-except (urllib2.URLError, ValueError), e:
+except (urllib.error.URLError, ValueError) as e:
     # This is where the client now exits if it can't reach shoal, might be worth
     # refactoring instead of injecting code here to reuse the proceeding code.
     #checkEnvVariable()
@@ -531,7 +534,7 @@ if not frontier:
        local_squid = q.get(block=True, timeout=90)
     except Q.Empty:
        #continue
-       #print "timeout !"
+       #print("timeout !")
        pass
     p.join()
 
@@ -549,20 +552,19 @@ if not no_shoal_server:
         for i in range(0, numsquids):
             try:
                 closest_http_proxy += '(proxyurl=http://%s:%s)' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
-            except KeyError, e:
+            except KeyError as e:
                 syslog.syslog(
                     syslog.LOG_ERR,
                     "The data returned from '%s' was missing the key: %s. "
                     "Please ensure the server is running the latest version "
                     "of Shoal-Server." % (server, e))
-                print os.getenv("FRONTIER_SERVER", "")
-		sys.exit(2)
-
+                print(os.getenv("FRONTIER_SERVER", ""))
+                sys.exit(2)
     else:
         for i in range(0, numsquids):
             try:
                 closest_http_proxy += 'http://%s:%s;' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
-            except KeyError, e:
+            except KeyError as e:
                 syslog.syslog(
                     syslog.LOG_ERR,
                     "The data returned from '%s' was missing the key: %s. Please ensure the "
@@ -587,7 +589,7 @@ if not no_shoal_server:
         if not frontier:
             cvmfs_http_proxy = "\"" + closest_http_proxy + env_proxy + default_http_proxy + "\""
         syslog.syslog(syslog.LOG_INFO, "Dumping proxy string")
-        print cvmfs_http_proxy
+        print(cvmfs_http_proxy)
 
     elif frontier:
         #retrieve frontier env variable and insert new squids
@@ -604,7 +606,7 @@ if not no_shoal_server:
         # if no replacmeents, then there was no proxyurl to begin with
         if replacements == 0:
             frontier_output = frontier_output + closest_http_proxy
-        print frontier_output
+        print(frontier_output)
 
     else:
         cvmfs_http_proxy = closest_http_proxy + env_proxy + default_http_proxy
@@ -640,7 +642,7 @@ else:
     ## if dump, don't set CVMFS proxies
     if dump:
         syslog.syslog(syslog.LOG_INFO, "Dumping proxy string")
-        print cvmfs_http_proxy
+        print(cvmfs_http_proxy)
     else:
         syslog.syslog(syslog.LOG_DEBUG, "Executing 'cvmfs_talk proxy set %s'" % cvmfs_http_proxy)
         try:
