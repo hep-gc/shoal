@@ -188,7 +188,7 @@ try:
     #this goes direct to avoid any bad configuration
     proxy_handler = UrlRequest.ProxyHandler({})
     opener = UrlRequest.build_opener(proxy_handler)
-    if server[-1] == "\\":
+    if server[-1] == "/":
         server_url = server + "%s/" % numsquids
     else:
         server_url = server + "/%s/" % numsquids
