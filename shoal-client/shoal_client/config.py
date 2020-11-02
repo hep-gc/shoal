@@ -1,6 +1,9 @@
 from os.path import exists, join, expanduser, abspath, realpath
 import sys
-import configparser
+try:
+    import configparser
+except:
+    import ConfigParser as configparser
 import logging
 
 # Shoal Options Module
