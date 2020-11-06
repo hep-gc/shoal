@@ -47,7 +47,7 @@ def broadcast_my_ip():
             logging.error("No hostname found")
     
     while 1:
-        data = MAGIC + str(my_ip) + ":3128"
+        data = (MAGIC + str(my_ip) + ":3128").encode()
         s.sendto(data, ('<broadcast>', PORT))
         print("sent service announcement")
         sleep(60)

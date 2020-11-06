@@ -52,11 +52,12 @@ In either case, the Shoal agent does not require root privilege to run. The init
   1. [Install EPEL](http://fedoraproject.org/wiki/EPEL)
   2. `yum install python-pika python-netifaces`
   3. Checkout from Github: `git clone https://github.com/hep-gc/shoal/trunk/shoal-agent` and `python setup.py install`
-  4. Move configuration files from `/usr/share/shoal-agent/` to their proper locations:
-  * `/usr/share/shoal-agent/shoal_agent.conf` --> `/etc/shoal/shoal_agent.conf`
-  * `/usr/share/shoal-agent/shoal-agent.init` --> `/etc/init.d/shoal-agent`
-  * `/usr/share/shoal-agent/shoal-agent.logrotate` --> `/etc/logrotate.d/shoal-agent`
-  * `/usr/share/shoal-agent/shoal-agent.sysconfig` --> `/etc/sysconfig/shoal/shoal-agent`
-  * `/usr/share/shoal-agent/shoal-agent.service` --> `/usr/lib/systemd/system/shoal-agent.service` (if necessary)
+  4. Move configuration files from `/shoal-agent/conf/` to their proper locations:
+  * `/shoal-agent/conf/shoal_agent.conf` --> `/etc/shoal/shoal_agent.conf`
+  * `/shoal-agent/conf/shoal-agent.init` --> `/etc/init.d/shoal-agent`
+  * `/shoal-agent/conf/shoal-agent.logrotate` --> `/etc/logrotate.d/shoal-agent`
+  * `/shoal-agent/conf/shoal-agent.sysconfig` --> `/etc/sysconfig/shoal/shoal-agent`
+  * `/shoal-agent/conf/shoal-agent.service` --> `/usr/lib/systemd/system/shoal-agent.service` (if run with python 2.7)
+  * `/shoal-agent/conf/shoal-agent3.service` --> `/usr/lib/systemd/system/shoal-agent.service` (if run with python 3+)
   5. Modify the settings in `shoal_agent.conf` as needed.
   6. Start shoal agent: `service shoal-agent start`
