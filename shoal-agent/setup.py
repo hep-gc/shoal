@@ -7,7 +7,7 @@ except:
     try:
         from distutils.core import setup
     except:
-        print "Couldn't use either setuputils or distutils. Install one of those."
+        print("Couldn't use either setuputils or distutils. Install one of those.")
         sys.exit(1)
 
 from shoal_agent.__version__ import version
