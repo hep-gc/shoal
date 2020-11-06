@@ -619,6 +619,7 @@ class SquidVerifier(Thread):
                 except:
                     logger.error("squid key %s has been removed during the loop", squid_key)
                     continue
+            sleep(5)
 
     def stop(self):
         """
