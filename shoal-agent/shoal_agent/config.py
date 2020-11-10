@@ -9,6 +9,8 @@ except ImportError:  # python < 3
     import ConfigParser as configparser
 
 # Shoal Options Module
+from socket import gethostbyaddr
+import stun
 
 """
 Setup shoal using config file.
@@ -180,3 +182,9 @@ if config_file.has_option("general", "access_level"):
 
 if config_file.has_option("general", "max_load"):
     max_load = config_file.get("general","max_load")
+
+if not external_ip:
+    nat_type, external_ip, external_port = stun.get_ip_info()
+
+if not dnsname:
+    dnsname = gethostbyaddr(external_ip)[0]
