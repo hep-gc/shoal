@@ -6,8 +6,8 @@ After=basic.target network.target
 [Service]
 User=shoal
 Group=shoal
-EnvironmentFile=-/etc/sysconfig/shoal-agent
-ExecStart=/usr/bin/shoal-agent ${EXTRA_OPTS} 
+EnvironmentFile=-/etc/sysconfig/shoal/shoal-agent
+ExecStart=/bin/bash -c 'PATH=/sbin:/usr/sbin:/usr/local/bin:/usr/bin shoal-agent $${EXTRA_OPTS}'
 
 [Install]
 WantedBy=multi-user.target
