@@ -29,6 +29,7 @@ default_http_proxy = config.default_squid_proxy
 local_squid = None
 
 data = None
+data_squids = []
 frontier = False
 numsquids = 2
 dump = False
@@ -36,9 +37,10 @@ closest_http_proxy = ''
 env_proxy = ''
 no_shoal_server = False
 unicode = str
+timeout = 90
 
 
-def get_local_squid(q):
+def get_local_squid(q, t):
     PORT = 50000
     MAGIC = "fna349fn" #to make sure we don't confuse or get confused by other programs
 
@@ -46,17 +48,18 @@ def get_local_squid(q):
     
     s = socket(AF_INET, SOCK_DGRAM) #create UDP socket
     s.bind(('', PORT))
-    s.settimeout(90)
+    s.settimeout(t)
     
     while 1:
         try:
             data, addr = s.recvfrom(1024) #wait for a packet
+            data = data.decode('utf-8')
             if data.startswith(MAGIC):
                 # print("got service announcement from", data[len(MAGIC):])
                 q.put(data[len(MAGIC):])
             break
         except:
-            # print("got a timeout")
+            # print("socket got a timeout")
             break
 
 
@@ -208,16 +211,15 @@ except (UrlError, ValueError) as e:
 
 if not frontier:
     q = Queue()
-    p = Process(target=get_local_squid, args=(q,))
+    p = Process(target=get_local_squid, args=(q,timeout))
     p.start()
     try:
-       local_squid = q.get(block=True, timeout=90)
+       local_squid = q.get(block=True, timeout=timeout)
     except Q.Empty:
        #continue
-       #print("timeout !")
+       #print("queue timeout !")
        pass
     p.join()
-
 
 # If the shoal_server was reachable
 if not no_shoal_server:
@@ -229,9 +231,12 @@ if not no_shoal_server:
     ## iterate through the data dict and use all hostname and squid_port keys
     ## to create addresses for squids in closest_http_proxy
     if frontier:
-        for i in range(0, numsquids):
+        for squid_key in list(data):
+            squid = data[squid_key]
+            data_squids.append(squid['hostname'])
             try:
-                closest_http_proxy += '(proxyurl=http://%s:%s)' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
+                if not local_squid or (squid['private_ip'] and squid['private_ip'] != local_squid.split(':')[0]):
+                    closest_http_proxy += '(proxyurl=http://%s:%s)' % (squid['hostname'], squid['squid_port'])
             except KeyError as e:
                 syslog.syslog(
                     syslog.LOG_ERR,
@@ -242,9 +247,12 @@ if not no_shoal_server:
                 sys.exit(2)
 
     else:
-        for i in range(0, numsquids):
+        for squid_key in list(data):
+            squid = data[squid_key]
+            data_squids.append(squid['hostname'])
             try:
-                closest_http_proxy += 'http://%s:%s;' % (data['%s'%i]['hostname'], data['%s'%i]['squid_port'])
+                if not local_squid or (squid['private_ip'] and squid['private_ip'] != local_squid.split(':')[0]):
+                    closest_http_proxy += 'http://%s:%s;' % (squid['hostname'], squid['squid_port'])
             except KeyError as e:
                 syslog.syslog(
                     syslog.LOG_ERR,
@@ -259,10 +267,19 @@ if not no_shoal_server:
             new_defaults += '(proxyurl=%s)' % proxy
         default_http_proxy = new_defaults
 
+    # remove duplicate default squid
+    default_http_list = default_http_proxy.split(';')
+    temp_default_http = ''
+    for i, each_default in enumerate(default_http_list):
+        each_default_ip = each_default.split('//')[1].split(':')[0] if len(each_default.split('//')) > 1 else each_default.split('//')[0].split(':')[0]
+        if each_default_ip not in closest_http_proxy and each_default_ip not in data_squids:
+            addon = '' if i == len(default_http_list) - 1 else ';'
+            temp_default_http += each_default + addon
+    default_http_proxy = temp_default_http
 
     if local_squid:
         closest_http_proxy = "http://" + local_squid + ";" + closest_http_proxy
-    cvmfs_http_proxy = "\"" + closest_http_proxy + default_http_proxy + "\""
+    cvmfs_httpeach_default_proxy = "\"" + closest_http_proxy + default_http_proxy + "\""
     syslog.syslog(syslog.LOG_DEBUG, "Data parsing complete.")
 
     if dump:
