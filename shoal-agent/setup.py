@@ -12,11 +12,7 @@ except:
 
 from shoal_agent.__version__ import version
 
-if sys.version_info.major < 3:
-    service_path = 'conf/shoal-agent.service'
-else:
-    service_path = 'conf/shoal-agent3.service'
-    
+
 setup(name='shoal-agent',
       version=version,
       license="'GPL3' or 'Apache 2'",
@@ -30,7 +26,7 @@ setup(name='shoal-agent',
       url='http://github.com/hep-gc/shoal',
       packages=['shoal_agent'],
       scripts=['shoal-agent'],
-      data_files=[('share/shoal-agent', ['conf/shoal_agent.conf','conf/shoal-agent.init','conf/shoal-agent.logrotate','conf/shoal-agent.sysconfig', service_path])
+      data_files=[('share/shoal-agent', ['conf/shoal_agent.conf','conf/shoal-agent.init','conf/shoal-agent.logrotate','conf/shoal-agent.sysconfig', 'conf/shoal-agent.service'])
                   ],
       options = {'bdist_rpm':{'post_install':'manage_permissions'},
                  'bdist_rpm':{'requires':'python-netifaces >= 0.5,python-pika >= 0.9.5'}},

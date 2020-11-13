@@ -10,7 +10,10 @@ except ImportError:  # python < 3
 
 # Shoal Options Module
 from socket import gethostbyaddr
+from subprocess import check_output
+from pwd import getpwnam
 import stun
+import netifaces
 
 """
 Setup shoal using config file.
@@ -45,10 +48,49 @@ verified = False
 global_access = "True"
 #squid serve accessible by same domain only
 domain_access = "False"
-#this is the max load of the server in terms of kb/s
-max_load = 122000
+#this is the speed of the network interface card in terms of Mbps
+interface_speed = 1000
 
 homedir = expanduser('~')
+
+# auto config
+# get squid_port
+squid_uid = getpwnam('squid')[2]
+squid_pid = int(check_output(['pidof', '-s', 'squid']))
+def get_squid_port(filename):
+    with open(filename) as f:
+        for i, line in enumerate(f):
+            if i != 0:
+                lineList = line.strip().split()
+                if int(lineList[7]) == int(squid_uid):
+                    if int(lineList[1].split(':')[0],16) == 0:
+                        return int(lineList[1].split(':')[1],16)
+        return None
+squid_port = get_squid_port('/proc/' + str(squid_pid) + '/net/tcp') or squid_port
+squid_port = get_squid_port('/proc/' + str(squid_pid) + '/net/tcp6') or squid_port
+# get external_ip
+external_ip = stun.get_ip_info()[1]
+# get dnsname
+dnsname = gethostbyaddr(external_ip)[0]
+# get interface
+for each_interface in netifaces.interfaces():
+    try:
+        for link in netifaces.ifaddresses(each_interface)[netifaces.AF_INET]:
+            if link['addr'] == external_ip:
+                interface = each_interface
+                break
+            elif not link['addr'].startswith('127.'):
+                interface = each_interface
+                break
+    except Exception:
+        continue
+# get max_load
+try:
+    with open('/sys/class/net/' + interface + '/speed') as f:
+        speed = f[0]
+        interface_speed = speed * 0.9
+except:
+    print("Couldn't auto config the max_load, use the default one")
 
 # find config file by checking the directory of the calling script and sets path
 if exists(abspath(dirname(sys.path[0])+"/shoal_agent.conf")):
@@ -143,22 +185,22 @@ if config_file.has_option("logging", "logging_level"):
         print("Configuration file problem: Invalid logging level")
         sys.exit(1)
 
-if config_file.has_option("general", "squid_port"):
-    try:
-        squid_port = config_file.getint("general", "squid_port")
-    except ValueError:
-        print("Configuration file problem: squid_port must be an " \
-              "integer value.")
-        sys.exit(1)
+#if config_file.has_option("general", "squid_port"):
+#    try:
+#        squid_port = config_file.getint("general", "squid_port")
+#    except ValueError:
+#        print("Configuration file problem: squid_port must be an " \
+#              "integer value.")
+#        sys.exit(1)
  
-if config_file.has_option("general", "external_ip"):
-    external_ip = config_file.get("general", "external_ip")
+#if config_file.has_option("general", "external_ip"):
+#    external_ip = config_file.get("general", "external_ip")
 
-if config_file.has_option("general", "dnsname"):
-    dnsname = config_file.get("general", "dnsname")
+#if config_file.has_option("general", "dnsname"):
+#    dnsname = config_file.get("general", "dnsname")
 
-if config_file.has_option("general", "interface"):
-    interface = config_file.get("general", "interface")
+#if config_file.has_option("general", "interface"):
+#    interface = config_file.get("general", "interface")
 
 if config_file.has_option("general", "global_access"):
     global_access = config_file.get("general","global_access")
@@ -180,11 +222,6 @@ if config_file.has_option("general", "access_level"):
     else:
         logging.error("access_level not set to known value in config - Defaulting to Global")
 
-if config_file.has_option("general", "max_load"):
-    max_load = config_file.get("general","max_load")
+if config_file.has_option("general", "interface_speed"):
+    interface_speed = config_file.get("general","interface_speed")
 
-if not external_ip:
-    nat_type, external_ip, external_port = stun.get_ip_info()
-
-if not dnsname:
-    dnsname = gethostbyaddr(external_ip)[0]
