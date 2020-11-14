@@ -71,7 +71,10 @@ squid_port = get_squid_port('/proc/' + str(squid_pid) + '/net/tcp6') or squid_po
 # get external_ip
 external_ip = stun.get_ip_info()[1]
 # get dnsname
-dnsname = gethostbyaddr(external_ip)[0]
+try:
+    dnsname = gethostbyaddr(external_ip)[0]
+except:
+    print("Couldn't auto config the domain name, use the default one")
 # get interface
 for each_interface in netifaces.interfaces():
     try:
@@ -90,7 +93,7 @@ try:
         speed = f[0]
         interface_speed = speed * 0.9
 except:
-    print("Couldn't auto config the max_load, use the default one")
+    print("Couldn't auto config the interface speed, use the default one")
 
 # find config file by checking the directory of the calling script and sets path
 if exists(abspath(dirname(sys.path[0])+"/shoal_agent.conf")):
