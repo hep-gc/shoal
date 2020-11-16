@@ -48,8 +48,9 @@ verified = False
 global_access = "True"
 #squid serve accessible by same domain only
 domain_access = "False"
-#this is the speed of the network interface card in terms of Mbps
-interface_speed = 1000
+#this is the speed of the network interface card in terms of KB/s
+max_load = 122000
+load_factor = 0.9
 
 homedir = expanduser('~')
 
@@ -90,8 +91,8 @@ for each_interface in netifaces.interfaces():
 # get max_load
 try:
     with open('/sys/class/net/' + interface + '/speed') as f:
-        speed = f[0]
-        interface_speed = speed * 0.9
+        speed = int(f.readlines()[0])
+        max_load = int(speed * 1000 * load_factor / 8)
 except:
     print("Couldn't auto config the interface speed, use the default one")
 
@@ -225,6 +226,6 @@ if config_file.has_option("general", "access_level"):
     else:
         logging.error("access_level not set to known value in config - Defaulting to Global")
 
-if config_file.has_option("general", "interface_speed"):
-    interface_speed = config_file.get("general","interface_speed")
+if config_file.has_option("general", "max_load"):
+    interface_speed = config_file.get("general","max_load")
 
