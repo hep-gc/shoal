@@ -235,11 +235,12 @@ def verify(squid):
 
     # only verify if it is gobally accessable
     try:
-        if squid.global_access or squid.domain_access:
+        if squid.global_access:
 
             if not _is_available(squid):
                 logger.warning("Failed Verification: %s ", str(squid.public_ip or squid.private_ip))
                 squid.verified = False
+                squid.global_access = False
             else:
                 logger.info("VERIFIED:%s ", str(squid.public_ip or squid.private_ip))
                 squid.verified = True
@@ -329,11 +330,12 @@ def _is_available(squid):
             return False
         return True
     else:
-        if squid.domain_access and squid.global_access:
+        # todo: rewrite the error cases when squid doesn't have a domain_access attribute
+        if squid.global_access:
             squid.error = "Configuration conflict detected! %s is configured " \
                           "for both Local Access Only and Global Access."  % (hostname)
 
-        if squid.domain_access and not squid.global_access:
+        if not squid.global_access:
             squid.error = "Squid is configured for Local Access Only. Cannot verify %s" % (hostname)
         else:
             squid.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. %s has " \

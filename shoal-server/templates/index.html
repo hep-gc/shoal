@@ -61,8 +61,6 @@ $$(document).ready(function () {
                 $ state = 'error'
             $if squid.global_access == True:
                 $ access = 'Global'
-            $elif squid.domain_access == True:
-                $ access = 'Local Access Only'
             $else:
                 $ access = 'Private'
             $if squid.verified:

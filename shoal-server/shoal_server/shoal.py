@@ -21,7 +21,7 @@ logger.setLevel(level)
 # Basic class to store and update information about each squid server.
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, drift_detected, drift_time, max_load=122000, last_active=time()):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, drift_detected, drift_time, max_load=122000, last_active=time()):
         """
         constructor for SquidNode, time created is current time
         """
@@ -37,7 +37,6 @@ class SquidNode(object):
         self.load = load
         self.verified = verified
         self.global_access = global_access
-        self.domain_access = domain_access
         self.max_load = max_load
         self.drift_detected = drift_detected
         self.drift_time = drift_time
@@ -68,7 +67,6 @@ class SquidNode(object):
             "load": self.load,
             "verified": self.verified,
             "global_access": self.global_access,
-            "domain_access": self.domain_access,
             "max_load": self.max_load,},)
 
 # Main application that will monitor RabbitMQ and ShoalUpdate threads.
@@ -467,7 +465,7 @@ class RabbitMQConsumer(Thread):
         """
         external_ip = public_ip = private_ip = None
         #assume global access unless otherwise indicated
-        globalaccess = domainaccess = True
+        globalaccess = True
         drift_detected = False
         drift_time = 0
         curr = time()
@@ -511,21 +509,6 @@ class RabbitMQConsumer(Thread):
             maxload = data['max_load']
         except KeyError:
             maxload = config.squid_max_load
-        try:
-            # it seems these can contain proper booleans now and strings
-            if isinstance(data['global_access'], (bool)):
-                globalaccess = data['global_access']
-            else:
-                globalaccess = bool('True' in data['global_access'])
-        except KeyError:
-            pass
-        try:
-            if isinstance(data['domain_access'], (bool)):
-                domainaccess = data['domain_access']
-            else:
-                domainaccess = bool('True' in data['domain_access'])
-        except KeyError:
-            pass
 
         # attempt to detect misconfigured clocks and clock drifts,
         # allows for a 10 second grace period
@@ -571,7 +554,6 @@ class RabbitMQConsumer(Thread):
                     geo_data,
                     verified,
                     globalaccess,
-                    domainaccess,
                     drift_detected,
                     drift_time,
                     maxload,
