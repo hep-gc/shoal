@@ -44,10 +44,6 @@ log_file = '/var/log/shoal_agent.log'
 logging_level = logging.ERROR
 #this value should be false unless you wish the shoal server to neglect verifying this squid
 verified = False
-#squid server accessible globally
-global_access = "True"
-#squid serve accessible by same domain only
-domain_access = "False"
 #this is the speed of the network interface card in terms of KB/s
 max_load = 122000
 load_factor = 0.9
@@ -188,43 +184,6 @@ if config_file.has_option("logging", "logging_level"):
     except KeyError:
         print("Configuration file problem: Invalid logging level")
         sys.exit(1)
-
-#if config_file.has_option("general", "squid_port"):
-#    try:
-#        squid_port = config_file.getint("general", "squid_port")
-#    except ValueError:
-#        print("Configuration file problem: squid_port must be an " \
-#              "integer value.")
-#        sys.exit(1)
- 
-#if config_file.has_option("general", "external_ip"):
-#    external_ip = config_file.get("general", "external_ip")
-
-#if config_file.has_option("general", "dnsname"):
-#    dnsname = config_file.get("general", "dnsname")
-
-#if config_file.has_option("general", "interface"):
-#    interface = config_file.get("general", "interface")
-
-if config_file.has_option("general", "global_access"):
-    global_access = config_file.get("general","global_access")
-
-if config_file.has_option("general", "domain_access"):
-    domain_access = config_file.get("general","domain_access")
-
-if config_file.has_option("general", "access_level"):
-    access_level = config_file.get("general","access_level").lower()
-    if access_level == "global":
-        global_access = "True"
-        domain_access = "True"
-    elif access_level == "servelocal":
-        global_access = "False"
-        domain_access = "True"
-    elif access_level == "private":
-        global_access = "False"
-        domain_access = "False"
-    else:
-        logging.error("access_level not set to known value in config - Defaulting to Global")
 
 if config_file.has_option("general", "max_load"):
     interface_speed = config_file.get("general","max_load")

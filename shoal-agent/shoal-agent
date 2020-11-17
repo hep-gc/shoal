@@ -151,9 +151,7 @@ def main():
         'hostname': socket.gethostname(),
         'squid_port': config.squid_port,
         'verified': config.verified,
-        'max_load': config.max_load,
-        'global_access': config.global_access,
-        'domain_access': config.domain_access
+        'max_load': config.max_load
     }
 
     public_ip, private_ip = get_ip_addresses()
