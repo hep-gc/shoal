@@ -124,7 +124,7 @@ def parseServerData(jsonStr):
     # TODO should load this from a config file as it has to match the server
     # Nested properties (i.e geo_data) needs to be handled separately
     dataTypes = ["load", "distance", "squid_port", "last_active", "created", \
-                 "external_ip", "hostname", "public_ip", "private_ip"]
+                 "external_ip", "hostname", "public_ip", "private_ip", "local"]
 
     geoDataTypes = ["city", "region_name", "area_code", "time_zone", "dma_code", \
                     "metro_code", "country_code3", "latitude", "postal_code", \
@@ -223,7 +223,7 @@ if not frontier:
 
 # If the shoal_server was reachable
 if not no_shoal_server:
-
+    
     ## iterate through the data dict and use all hostname and squid_port keys
     ## to create addresses for squids in closest_http_proxy
     syslog.syslog(syslog.LOG_INFO, "Received data from server, processing.")
@@ -235,7 +235,7 @@ if not no_shoal_server:
             squid = data[squid_key]
             data_squids.append(squid['hostname'])
             try:
-                if not local_squid or (squid['private_ip'] and squid['private_ip'] != local_squid.split(':')[0]):
+                if not local_squid or not squid['private_ip'] or squid['private_ip'] != local_squid.split(':')[0]:
                     closest_http_proxy += '(proxyurl=http://%s:%s)' % (squid['hostname'], squid['squid_port'])
             except KeyError as e:
                 syslog.syslog(
@@ -251,7 +251,7 @@ if not no_shoal_server:
             squid = data[squid_key]
             data_squids.append(squid['hostname'])
             try:
-                if not local_squid or (squid['private_ip'] and squid['private_ip'] != local_squid.split(':')[0]):
+                if not local_squid or not squid['private_ip'] or squid['private_ip'] != local_squid.split(':')[0]:
                     closest_http_proxy += 'http://%s:%s;' % (squid['hostname'], squid['squid_port'])
             except KeyError as e:
                 syslog.syslog(
