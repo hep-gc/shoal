@@ -13,6 +13,7 @@ import geoip2.database
 import web
 
 import socket
+import copy
 
 import shoal_server.config as config
 
@@ -99,7 +100,10 @@ def get_nearest_verified_squids(ip, count=10):
             distance = haversine(r_lat, r_long, s_lat, s_long)
             distancecost = distance/(earthrad * 3.14159265359) * (w)
             loadcost = ((squid.load/maxload)**b) * (1-w)
-            nearest_squids.append((squid, distancecost+loadcost))
+            new_squid = copy.deepcopy(squid)
+            if checkDomain(ip, squid.public_ip): 
+                new_squid.local = True
+            nearest_squids.append((new_squid, distancecost+loadcost))
 
     squids = sorted(nearest_squids, key=lambda k: (k[1]))
     return squids[:count]

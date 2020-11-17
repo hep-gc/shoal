@@ -21,7 +21,7 @@ logger.setLevel(level)
 # Basic class to store and update information about each squid server.
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, drift_detected, drift_time, max_load=122000, last_active=time()):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, drift_detected, drift_time, local, max_load=122000, last_active=time()):
         """
         constructor for SquidNode, time created is current time
         """
@@ -42,6 +42,7 @@ class SquidNode(object):
         self.drift_time = drift_time
         self.last_verified = 0
         self.error = 'All systems OK!'
+        self.local = local
 
     def update(self, load, drift_detected, drift_time):
         """
@@ -67,7 +68,8 @@ class SquidNode(object):
             "load": self.load,
             "verified": self.verified,
             "global_access": self.global_access,
-            "max_load": self.max_load,},)
+            "max_load": self.max_load,
+            "local": self.local,},)
 
 # Main application that will monitor RabbitMQ and ShoalUpdate threads.
 class ThreadMonitor(Thread):
@@ -466,6 +468,7 @@ class RabbitMQConsumer(Thread):
         external_ip = public_ip = private_ip = None
         #assume global access unless otherwise indicated
         globalaccess = True
+        local = None
         drift_detected = False
         drift_time = 0
         curr = time()
@@ -556,6 +559,7 @@ class RabbitMQConsumer(Thread):
                     globalaccess,
                     drift_detected,
                     drift_time,
+                    local,
                     maxload,
                     time_sent)
                 self.shoal[key] = new_squid
