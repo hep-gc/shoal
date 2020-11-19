@@ -15,6 +15,7 @@ import syslog
 from optparse import OptionParser
 from subprocess import Popen, PIPE
 from multiprocessing import Process, Queue
+import requests
 try:
     import queue as Q
 except:
@@ -29,7 +30,7 @@ default_http_proxy = config.default_squid_proxy
 local_squid = None
 
 data = None
-data_squids = []
+server_squids = {}
 frontier = False
 numsquids = 2
 dump = False
@@ -38,7 +39,12 @@ env_proxy = ''
 no_shoal_server = False
 unicode = str
 timeout = 90
-
+paths = [
+"http://cvmfs-stratum-one.cern.ch/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
+"http://cernvmfs.gridpp.rl.ac.uk/cvmfs/sft.cern.ch/.cvmfswhitelist",
+"http://cvmfs.racf.bnl.gov/cvmfs/atlas.cern.ch/.cvmfswhitelist",
+"http://cvmfs.fnal.gov/cvmfs/grid.cern.ch/.cvmfswhitelist"
+]
 
 def get_local_squid(q, t):
     PORT = 50000
@@ -165,6 +171,64 @@ def parseServerData(jsonStr):
     ## outDict in geo_data for each geoDataType holds a val
     return outDict
 
+def getString(content):
+    try:
+        formatted = bytes(content, 'utf-8')
+    except:
+        formatted = bytes(content) # for python 2
+    return formatted
+
+def functionalTest(ip, port):
+    """
+    A list of paths are tested to see all repos are working, returns the True if it is verified or False if it cannot be
+    """
+    proxystring = "http://%s:%s" % (ip, port)
+    #set proxy
+    proxies = {
+        "http":proxystring,
+    }   
+    for targeturl in paths:
+        #if a url checks out testflag set to true, otherwise fails verification at end of loop
+        testflag = False
+        try:
+            # print("Trying", targeturl)
+            repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+            if repo is None:
+                repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+            file = requests.get(targeturl, proxies=proxies, timeout=2)
+            f = file.content
+            for line in f.splitlines():            
+                if line.startswith(getString('N')):
+                    if getString(repo) in line:
+                        testflag = True
+                        return True
+            if testflag is False:
+                syslog.syslog(syslog.LOG_ERR, "%s filed verification on %s" % (ip, targeturl))
+        except:
+            # note that this would catch any RE errors aswell but they are
+            # specified in the config and all fit the pattern.
+            syslog.syslog(syslog.LOG_ERR, "%s timeout or proxy error on %s repo" % (ip, targeturl))
+    return False
+
+def isAvailableIp(squid):
+    """
+    Functioanl test for return squids from broadcast and shoal-server
+    Test both private and public ip and return private ip first if available
+    """
+    private_ip = str(squid['private_ip']) if squid['private_ip'] else None
+    public_ip = str(squid['public_ip']) if squid['public_ip'] else None
+    port = squid['squid_port']    
+
+    availableIp = None
+    #if squid['local'] and private_ip and functionalTest(private_ip, port):
+    # test both the private and public ips, return private ip first if available
+    if private_ip and functionalTest(private_ip, port):
+        availableIp = private_ip
+    if not availableIp and public_ip and functionalTest(public_ip, port):
+        availableIp = public_ip
+    return availableIp
+        
+
 get_args()
 
 
@@ -233,10 +297,13 @@ if not no_shoal_server:
     if frontier:
         for squid_key in list(data):
             squid = data[squid_key]
-            data_squids.append(squid['hostname'])
+            server_squids[squid['public_ip'] or squid['hostname']] = squid
             try:
                 if not local_squid or not squid['private_ip'] or squid['private_ip'] != local_squid.split(':')[0]:
-                    closest_http_proxy += '(proxyurl=http://%s:%s)' % (squid['hostname'], squid['squid_port'])
+                    # test the squid received from shoal server
+                    availableIp = isAvailableIp(squid)
+                    if availableIp:
+                        closest_http_proxy += '(proxyurl=http://%s:%s)' % (availableIp, squid['squid_port'])
             except KeyError as e:
                 syslog.syslog(
                     syslog.LOG_ERR,
@@ -249,16 +316,30 @@ if not no_shoal_server:
     else:
         for squid_key in list(data):
             squid = data[squid_key]
-            data_squids.append(squid['hostname'])
+            server_squids[squid['public_ip'] or squid['hostname']] = squid
             try:
                 if not local_squid or not squid['private_ip'] or squid['private_ip'] != local_squid.split(':')[0]:
-                    closest_http_proxy += 'http://%s:%s;' % (squid['hostname'], squid['squid_port'])
+                    # test the squid received from shoal server
+                    availableIp = isAvailableIp(squid)
+                    if availableIp:
+                        closest_http_proxy += 'http://%s:%s;' % (availableIp, squid['squid_port'])
             except KeyError as e:
                 syslog.syslog(
                     syslog.LOG_ERR,
                     "The data returned from '%s' was missing the key: %s. Please ensure the "
                     "server is running the latest version of Shoal-Server." % (server, e))
                 # sys.exit(2)
+
+    # remove duplicate default squid
+    default_http_list = default_http_proxy.split(';')
+    temp_default_http = ''
+    for i, each_default in enumerate(default_http_list):
+        each_default_ip = each_default.split('//')[1].split(':')[0] if len(each_default.split('//')) > 1 else each_default.split('//')[0].split(':')[0]
+        if (not local_squid or each_default_ip not in local_squid) and each_default_ip not in server_squids:
+            addon = '' if i == len(default_http_list) - 1 else ';'
+            temp_default_http += each_default + addon
+    default_http_proxy = temp_default_http
+
     #need to reformat default string for frontier nodes
     if frontier:
         new_defaults = ''
@@ -267,18 +348,13 @@ if not no_shoal_server:
             new_defaults += '(proxyurl=%s)' % proxy
         default_http_proxy = new_defaults
 
-    # remove duplicate default squid
-    default_http_list = default_http_proxy.split(';')
-    temp_default_http = ''
-    for i, each_default in enumerate(default_http_list):
-        each_default_ip = each_default.split('//')[1].split(':')[0] if len(each_default.split('//')) > 1 else each_default.split('//')[0].split(':')[0]
-        if each_default_ip not in closest_http_proxy and each_default_ip not in data_squids:
-            addon = '' if i == len(default_http_list) - 1 else ';'
-            temp_default_http += each_default + addon
-    default_http_proxy = temp_default_http
-
     if local_squid:
-        closest_http_proxy = "http://" + local_squid + ";" + closest_http_proxy
+        # test the local squid received from broadcast
+        local_squid_ip = local_squid.split(':')[0]
+        local_squid_port = local_squid.split(':')[1]
+        availableIp = isAvailableIp({'private_ip': local_squid_ip, 'public_ip': None, 'squid_port': local_squid_port})
+        if availableIp:
+            closest_http_proxy = "http://" + local_squid + ";" + closest_http_proxy
     cvmfs_httpeach_default_proxy = "\"" + closest_http_proxy + default_http_proxy + "\""
     syslog.syslog(syslog.LOG_DEBUG, "Data parsing complete.")
 
