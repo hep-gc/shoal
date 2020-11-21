@@ -16,6 +16,7 @@ from optparse import OptionParser
 from subprocess import Popen, PIPE
 from multiprocessing import Process, Queue
 import requests
+import time
 try:
     import queue as Q
 except:
@@ -201,14 +202,15 @@ def functionalTest(ip, port):
                 if line.startswith(getString('N')):
                     if getString(repo) in line:
                         testflag = True
-                        return True
             if testflag is False:
                 syslog.syslog(syslog.LOG_ERR, "%s filed verification on %s" % (ip, targeturl))
+                return False
         except:
             # note that this would catch any RE errors aswell but they are
             # specified in the config and all fit the pattern.
             syslog.syslog(syslog.LOG_ERR, "%s timeout or proxy error on %s repo" % (ip, targeturl))
-    return False
+            return False
+    return True
 
 def isAvailableIp(squid):
     """
@@ -256,9 +258,9 @@ try:
     proxy_handler = UrlRequest.ProxyHandler({})
     opener = UrlRequest.build_opener(proxy_handler)
     if server[-1] == "/":
-        server_url = server + "%s/" % numsquids
+        server_url = server + "%s/" % (numsquids + 5)
     else:
-        server_url = server + "/%s/" % numsquids
+        server_url = server + "/%s/" % (numsquids + 5)
     f = opener.open(server_url, timeout=5)
     # data = json.loads(f.read())
     data = parseServerData(f.read())
@@ -294,48 +296,65 @@ if not no_shoal_server:
 
     ## iterate through the data dict and use all hostname and squid_port keys
     ## to create addresses for squids in closest_http_proxy
+    avaliable_server_return = {}
     if frontier:
         for squid_key in list(data):
-            squid = data[squid_key]
-            server_squids[squid['public_ip'] or squid['hostname']] = squid
-            try:
-                if not local_squid or not squid['private_ip'] or squid['private_ip'] != local_squid.split(':')[0]:
-                    # test the squid received from shoal server
-                    availableIp = isAvailableIp(squid)
-                    if availableIp:
-                        closest_http_proxy += '(proxyurl=http://%s:%s)' % (availableIp, squid['squid_port'])
-            except KeyError as e:
-                syslog.syslog(
-                    syslog.LOG_ERR,
-                    "The data returned from '%s' was missing the key: %s. "
-                    "Please ensure the server is running the latest version "
-                    "of Shoal-Server." % (server, e))
-                print(os.getenv("FRONTIER_SERVER", ""))
-                sys.exit(2)
+            if len(avaliable_server_return.keys()) < numsquids:
+                squid = data[squid_key]
+                server_squids[squid['public_ip'] or squid['hostname']] = squid
+                try:
+                    if not local_squid or not squid['private_ip'] or squid['private_ip'] != local_squid.split(':')[0]:
+                        # test the squid received from shoal server
+                        start_time = time.time()
+                        availableIp = isAvailableIp(squid)
+                        timer = time.time() - start_time
+                        if availableIp:
+                            avaliable_server_return[timer] = (availableIp, squid['squid_port'])
+                except KeyError as e:
+                    syslog.syslog(
+                        syslog.LOG_ERR,
+                        "The data returned from '%s' was missing the key: %s. "
+                        "Please ensure the server is running the latest version "
+                        "of Shoal-Server." % (server, e))
+                    print(os.getenv("FRONTIER_SERVER", ""))
+                    sys.exit(2)
+            else:
+                break
+        if len(avaliable_server_return.keys()) > 0:
+            for item in sorted(avaliable_server_return.items()):
+                closest_http_proxy += '(proxyurl=http://%s:%s)' % (item[1][0], item[1][1])
 
     else:
         for squid_key in list(data):
-            squid = data[squid_key]
-            server_squids[squid['public_ip'] or squid['hostname']] = squid
-            try:
-                if not local_squid or not squid['private_ip'] or squid['private_ip'] != local_squid.split(':')[0]:
-                    # test the squid received from shoal server
-                    availableIp = isAvailableIp(squid)
-                    if availableIp:
-                        closest_http_proxy += 'http://%s:%s;' % (availableIp, squid['squid_port'])
-            except KeyError as e:
-                syslog.syslog(
-                    syslog.LOG_ERR,
-                    "The data returned from '%s' was missing the key: %s. Please ensure the "
-                    "server is running the latest version of Shoal-Server." % (server, e))
-                # sys.exit(2)
+            if len(avaliable_server_return.keys()) < numsquids:
+                squid = data[squid_key]
+                server_squids[squid['public_ip'] or squid['hostname']] = squid
+                try:
+                    if not local_squid or not squid['private_ip'] or squid['private_ip'] != local_squid.split(':')[0]:
+                        # test the squid received from shoal server
+                        start_time = time.time()
+                        availableIp = isAvailableIp(squid)
+                        timer = time.time() - start_time
+                        if availableIp:
+                            avaliable_server_return[timer] = (availableIp, squid['squid_port'])
+                except KeyError as e:
+                    syslog.syslog(
+                        syslog.LOG_ERR,
+                        "The data returned from '%s' was missing the key: %s. Please ensure the "
+                        "server is running the latest version of Shoal-Server." % (server, e))
+                    # sys.exit(2)
+            else:
+                break
+        if len(avaliable_server_return.keys()) > 0:
+            for item in sorted(avaliable_server_return.items()):
+                closest_http_proxy += 'http://%s:%s;' % (item[1][0], item[1][1])
 
     # remove duplicate default squid
     default_http_list = default_http_proxy.split(';')
     temp_default_http = ''
     for i, each_default in enumerate(default_http_list):
         each_default_ip = each_default.split('//')[1].split(':')[0] if len(each_default.split('//')) > 1 else each_default.split('//')[0].split(':')[0]
-        if (not local_squid or each_default_ip not in local_squid) and each_default_ip not in server_squids:
+        if (not local_squid or each_default_ip not in local_squid) and each_default_ip not in server_squids:            
             addon = '' if i == len(default_http_list) - 1 else ';'
             temp_default_http += each_default + addon
     default_http_proxy = temp_default_http
@@ -349,12 +368,7 @@ if not no_shoal_server:
         default_http_proxy = new_defaults
 
     if local_squid:
-        # test the local squid received from broadcast
-        local_squid_ip = local_squid.split(':')[0]
-        local_squid_port = local_squid.split(':')[1]
-        availableIp = isAvailableIp({'private_ip': local_squid_ip, 'public_ip': None, 'squid_port': local_squid_port})
-        if availableIp:
-            closest_http_proxy = "http://" + local_squid + ";" + closest_http_proxy
+        closest_http_proxy = "http://" + local_squid + ";" + closest_http_proxy
     cvmfs_httpeach_default_proxy = "\"" + closest_http_proxy + default_http_proxy + "\""
     syslog.syslog(syslog.LOG_DEBUG, "Data parsing complete.")
 
