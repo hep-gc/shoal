@@ -21,7 +21,7 @@ logger.setLevel(level)
 # Basic class to store and update information about each squid server.
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, drift_detected, drift_time, local, max_load=122000, last_active=time()):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, allow_verification, drift_detected, drift_time, local, max_load=122000, last_active=time()):
         """
         constructor for SquidNode, time created is current time
         """
@@ -37,6 +37,7 @@ class SquidNode(object):
         self.load = load
         self.verified = verified
         self.global_access = global_access
+        self.allow_verification = allow_verification
         self.max_load = max_load
         self.drift_detected = drift_detected
         self.drift_time = drift_time
@@ -80,7 +81,8 @@ class ThreadMonitor(Thread):
 
         # check if geolitecity database needs updating
         if utilities.check_geolitecity_need_update():
-            utilities.download_geolitecity()
+            logger.warning('GeoLiteCity database needs manually updating.')
+#            utilities.download_geolitecity()
 
         Thread.__init__(self)
 
@@ -467,7 +469,8 @@ class RabbitMQConsumer(Thread):
         """
         external_ip = public_ip = private_ip = None
         #assume global access unless otherwise indicated
-        globalaccess = True
+        globalaccess = False
+        allow_verification = True
         local = None
         drift_detected = False
         drift_time = 0
@@ -557,6 +560,7 @@ class RabbitMQConsumer(Thread):
                     geo_data,
                     verified,
                     globalaccess,
+                    allow_verification,
                     drift_detected,
                     drift_time,
                     local,

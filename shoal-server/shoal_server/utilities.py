@@ -239,15 +239,17 @@ def verify(squid):
 
     # only verify if it is gobally accessable
     try:
-        if squid.global_access:
+        if squid.allow_verification:
 
             if not _is_available(squid):
                 logger.warning("Failed Verification: %s ", str(squid.public_ip or squid.private_ip))
                 squid.verified = False
-                squid.global_access = False
+                squid.allow_verification = False
             else:
                 logger.info("VERIFIED:%s ", str(squid.public_ip or squid.private_ip))
+                logger.warning("Got Verification: %s ", str(squid.public_ip or squid.private_ip))
                 squid.verified = True
+                squid.global_access = True
     except TypeError:
         logger.info("VERIFIED: %s", str(squid.public_ip or squid.private_ip))
         squid.verified = True
@@ -270,7 +272,7 @@ def _is_available(squid):
     }
     badpaths = 0
     badflags = 0
-    # first test the ip with all the urls
+    # test the ip with all the urls
     for targeturl in paths:
         #if a url checks out testflag set to true, otherwise fails verification at end of loop
         testflag = False
@@ -286,7 +288,6 @@ def _is_available(squid):
                     if line.startswith(bytes('N', 'utf-8')):
                         if bytes(repo, 'utf-8') in line:
                             testflag = True
-                            goodurl = targeturl
                 if testflag is False:
                     badflags = badflags + 1
                     logger.error(
@@ -305,33 +306,8 @@ def _is_available(squid):
             logger.error('%s repos failing, squid failed on verification', badpaths)
             return False
 
-    # second test the hostname with the squal url 
     if badpaths < len(paths) and badflags < len(paths):
-        #if all the IP is able to connect to the test URLs, then check the
-        # actual squid URL to make sure both IP and URL are good.
-        try:
-            proxystring = "http://%s:%s" % (hostname, port)
-            #set proxy
-            proxy = {
-                "http":proxystring,
-            }
-            file = requests.get(goodurl, proxies=proxy, timeout=2)
-        except requests.ConnectionError:
-            squid.error = "DNS failure or refused connection."
-            logger.error(squid.error)
-            return False
-        except requests.HTTPError:
-            squid.error = "Invalid HTTP response."
-            logger.error(squid.error)
-            return False
-        except requests.Timeout:
-            squid.error = "Timeout out on: " + proxy
-            logger.error(squid.error)
-            return False
-        except requests.RequestException:
-            squid.error = "DNS configuration error! Squid IP is OK, but squid URL is wrong."
-            logger.error(squid.error)
-            return False
+        #if all the IP is able to connect to the test URLs, return True
         return True
     else:
         # todo: rewrite the error cases when squid doesn't have a domain_access attribute

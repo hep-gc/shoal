@@ -62,7 +62,7 @@ $$(document).ready(function () {
                 $ access = 'Global'
             $else:
                 $ access = 'Private'
-            $if not squid.verified and squid.global_access == True:
+            $if not squid.verified and squid.allow_verification == True:
                 $ state = 'warning'
             $if squid.drift_detected == True:
                 $ state = 'error'
