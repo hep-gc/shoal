@@ -82,7 +82,6 @@ class ThreadMonitor(Thread):
         # check if geolitecity database needs updating
         if utilities.check_geolitecity_need_update():
             logger.warning('GeoLiteCity database needs manually updating.')
-#            utilities.download_geolitecity()
 
         Thread.__init__(self)
 

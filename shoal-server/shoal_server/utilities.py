@@ -189,32 +189,6 @@ def check_geolitecity_need_update():
         logger.warning('GeoLiteCity database needs updating.')
         return True
 
-def download_geolitecity():
-    """
-        Downloads a new geolite database
-    """
-    try:
-        urlretrieve(GEOLITE_URL, GEOLITE_DB + '.gz')
-    except Exception as exc:
-        logger.error("Could not download the database. - %s", exc)
-        sys.exit(1)
-    try:
-        fname = GEOLITE_DB + '.gz'
-        tar = tarfile.open(fname, "r:gz")
-        tar.extractall()
-        dir_name = tar.getmembers()[0].name #only 1 member of this tar and it is a directory containing all the files
-        tar.close()
-        db_path = os.path.join(config.geolitecity_path, dir_name)
-        db_path = os.path.join(db_path, "GeoLite2-City.mmdb")
-        os.rename(db_path, GEOLITE_DB)
-        
-    except Exception:
-        logger.error("GeoLiteCity.dat file was not properly downloaded. "
-                     "Check contents of %s for possible errors.", (GEOLITE_DB + '.gz'))
-        sys.exit(1)
-    if check_geolitecity_need_update():
-        logger.error('GeoLiteCity database failed to update.')
-
 def generate_wpad(ip):
     """
         Parses the JSON of nearest squids and provides the data as a wpad
