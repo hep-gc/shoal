@@ -101,7 +101,7 @@ def get_nearest_verified_squids(ip, count=10):
             distancecost = distance/(earthrad * 3.14159265359) * (w)
             loadcost = ((squid.load/maxload)**b) * (1-w)
             new_squid = copy.deepcopy(squid)
-            if checkDomain(ip, squid.public_ip): 
+            if checkDomain(ip, new_squid.public_ip): 
                 new_squid.local = True
             nearest_squids.append((new_squid, distancecost+loadcost))
 
