@@ -17,6 +17,7 @@ from subprocess import Popen, PIPE
 from multiprocessing import Process, Queue
 import requests
 import time
+import netifaces
 try:
     import queue as Q
 except:
@@ -187,7 +188,7 @@ def functionalTest(ip, port):
     #set proxy
     proxies = {
         "http":proxystring,
-    }   
+    }
     for targeturl in paths:
         #if a url checks out testflag set to true, otherwise fails verification at end of loop
         testflag = False
@@ -220,12 +221,30 @@ def isAvailableIp(squid):
     private_ip = str(squid['private_ip']) if squid['private_ip'] else None
     public_ip = str(squid['public_ip']) if squid['public_ip'] else None
     port = squid['squid_port']    
-
+    
     availableIp = None
-    #if squid['local'] and private_ip and functionalTest(private_ip, port):
-    # test both the private and public ips, return private ip first if available
-    if private_ip and functionalTest(private_ip, port):
-        availableIp = private_ip
+    my_ip = None
+    try:
+        privAddressList = ['172.' + str(x) for x in range(16, 32)] + ['10.', '192.168.']
+        PRIVATE_ADDRESS = tuple(privAddressList)
+        for interface in netifaces.interfaces():
+            try:
+                for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
+                    if link['addr'].startswith(PRIVATE_ADDRESS):
+                        my_ip = link['addr']
+            except Exception:
+                continue
+    except:
+        syslog.syslog(syslog.LOG_ERR, "Unable to detect the local ip address")
+
+    if squid['local'] and private_ip:
+        same_subnet = False
+        if my_ip:
+            squid_subnet = '.'.join(private_ip.split('.')[:2])
+            my_subnet = '.'.join(my_ip.split('.')[:2])
+            same_subnet = squid_subnet == my_subnet
+        if (same_subnet or not my_ip) and functionalTest(private_ip, port):
+            availableIp = private_ip  
     if not availableIp and public_ip and functionalTest(public_ip, port):
         availableIp = public_ip
     return availableIp
