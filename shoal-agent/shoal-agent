@@ -17,12 +17,19 @@ import logging
 
 import netifaces
 import pika
-
+import re
+import requests
+from socket import gethostbyname, gethostname
 try:
     import _thread as thread
 except:
     import thread
 
+import smtplib
+try:
+    from email.message import EmailMessage
+except:
+    from email.mime.text import MIMEText
 
 from shoal_agent import config
 
@@ -57,6 +64,7 @@ INTERVAL = config.interval
 privAddressList = ['172.' + str(x) for x in range(16, 32)] + ['10.', '192.168.']
 PRIVATE_ADDRESS = tuple(privAddressList)
 LOG_FORMAT = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
+test_targeturl = "http://cvmfs-stratum-one.cern.ch/cvmfs/atlas.cern.ch/.cvmfswhitelist"
 
 def SIGTERM_handler(signal, frame):
 
@@ -135,6 +143,76 @@ def get_ip_addresses():
     logging.info('Public IPs found: {0}, Private IPs found: {1}'.format(public, private))
     return public, private
 
+def getString(content):
+    try:
+        formatted = bytes(content, 'utf-8')
+    except:
+        formatted = bytes(content) # for python 2
+    return formatted
+
+def functionalTest(ip, port):
+    """
+    An url is tested to see if the repo if working, returns the True if it is verified or False if it cannot be
+    """
+    proxystring = "http://%s:%s" % (ip or '127.0.0.1', port)
+    #set proxy
+    proxies = {
+        "http":proxystring,
+    }
+    targeturl = test_targeturl   
+    try:
+        # print("Trying", targeturl)
+        repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+        if repo is None:
+            repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+        file = requests.get(targeturl, proxies=proxies, timeout=2)
+        f = file.content
+        for line in f.splitlines():            
+            if line.startswith(getString('N')):
+                if getString(repo) in line:
+                    return True
+        logging.error("%s filed verification on %s" % (ip, targeturl))
+        return False
+    except:
+        # note that this would catch any RE errors aswell but they are
+        # specified in the config and all fit the pattern.
+        logging.error("%s timeout or proxy error on %s repo" % (ip, targeturl))
+        return False
+    return True
+
+def sendEmail():
+    try:
+        msg = EmailMessage()
+        msg.set_content(config.email_content)
+    except:
+        try:
+            msg = MIMEText(config.email_content) # for python 2
+        except:
+            logging.error("Having error when writing the email content")
+    sender_email = config.sender_email
+    receiver_email = config.receiver_email
+    msg['Subject'] = config.email_subject
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    # Send the message via our own SMTP server
+    s = smtplib.SMTP('localhost')
+    try:
+        s.send_message(msg)
+    except:
+        try:
+            s.sendmail(sender_email, receiver_email, msg.as_string()) # for python 2
+        except:
+            logging.error("Have error when sending email to the admin")
+    s.quit()
+
+def writeEmailTime(time_to_write):
+    try:
+        f = open(config.last_sent_email, "w")
+        f.write(str(time_to_write))
+        f.close()
+    except:
+        logging.error("Have error when writing the time stamp to the last sent email file")
+
 def main():
     # Sets up uuid, hostname, squid_port, public/private/external ip, and interface
     # Establishes connection and publishes the load and ip of the squid server using
@@ -204,21 +282,70 @@ def main():
     # enable the sigterm signal handler to log before exit
     signal.signal(signal.SIGTERM, SIGTERM_handler)
 
+    logging.info("test if the squid is running successfully")
+
+    try:
+        test_private_ip = list(private_ip.values())[0]
+    except:
+        try:
+            test_private_ip = gethostbyname(gethostname())
+        except:
+            try:
+                test_private_ip = list(public_ip.values())[0]
+            except:
+                test_private_ip = external_ip
+    last_test_time = time.time()
+    available = functionalTest(test_private_ip, config.squid_port)
+    try:
+        # if has history email time
+        with open(config.last_sent_email) as f:
+            last_email_time = float(f.readlines()[0])
+        current_time = time.time()
+        if not available and current_time - last_email_time > 60 * 60 * 24:
+            # send initial email notification
+            sendEmail()
+            last_email_time = current_time
+            writeEmailTime(last_email_time)
+    except:
+        last_email_time = time.time()
+        if not available:
+            sendEmail()
+            writeEmailTime(last_email_time)
+    test_interval = 60 * 30
+    
     logging.info("shoal-agent configured, starting up")
+   
     while True:
         # only time/load are expected to change
         # private/public/external IPs are kept constant while shoal-agent is running
         # the load is read only from a single interface either user specified or the
         # first valid one netifaces finds
         try:
-            data['timestamp'] = time.time()
-            data['load'] = get_load_data(interface)
-            try:
-                amqp_send(json.dumps(data))
-                logging.debug("heartbeat sent to shoal-server sucessfully")
-            except Exception as exc:
-                logging.error("Could not connect to AMQP Server. Attempting to connect in {0}s...".format(INTERVAL))
-                logging.error(exc)
+            current_time = time.time()
+            if current_time - last_test_time > test_interval:
+                # redo functional test for every test_invertal time
+                last_test_time = current_time
+                available = functionalTest(test_private_ip, config.squid_port)
+            if available:
+                test_interval = 60 * 60 * 6
+                data['timestamp'] = time.time()
+                data['load'] = get_load_data(interface)
+                try:
+                    amqp_send(json.dumps(data))
+                    logging.debug("heartbeat sent to shoal-server sucessfully")
+                except Exception as exc:
+                    logging.error("Could not connect to AMQP Server. Attempting to connect in {0}s...".format(INTERVAL))
+                    logging.error(exc)
+            else:
+                test_interval = 60 * 30
+                try:
+                    if current_time - last_email_time > 60 * 60 * 24:
+                        sendEmail()
+                        last_email_time = current_time
+                        writeEmailTime(current_time)
+                    time.sleep(60 * 30)
+                except:
+                    logging.error("Have error when reading the last sent email time")
             time.sleep(INTERVAL)
         except KeyboardInterrupt:
             logging.info("shoal-agent exiting")

@@ -48,28 +48,38 @@ verified = False
 max_load = 122000
 load_factor = 0.9
 
+sender_email = 'root@localhost'
+receiver_email = 'root@localhost'
+email_subject = 'Shoal Agent Notification'
+email_content = 'Hello, there is no available squid running on the agent, please review the squid status. Squid will be retried in 30 mins. Thanks!'
+last_sent_email = '/var/tmp/last_sent_email'
+
 homedir = expanduser('~')
 
 # auto config
 # get squid_port
-squid_uid = getpwnam('squid')[2]
-squid_pid = int(check_output(['pidof', '-s', 'squid']))
-def get_squid_port(filename):
-    with open(filename) as f:
-        for i, line in enumerate(f):
-            if i != 0:
-                lineList = line.strip().split()
-                if int(lineList[7]) == int(squid_uid):
-                    if int(lineList[1].split(':')[0],16) == 0:
-                        return int(lineList[1].split(':')[1],16)
-        return None
-squid_port = get_squid_port('/proc/' + str(squid_pid) + '/net/tcp') or squid_port
-squid_port = get_squid_port('/proc/' + str(squid_pid) + '/net/tcp6') or squid_port
+try:
+    squid_uid = getpwnam('squid')[2]
+    squid_pid = int(check_output(['pidof', '-s', 'squid']))
+    def get_squid_port(filename):
+        with open(filename) as f:
+            for i, line in enumerate(f):
+                if i != 0:
+                    lineList = line.strip().split()
+                    if int(lineList[7]) == int(squid_uid):
+                        if int(lineList[1].split(':')[0],16) == 0:
+                            return int(lineList[1].split(':')[1],16)
+            return None
+    squid_port = get_squid_port('/proc/' + str(squid_pid) + '/net/tcp') or squid_port
+    squid_port = get_squid_port('/proc/' + str(squid_pid) + '/net/tcp6') or squid_port
+except:
+    print("Couldn't auto config the squid port, use the default one")
 # get external_ip
 external_ip = stun.get_ip_info()[1]
 # get dnsname
 try:
     dnsname = gethostbyaddr(external_ip)[0]
+    sender_email = 'root@' + dnsname
 except:
     print("Couldn't auto config the domain name, use the default one")
 # get interface
@@ -187,4 +197,7 @@ if config_file.has_option("logging", "logging_level"):
 
 if config_file.has_option("general", "max_load"):
     interface_speed = config_file.get("general","max_load")
+
+if config_file.has_option("general", "admin_email"):
+    receiver_email = config_file.get("general","admin_email") or receiver_email
 
