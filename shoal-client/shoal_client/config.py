@@ -38,13 +38,13 @@ config_file = configparser.ConfigParser()
 try:
     config_file.read(path)
 except IOError:
-    print >> sys.stderr, "Configuration file problem: There was a " \
+    print("Configuration file problem: There was a " \
                          "problem reading %s. Check that it is readable," \
-                         "and that it exists. " % path
+                         "and that it exists. " % path, file=sys.stderr)
     raise
 except configparser.ParsingError:
-    print >> sys.stderr, "Configuration file problem: Couldn't " \
-                         "parse your file. Check for spaces before or after variables."
+    print("Configuration file problem: Couldn't " \
+                         "parse your file. Check for spaces before or after variables.", file=sys.stderr)
     raise
 except:
     print("Configuration file problem: There is something wrong with " \
