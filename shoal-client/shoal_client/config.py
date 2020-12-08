@@ -28,9 +28,9 @@ elif exists("/etc/shoal/shoal_client.conf"):
 elif exists(abspath(homedir + "/.shoal/shoal_client.conf")):
     path =  abspath(homedir + "/.shoal/shoal_client.conf")
 else:
-    print >> sys.stderr, "Configuration file problem: There doesn't " \
+    print("Configuration file problem: There doesn't " \
                          "seem to be a configuration file. " \
-                         "You can specify one in /etc/shoal/shoal_client.conf"
+                         "You can specify one in /etc/shoal/shoal_client.conf", file=sys.stderr)
     sys.exit(1)
 
 # Read config file from the given path above
