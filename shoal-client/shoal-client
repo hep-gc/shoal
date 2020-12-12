@@ -237,7 +237,12 @@ def isAvailableIp(squid):
     except:
         syslog.syslog(syslog.LOG_ERR, "Unable to detect the local ip address")
 
-    if squid['local'] and private_ip:
+    local = False
+    try:
+        local = squid['local']
+    except:
+        syslog.syslog(syslog.LOG_ERR, "Squid has not local attribute")
+    if local and private_ip:
         same_subnet = False
         if my_ip:
             squid_subnet = '.'.join(private_ip.split('.')[:2])
