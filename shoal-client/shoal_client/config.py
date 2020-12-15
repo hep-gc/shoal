@@ -30,7 +30,7 @@ elif exists(abspath(homedir + "/.shoal/shoal_client.conf")):
 else:
     print("Configuration file problem: There doesn't " \
                          "seem to be a configuration file. " \
-                         "You can specify one in /etc/shoal/shoal_client.conf", file=sys.stderr)
+                         "You can specify one in /etc/shoal/shoal_client.conf", sys.stderr)
     sys.exit(1)
 
 # Read config file from the given path above
@@ -40,11 +40,11 @@ try:
 except IOError:
     print("Configuration file problem: There was a " \
                          "problem reading %s. Check that it is readable," \
-                         "and that it exists. " % path, file=sys.stderr)
+                         "and that it exists. " % path, sys.stderr)
     raise
 except configparser.ParsingError:
     print("Configuration file problem: Couldn't " \
-                         "parse your file. Check for spaces before or after variables.", file=sys.stderr)
+                         "parse your file. Check for spaces before or after variables.", sys.stderr)
     raise
 except:
     print("Configuration file problem: There is something wrong with " \
