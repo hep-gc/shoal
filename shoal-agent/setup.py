@@ -12,6 +12,12 @@ except:
 
 from shoal_agent.__version__ import version
 
+try:
+    with open("README.md", "r", encoding="utf-8") as fh:
+        long_description = fh.read()
+except: 
+    print("Couldn't read description from the README.md")
+    long_description = ''
 
 setup(name='shoal-agent',
       version=version,
@@ -21,6 +27,8 @@ setup(name='shoal-agent',
           'pika>=0.9.5',
       ],
       description='A squid cache publishing and advertising tool designed to work in fast changing environments',
+      long_description=long_description,
+      long_description_content_type="text/markdown",
       author='Mike Chester, Colson Drimiel, Ian Gable, Alex Lam, Rob Prior, Ryan Taylor, Steve Traylen',
       author_email='igable@uvic.ca',
       url='http://github.com/hep-gc/shoal',
