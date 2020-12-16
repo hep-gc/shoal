@@ -1,5 +1,6 @@
 import sys
 import os
+import subprocess
 import logging
 import tarfile
 import re
@@ -120,40 +121,36 @@ def get_all_squids():
     return squids
 
 def lookupDomain(temp_ip):
-    name = socket.getfqdn(temp_ip)
-    if name == temp_ip:
-       	return None
-    domain = name.split('.')
-    return domain[-2]+'.'+domain[-1]
-
+#    name = socket.getfqdn(temp_ip)
+#    if name == temp_ip:
+#       	return None
+#    domain = name.split('.')
+#    return domain[-2]+'.'+domain[-1]
+    try:
+        findDomain = subprocess.Popen('dig +nocomments  -x' + temp_ip + 'soa', shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+        result = findDomain.communicate()[0].decode('utf-8').splitlines()
+        for entry in result:
+            if entry != '' and not entry.startswith(';'):
+                return entry.split()[5]
+        return None
+    except:
+        logger.error("Could not get the domain of ip %s", temp_ip)
+        return None 
 
 def checkDomain(req_ip, squid_ip):
     """
     Check if two ips come from the same domain
-    If no database file is detected produce an error message and continue
-    functioning without the domain lookup feature
     """
-    if os.path.exists(GEODOMAIN_DB):
-        try:
-            #reader = geoip2.database.Reader(GEODOMAIN_DB)
-            #req_domain = reader.domain(req_ip).domain
-            #squid_domain = reader.domain(squid_ip).domain
-            #if req_domain is None:
-            req_domain = lookupDomain(req_ip)
-            #if squid_domain is None:
-            squid_domain = lookupDomain(squid_ip)
-            if (req_domain == squid_domain) and squid_domain is not None:
-                return True
-            else:
-                return False
-        except Exception as exc:
-            logger.error(exc)
-            logger.error("IP not found in database - could not find second level domain name")
+    try:
+        req_domain = lookupDomain(req_ip)
+        squid_domain = lookupDomain(squid_ip)
+        if (req_domain == squid_domain) and squid_domain is not None:
+            return True
+        else:
             return False
-    else:
-        logger.error("No geoDomain database file detected. Add the database file "
-                      "to shoal-server/static/db before installation and ensure the path in "
-                      "the config file is correct")
+    except Exception as exc:
+        logger.error(exc)
+        logger.error("Could not compare the domain for the two ips")
         return False
 
 
