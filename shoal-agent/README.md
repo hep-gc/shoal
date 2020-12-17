@@ -57,7 +57,6 @@ In either case, the Shoal agent does not require root privilege to run. The init
   * `/shoal-agent/conf/shoal-agent.init` --> `/etc/init.d/shoal-agent`
   * `/shoal-agent/conf/shoal-agent.logrotate` --> `/etc/logrotate.d/shoal-agent`
   * `/shoal-agent/conf/shoal-agent.sysconfig` --> `/etc/sysconfig/shoal/shoal-agent`
-  * `/shoal-agent/conf/shoal-agent.service` --> `/usr/lib/systemd/system/shoal-agent.service` (if run with python 2.7)
-  * `/shoal-agent/conf/shoal-agent3.service` --> `/usr/lib/systemd/system/shoal-agent.service` (if run with python 3+)
+  * `/shoal-agent/conf/shoal-agent.service` --> `/usr/lib/systemd/system/shoal-agent.service` (if necessary)
   5. Modify the settings in `shoal_agent.conf` as needed.
   6. Start shoal agent: `service shoal-agent start`

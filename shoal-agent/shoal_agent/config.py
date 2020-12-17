@@ -100,7 +100,7 @@ try:
         speed = int(f.readlines()[0])
         max_load = int(speed * 1000 * load_factor / 8)
 except:
-    print("Couldn't auto config the interface speed, use the default one")
+    print("Couldn't auto config the interface speed for max_load, use the default one")
 
 # find config file by checking the directory of the calling script and sets path
 if exists(abspath(dirname(sys.path[0])+"/shoal_agent.conf")):
@@ -196,7 +196,7 @@ if config_file.has_option("logging", "logging_level"):
         sys.exit(1)
 
 if config_file.has_option("general", "max_load"):
-    interface_speed = config_file.get("general","max_load")
+    max_load = config_file.get("general","max_load")
 
 if config_file.has_option("general", "admin_email"):
     receiver_email = config_file.get("general","admin_email") or receiver_email

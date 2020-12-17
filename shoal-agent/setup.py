@@ -1,6 +1,7 @@
 import os
 from os.path import isfile, join, expanduser
 import sys
+import io
 try:
     from setuptools import setup
 except:
@@ -13,7 +14,7 @@ except:
 from shoal_agent.__version__ import version
 
 try:
-    with open("README.md", "r", encoding="utf-8") as fh:
+    with io.open("README.md", "r", encoding="utf-8") as fh:
         long_description = fh.read()
 except: 
     print("Couldn't read description from the README.md")
@@ -34,7 +35,7 @@ setup(name='shoal-agent',
       url='http://github.com/hep-gc/shoal',
       packages=['shoal_agent'],
       scripts=['shoal-agent'],
-      data_files=[('share/shoal-agent', ['conf/shoal_agent.conf','conf/shoal-agent.init','conf/shoal-agent.logrotate','conf/shoal-agent.sysconfig', 'conf/shoal-agent.service'])
+      data_files=[('share/shoal-agent', ['conf/shoal_agent.conf','conf/shoal-agent.init','conf/shoal-agent.logrotate','conf/shoal-agent.sysconfig','conf/shoal-agent.service'])
                   ],
       options = {'bdist_rpm':{'post_install':'manage_permissions'},
                  'bdist_rpm':{'requires':'python-netifaces >= 0.5,python-pika >= 0.9.5'}},
