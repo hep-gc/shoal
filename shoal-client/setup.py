@@ -1,6 +1,7 @@
 import os
 from os.path import isfile, join
 import sys
+import io
 try:
     from setuptools import setup
 except:
@@ -13,12 +14,11 @@ except:
 from shoal_client.__version__ import version
 
 try:
-    with open("README.md", "r", encoding="utf-8") as fh:
+    with io.open("README.md", "r", encoding="utf-8") as fh:
         long_description = fh.read()
-except: 
+except:
     print("Couldn't read description from the README.md")
     long_description = ''
-
 
 setup(name='shoal-client',
       version=version,

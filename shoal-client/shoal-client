@@ -6,8 +6,8 @@ try:
     import urllib.request as UrlRequest
     from urllib.error import URLError as UrlError
 except:
-    from urllib2 import URLError as UrlError
     import urllib2 as UrlRequest
+    from urllib2 import URLError as UrlError
 import sys
 import re
 import os
