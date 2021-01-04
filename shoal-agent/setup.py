@@ -26,6 +26,8 @@ setup(name='shoal-agent',
       install_requires=[
           'netifaces>=0.5',
           'pika>=0.9.5',
+          'pystun3>=1.0.0',
+          'requests>=2.25.1',
       ],
       description='A squid cache publishing and advertising tool designed to work in fast changing environments',
       long_description=long_description,
