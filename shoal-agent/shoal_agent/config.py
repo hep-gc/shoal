@@ -199,5 +199,5 @@ if config_file.has_option("general", "max_load"):
     max_load = config_file.get("general","max_load")
 
 if config_file.has_option("general", "admin_email"):
-    receiver_email = config_file.get("general","admin_email") or receiver_email
+    receiver_email = config_file.get("general","admin_email")
 
