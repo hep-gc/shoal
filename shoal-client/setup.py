@@ -23,7 +23,9 @@ except:
 setup(name='shoal-client',
       version=version,
       license="'GPL3' or 'Apache 2'",
-      install_requires=[],
+      install_requires=[
+          'requests>=2.25.1',
+      ],
       description='A squid cache publishing and advertising tool designed to work in fast changing environments',
       long_description=long_description,
       long_description_content_type="text/markdown",

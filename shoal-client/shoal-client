@@ -393,7 +393,7 @@ if not no_shoal_server:
 
     if local_squid:
         closest_http_proxy = "http://" + local_squid + ";" + closest_http_proxy
-    cvmfs_httpeach_default_proxy = "\"" + closest_http_proxy + default_http_proxy + "\""
+    cvmfs_http_proxy = "\"" + closest_http_proxy + default_http_proxy + "\""
     syslog.syslog(syslog.LOG_DEBUG, "Data parsing complete.")
 
     if dump:
