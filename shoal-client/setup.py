@@ -24,7 +24,7 @@ setup(name='shoal-client',
       version=version,
       license="'GPL3' or 'Apache 2'",
       install_requires=[
-          'requests>=2.25.1',
+          'requests>=2.6.0',
       ],
       description='A squid cache publishing and advertising tool designed to work in fast changing environments',
       long_description=long_description,
