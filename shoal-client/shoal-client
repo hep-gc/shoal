@@ -58,17 +58,15 @@ def get_local_squid(q, t):
     s.bind(('', PORT))
     s.settimeout(t)
     
-    while 1:
-        try:
-            data, addr = s.recvfrom(1024) #wait for a packet
-            data = data.decode('utf-8')
-            if data.startswith(MAGIC):
-                # print("got service announcement from", data[len(MAGIC):])
-                q.put(data[len(MAGIC):])
-            break
-        except:
-            # print("socket got a timeout")
-            break
+    try:
+        data, addr = s.recvfrom(1024) #wait for a packet
+        data = data.decode('utf-8')
+        if data.startswith(MAGIC):
+            # print("got service announcement from", data[len(MAGIC):])
+            q.put(data[len(MAGIC):])
+    except:
+        # print("socket got a timeout")
+        syslog.syslog(syslog.LOG_ERR, "Socket got a timeout")
 
 
 def get_args():
@@ -103,7 +101,6 @@ def get_args():
         frontier = True
     if options.numsquids:
         numsquids = options.numsquids
-        dump = True
 
 def convertServerData(val):
     """
@@ -213,17 +210,17 @@ def functionalTest(ip, port):
             return False
     return True
 
-def isAvailableIp(squid):
+def getAvailableIp(squid):
     """
     Functioanl test for return squids from broadcast and shoal-server
     Test both private and public ip and return private ip first if available
     """
-    private_ip = str(squid['private_ip']) if squid['private_ip'] else None
-    public_ip = str(squid['public_ip']) if squid['public_ip'] else None
-    port = squid['squid_port']    
+    squid_private_ip = str(squid['private_ip']) if squid['private_ip'] else None
+    squid_public_ip = str(squid['public_ip']) if squid['public_ip'] else None
+    squid_port = squid['squid_port']    
     
-    availableIp = None
-    my_ip = None
+    client_private_ip = None
+    client_private_not_found = False
     try:
         privAddressList = ['172.' + str(x) for x in range(16, 32)] + ['10.', '192.168.']
         PRIVATE_ADDRESS = tuple(privAddressList)
@@ -231,28 +228,38 @@ def isAvailableIp(squid):
             try:
                 for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
                     if link['addr'].startswith(PRIVATE_ADDRESS):
-                        my_ip = link['addr']
+                        client_private_ip = link['addr']
             except Exception:
                 continue
     except:
-        syslog.syslog(syslog.LOG_ERR, "Unable to detect the local ip address")
+        client_private_not_found = True
+        syslog.syslog(syslog.LOG_ERR, "Unable to check the local ip address")
 
     local = False
     try:
         local = squid['local']
     except:
         syslog.syslog(syslog.LOG_ERR, "Squid has not local attribute")
-    if local and private_ip:
+    
+    return_squid_ip = None
+    test_time_cost = None
+    if local and squid_private_ip:
         same_subnet = False
-        if my_ip:
-            squid_subnet = '.'.join(private_ip.split('.')[:2])
-            my_subnet = '.'.join(my_ip.split('.')[:2])
-            same_subnet = squid_subnet == my_subnet
-        if (same_subnet or not my_ip) and functionalTest(private_ip, port):
-            availableIp = private_ip  
-    if not availableIp and public_ip and functionalTest(public_ip, port):
-        availableIp = public_ip
-    return availableIp
+        if client_private_ip:
+            squid_subnet = '.'.join(squid_private_ip.split('.')[:2])
+            client_subnet = '.'.join(client_private_ip.split('.')[:2])
+            same_subnet = squid_subnet == client_subnet
+        if (same_subnet or client_private_not_found):
+            start_time = time.time()
+            if functionalTest(squid_private_ip, squid_port):
+                test_time_cost = time.time() - start_time
+                return_squid_ip = squid_private_ip  
+    if not return_squid_ip and squid_public_ip:
+        start_time = time.time()
+        if functionalTest(squid_public_ip, squid_port):
+            test_time_cost = time.time() - start_time
+            return_squid_ip = squid_public_ip
+    return {'available_squid_ip': return_squid_ip, 'time_cost': test_time_cost}
         
 
 get_args()
@@ -321,56 +328,34 @@ if not no_shoal_server:
     ## iterate through the data dict and use all hostname and squid_port keys
     ## to create addresses for squids in closest_http_proxy
     avaliable_server_return = {}
-    if frontier:
-        for squid_key in list(data):
-            if len(avaliable_server_return.keys()) < numsquids:
-                squid = data[squid_key]
-                server_squids[squid['public_ip'] or squid['hostname']] = squid
-                try:
-                    if not local_squid or not squid['private_ip'] or squid['private_ip'] != local_squid.split(':')[0]:
-                        # test the squid received from shoal server
-                        start_time = time.time()
-                        availableIp = isAvailableIp(squid)
-                        timer = time.time() - start_time
-                        if availableIp:
-                            avaliable_server_return[timer] = (availableIp, squid['squid_port'])
-                except KeyError as e:
-                    syslog.syslog(
-                        syslog.LOG_ERR,
-                        "The data returned from '%s' was missing the key: %s. "
-                        "Please ensure the server is running the latest version "
-                        "of Shoal-Server." % (server, e))
+    for squid_key in list(data):
+        if len(avaliable_server_return.keys()) < numsquids:
+            squid = data[squid_key]
+            server_squids[squid['public_ip'] or squid['hostname']] = squid
+            try:
+                if not local_squid or not squid['private_ip'] or squid['private_ip'] != local_squid.split(':')[0]:
+                    # test the squid received from shoal server
+                    available_ip_with_timer = getAvailableIp(squid)
+                    if available_ip_with_timer['available_squid_ip']:
+                        timer = available_ip_with_timer['time_cost']
+                        available_squid_ip = available_ip_with_timer['available_squid_ip']
+                        avaliable_server_return[timer] = (available_squid_ip, squid['squid_port'])
+            except KeyError as e:
+                syslog.syslog(
+                    syslog.LOG_ERR,
+                    "The data returned from '%s' was missing the key: %s. "
+                    "Please ensure the server is running the latest version "
+                    "of Shoal-Server." % (server, e))
+                if frontier:
                     print(os.getenv("FRONTIER_SERVER", ""))
                     sys.exit(2)
-            else:
-                break
-        if len(avaliable_server_return.keys()) > 0:
-            for item in sorted(avaliable_server_return.items()):
+        else:
+            break
+    if len(avaliable_server_return.keys()) > 0:
+        for item in sorted(avaliable_server_return.items()):
+            if frontier:
                 closest_http_proxy += '(proxyurl=http://%s:%s)' % (item[1][0], item[1][1])
-
-    else:
-        for squid_key in list(data):
-            if len(avaliable_server_return.keys()) < numsquids:
-                squid = data[squid_key]
-                server_squids[squid['public_ip'] or squid['hostname']] = squid
-                try:
-                    if not local_squid or not squid['private_ip'] or squid['private_ip'] != local_squid.split(':')[0]:
-                        # test the squid received from shoal server
-                        start_time = time.time()
-                        availableIp = isAvailableIp(squid)
-                        timer = time.time() - start_time
-                        if availableIp:
-                            avaliable_server_return[timer] = (availableIp, squid['squid_port'])
-                except KeyError as e:
-                    syslog.syslog(
-                        syslog.LOG_ERR,
-                        "The data returned from '%s' was missing the key: %s. Please ensure the "
-                        "server is running the latest version of Shoal-Server." % (server, e))
-                    # sys.exit(2)
             else:
-                break
-        if len(avaliable_server_return.keys()) > 0:
-            for item in sorted(avaliable_server_return.items()):
                 closest_http_proxy += 'http://%s:%s;' % (item[1][0], item[1][1])
 
     # remove duplicate default squid
@@ -412,11 +397,11 @@ if not no_shoal_server:
                 "FRONTIER_SERVER env variable unset, unable to run with --frontier option")
             sys.exit(1)
         (frontier_output, replacements) = re.subn(r'(\(.*?\))(\(proxyurl.*?\))',
-                                                  r'\1' + closest_http_proxy + r'\2',
+                                                  r'\1' + closest_http_proxy + default_http_proxy + r'\2',
                                                   frontier_var, 1)
         # if no replacmeents, then there was no proxyurl to begin with
         if replacements == 0:
-            frontier_output = frontier_output + closest_http_proxy
+            frontier_output = frontier_output + closest_http_proxy + default_http_proxy
         print(frontier_output)
 
     else:

@@ -25,11 +25,12 @@ setup(name='shoal-client',
       license="'GPL3' or 'Apache 2'",
       install_requires=[
           'requests>=2.6.0',
+          'netifaces>=0.10.0'
       ],
       description='A squid cache publishing and advertising tool designed to work in fast changing environments',
       long_description=long_description,
       long_description_content_type="text/markdown",
-      author='Mike Chester, Colson Drimiel, Ian Gable, Alex Lam, Rob Prior, Ryan Taylor, Steve Traylen',
+      author='Mike Chester, Colson Drimiel, Ian Gable, Alex Lam, Rob Prior, Ryan Taylor, Steve Traylen, Marcus Ebert, Da Meng',
       author_email='igable@uvic.ca',
       url='http://github.com/hep-gc/shoal',
       packages=['shoal_client'],
