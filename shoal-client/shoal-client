@@ -220,7 +220,7 @@ def getAvailableIp(squid):
     squid_port = squid['squid_port']    
     
     client_private_ip = None
-    client_private_not_found = False
+    client_private_ip_not_found = False
     try:
         privAddressList = ['172.' + str(x) for x in range(16, 32)] + ['10.', '192.168.']
         PRIVATE_ADDRESS = tuple(privAddressList)
@@ -232,7 +232,7 @@ def getAvailableIp(squid):
             except Exception:
                 continue
     except:
-        client_private_not_found = True
+        client_private_ip_not_found = True
         syslog.syslog(syslog.LOG_ERR, "Unable to check the local ip address")
 
     local = False
@@ -249,7 +249,7 @@ def getAvailableIp(squid):
             squid_subnet = '.'.join(squid_private_ip.split('.')[:2])
             client_subnet = '.'.join(client_private_ip.split('.')[:2])
             same_subnet = squid_subnet == client_subnet
-        if (same_subnet or client_private_not_found):
+        if (same_subnet or client_private_ip_not_found):
             start_time = time.time()
             if functionalTest(squid_private_ip, squid_port):
                 test_time_cost = time.time() - start_time
