@@ -19,15 +19,22 @@ import logging
 # set default values
 shoal_server_url = 'http://localhost:8080/nearest'
 default_squid_proxy   = ""
+paths = [
+"http://cvmfs-stratum-one.cern.ch/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
+"http://cernvmfs.gridpp.rl.ac.uk/cvmfs/sft.cern.ch/.cvmfswhitelist",
+"http://cvmfs.racf.bnl.gov/cvmfs/atlas.cern.ch/.cvmfswhitelist",
+"http://cvmfs.fnal.gov/cvmfs/grid.cern.ch/.cvmfswhitelist"
+]
 
 homedir = expanduser('~')
 # find config file by checking the directory of the calling script and sets path
 if  exists(abspath(sys.path[0]+"/shoal_client.conf")):
     path = abspath(sys.path[0]+"/shoal_client.conf")
-elif exists("/etc/shoal/shoal_client.conf"):
-    path = "/etc/shoal/shoal_client.conf"
 elif exists(abspath(homedir + "/.shoal/shoal_client.conf")):
     path =  abspath(homedir + "/.shoal/shoal_client.conf")
+elif exists("/etc/shoal/shoal_client.conf"):
+    path = "/etc/shoal/shoal_client.conf"
+
 else:
     print("Configuration file problem: There doesn't " \
                          "seem to be a configuration file. " \
