@@ -38,7 +38,6 @@ numsquids = 2
 dump = False
 best_http_proxy = ''
 env_proxy = ''
-# no_shoal_server = False
 unicode = str
 timeout = 90
 paths = config.paths
@@ -297,7 +296,6 @@ except (UrlError, ValueError) as e:
     #checkEnvVariable()
     #checkConfig()
     syslog.syslog(syslog.LOG_ERR, "Unable to reach shoal-server, reverting to defaults")
-    # no_shoal_server = True
     #sys.exit(1)
 
 
@@ -314,13 +312,10 @@ if not frontier:
     p.join()
 
 # If the shoal_server was reachable
-# if not no_shoal_server:
 ## iterate through the data dict and use all hostname and squid_port keys
 ## to create addresses for squids in best_http_proxy
 # syslog.syslog(syslog.LOG_INFO, "Received data from server, processing.")
 
-## iterate through the data dict and use all hostname and squid_port keys
-## to create addresses for squids in best_http_proxy
 avaliable_server_return = {}
 if data:
     for squid_key in list(data):
@@ -397,6 +392,7 @@ elif frontier:
     print(frontier_output)
 
 else:
+    # include the case that the client is unable to connect to the shoal_server
     cvmfs_http_proxy = best_http_proxy + env_proxy + default_http_proxy
     syslog.syslog(syslog.LOG_DEBUG, "Data parsing complete.")
     syslog.syslog(syslog.LOG_INFO, "Setting %s as proxy" % cvmfs_http_proxy)
@@ -420,33 +416,3 @@ else:
         syslog.syslog(syslog.LOG_ERR, "Could not execute cvmfs_talk: %s" % e.strerror)
         sys.exit(e.errno)
 
-#if we get here the client as unable to connect to the shoal_server
-#First check if there is a value in the env variable
-#Second check if there is a valid default in shoal_client.conf
-# else:
-
-#     cvmfs_http_proxy = env_proxy + default_http_proxy
-#     syslog.syslog(syslog.LOG_INFO, "Setting %s as proxy" % cvmfs_http_proxy)
-#     ## if dump, don't set CVMFS proxies
-#     if dump:
-#         syslog.syslog(syslog.LOG_INFO, "Dumping proxy string")
-#         print(cvmfs_http_proxy)
-#     else:
-#         syslog.syslog(syslog.LOG_DEBUG, "Executing 'cvmfs_talk proxy set %s'" % cvmfs_http_proxy)
-#         try:
-#             p = Popen(["cvmfs_talk", "proxy", "set", cvmfs_http_proxy], stdout=PIPE, stderr=PIPE)
-#             output, errors = p.communicate()
-#             if errors:
-#                 syslog.syslog(syslog.LOG_ERR, errors)
-#             if output:
-#                 syslog.syslog(syslog.LOG_DEBUG, output)
-#             if p.returncode:
-#                 syslog.syslog(
-#                     syslog.LOG_ERR,
-#                     "WARNING: CVMFS proxies may not have been set correctly for all repos")
-#                 sys.exit(p.returncode)
-#             else:
-#                 syslog.syslog(syslog.LOG_INFO, "CVMFS proxies set to %s" % cvmfs_http_proxy)
-#         except OSError as e:
-#             syslog.syslog(syslog.LOG_ERR, "Could not execute cvmfs_talk: %s" % e.strerror)
-#             sys.exit(e.errno)
