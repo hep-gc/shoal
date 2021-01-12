@@ -46,17 +46,3 @@ In either case, the Shoal agent does not require root privilege to run. The init
   
  _**Note**: A geoip domain database is requied on the shoal-server to use these boolean features.
 
-
-
-### Other Methods
-  1. [Install EPEL](http://fedoraproject.org/wiki/EPEL)
-  2. `yum install python-pika python-netifaces`
-  3. Checkout from Github: `git clone https://github.com/hep-gc/shoal/trunk/shoal-agent` and `python setup.py install`
-  4. Move configuration files from `/shoal-agent/conf/` to their proper locations:
-  * `/shoal-agent/conf/shoal_agent.conf` --> `/etc/shoal/shoal_agent.conf`
-  * `/shoal-agent/conf/shoal-agent.init` --> `/etc/init.d/shoal-agent`
-  * `/shoal-agent/conf/shoal-agent.logrotate` --> `/etc/logrotate.d/shoal-agent`
-  * `/shoal-agent/conf/shoal-agent.sysconfig` --> `/etc/sysconfig/shoal/shoal-agent`
-  * `/shoal-agent/conf/shoal-agent.service` --> `/usr/lib/systemd/system/shoal-agent.service` (if necessary)
-  5. Modify the settings in `shoal_agent.conf` as needed.
-  6. Start shoal agent: `service shoal-agent start`

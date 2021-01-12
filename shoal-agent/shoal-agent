@@ -35,7 +35,7 @@ from shoal_agent import config
 
 def broadcast_my_ip():
     PORT = 50000
-    MAGIC = "fna349fn" #to make sure we don't confuse or get confused by other programs
+    BROADCAST_ID = "fna349fn" #to make sure we don't confuse or get confused by other programs
     MULTICAST_TTL = 2
     
     from time import sleep
@@ -54,9 +54,9 @@ def broadcast_my_ip():
             logging.error("No hostname found")
     
     while 1:
-        data = (MAGIC + str(my_ip) + ":" + str(config.squid_port)).encode()
+        data = (BROADCAST_ID + str(my_ip) + ":" + str(config.squid_port)).encode()
         s.sendto(data, ('<broadcast>', PORT))
-        print("sent service announcement")
+        logging.info("sent service announcement")
         sleep(60)
 
 # Time interval to send data
@@ -64,7 +64,7 @@ INTERVAL = config.interval
 privAddressList = ['172.' + str(x) for x in range(16, 32)] + ['10.', '192.168.']
 PRIVATE_ADDRESS = tuple(privAddressList)
 LOG_FORMAT = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
-test_targeturl = "http://cvmfs-stratum-one.cern.ch/cvmfs/atlas.cern.ch/.cvmfswhitelist"
+test_targeturl = config.test_targeturl
 
 def SIGTERM_handler(signal, frame):
 
@@ -152,7 +152,7 @@ def getString(content):
 
 def functionalTest(ip, port):
     """
-    An url is tested to see if the repo if working, returns the True if it is verified or False if it cannot be
+    An url is tested to see if the repo if working, returns the "True" if it is verified or "False" if it cannot be
     """
     proxystring = "http://%s:%s" % (ip or '127.0.0.1', port)
     #set proxy
@@ -171,7 +171,7 @@ def functionalTest(ip, port):
             if line.startswith(getString('N')):
                 if getString(repo) in line:
                     return True
-        logging.error("%s filed verification on %s" % (ip, targeturl))
+        logging.error("%s failed verification on %s" % (ip, targeturl))
         return False
     except:
         # note that this would catch any RE errors aswell but they are
@@ -217,6 +217,10 @@ def main():
     # Sets up uuid, hostname, squid_port, public/private/external ip, and interface
     # Establishes connection and publishes the load and ip of the squid server using
     # a json formatted amqp message at regular intervals
+
+    SHORT_INTERVAL = 60 * 30
+    MEDIUM_INTERVAL = 60 * 60 * 6
+    LONG_INTERVAL = 60 * 60 * 24
 
     try:
         logging.basicConfig(level=config.logging_level, format=LOG_FORMAT, filename=config.log_file)
@@ -285,23 +289,23 @@ def main():
     logging.info("test if the squid is running successfully")
 
     try:
-        test_private_ip = list(private_ip.values())[0]
+        test_ip = list(private_ip.values())[0]
     except:
         try:
-            test_private_ip = gethostbyname(gethostname())
+            test_ip = gethostbyname(gethostname())
         except:
             try:
-                test_private_ip = list(public_ip.values())[0]
+                test_ip = list(public_ip.values())[0]
             except:
-                test_private_ip = external_ip
+                test_ip = external_ip
     last_test_time = time.time()
-    available = functionalTest(test_private_ip, config.squid_port)
+    available = functionalTest(test_ip, config.squid_port)
     try:
         # if has history email time
         with open(config.last_sent_email) as f:
             last_email_time = float(f.readlines()[0])
         current_time = time.time()
-        if not available and current_time - last_email_time > 60 * 60 * 24:
+        if not available and current_time - last_email_time > LONG_INTERVAL:
             # send initial email notification
             sendEmail()
             last_email_time = current_time
@@ -311,7 +315,7 @@ def main():
         if not available:
             sendEmail()
             writeEmailTime(last_email_time)
-    test_interval = 60 * 30
+    test_interval = SHORT_INTERVAL
     
     logging.info("shoal-agent configured, starting up")
    
@@ -325,9 +329,9 @@ def main():
             if current_time - last_test_time > test_interval:
                 # redo functional test for every test_invertal time
                 last_test_time = current_time
-                available = functionalTest(test_private_ip, config.squid_port)
+                available = functionalTest(test_ip, config.squid_port)
             if available:
-                test_interval = 60 * 60 * 6
+                test_interval = MEDIUM_INTERVAL
                 data['timestamp'] = time.time()
                 data['load'] = get_load_data(interface)
                 try:
@@ -337,15 +341,16 @@ def main():
                     logging.error("Could not connect to AMQP Server. Attempting to connect in {0}s...".format(INTERVAL))
                     logging.error(exc)
             else:
-                test_interval = 60 * 30
+                test_interval = SHORT_INTERVAL
                 try:
-                    if current_time - last_email_time > 60 * 60 * 24:
+                    if current_time - last_email_time > LONG_INTERVAL:
                         sendEmail()
                         last_email_time = current_time
                         writeEmailTime(current_time)
-                    time.sleep(60 * 30)
-                except:
+                    time.sleep(SHORT_INTERVAL)
+                except Exception as exc:
                     logging.error("Have error when reading the last sent email time")
+                    logging.error(exc)
             time.sleep(INTERVAL)
         except KeyboardInterrupt:
             logging.info("shoal-agent exiting")
@@ -355,7 +360,7 @@ def main():
             sys.exit()
 
 if __name__ == '__main__':
-    print("starting shoal-agent announcment thread")
+    print("starting shoal-agent broadcast thread")
     try:
         thread.start_new_thread( broadcast_my_ip, () )
     except:

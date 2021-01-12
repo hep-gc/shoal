@@ -40,6 +40,7 @@ interface = None
 interval = 30
 cloud = ''
 squid_port = 3128
+squid_auto_config = False
 log_file = '/var/log/shoal_agent.log'
 logging_level = logging.ERROR
 #this value should be false unless you wish the shoal server to neglect verifying this squid
@@ -51,8 +52,10 @@ load_factor = 0.9
 sender_email = 'root@localhost'
 receiver_email = 'root@localhost'
 email_subject = 'Shoal Agent Notification'
-email_content = 'Hello, there is no available squid running on the agent, please review the squid status. Squid will be retried in 30 mins. Thanks!'
+email_content = 'Hello, there is no available squid running on the agent, please review the squid status. Trying to find a squid process automatically will be retried in 30 min. Thanks!'
 last_sent_email = '/var/tmp/last_sent_email'
+
+test_targeturl = "http://cvmfs-stratum-one.cern.ch/cvmfs/atlas.cern.ch/.cvmfswhitelist"
 
 homedir = expanduser('~')
 
@@ -72,8 +75,9 @@ try:
             return None
     squid_port = get_squid_port('/proc/' + str(squid_pid) + '/net/tcp') or squid_port
     squid_port = get_squid_port('/proc/' + str(squid_pid) + '/net/tcp6') or squid_port
+    squid_auto_config = True
 except:
-    print("Couldn't auto config the squid port, use the default one")
+    print("Couldn't auto config the squid port, use the default one ", squid_port)
 # get external_ip
 external_ip = stun.get_ip_info()[1]
 # get dnsname
@@ -81,7 +85,7 @@ try:
     dnsname = gethostbyaddr(external_ip)[0]
     sender_email = 'root@' + dnsname
 except:
-    print("Couldn't auto config the domain name, use the default one")
+    print("Couldn't auto config the domain name, use the default one ")
 # get interface
 for each_interface in netifaces.interfaces():
     try:
@@ -105,10 +109,10 @@ except:
 # find config file by checking the directory of the calling script and sets path
 if exists(abspath(dirname(sys.path[0])+"/shoal_agent.conf")):
     path = abspath(dirname(sys.path[0])+"/shoal_agent.conf")
-elif exists("/etc/shoal/shoal_agent.conf"):
-    path = "/etc/shoal/shoal_agent.conf"
 elif exists(abspath(homedir + "/.shoal/shoal_agent.conf")):
     path = abspath(homedir + "/.shoal/shoal_agent.conf")
+elif exists("/etc/shoal/shoal_agent.conf"):
+    path = "/etc/shoal/shoal_agent.conf"
 else:
     print( "Configuration file problem: There doesn't " \
               "seem to be a configuration file. " \
@@ -195,9 +199,12 @@ if config_file.has_option("logging", "logging_level"):
         print("Configuration file problem: Invalid logging level")
         sys.exit(1)
 
+if config_file.squid_port("general", "squid_port") and not squid_auto_config:
+    squid_port = config_file.get("general", "squid_port")
+
 if config_file.has_option("general", "max_load"):
-    max_load = config_file.get("general","max_load")
+    max_load = config_file.get("general", "max_load")
 
 if config_file.has_option("general", "admin_email"):
-    receiver_email = config_file.get("general","admin_email")
+    receiver_email = config_file.get("general", "admin_email")
 
