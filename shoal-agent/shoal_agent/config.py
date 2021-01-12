@@ -199,7 +199,7 @@ if config_file.has_option("logging", "logging_level"):
         print("Configuration file problem: Invalid logging level")
         sys.exit(1)
 
-if config_file.squid_port("general", "squid_port") and not squid_auto_config:
+if config_file.has_option("general", "squid_port") and not squid_auto_config:
     squid_port = config_file.get("general", "squid_port")
 
 if config_file.has_option("general", "max_load"):
