@@ -44,7 +44,7 @@ paths = config.paths
 
 def get_local_squid(q, t):
     PORT = 50000
-    MAGIC = "fna349fn" #to make sure we don't confuse or get confused by other programs
+    BROADCAST_ID = "fna349fn" #to make sure we don't confuse or get confused by other programs
 
     from socket import socket, AF_INET, SOCK_DGRAM
     
@@ -55,9 +55,9 @@ def get_local_squid(q, t):
     try:
         data, addr = s.recvfrom(1024) #wait for a packet
         data = data.decode('utf-8')
-        if data.startswith(MAGIC):
-            # print("got service announcement from", data[len(MAGIC):])
-            q.put(data[len(MAGIC):])
+        if data.startswith(BROADCAST_ID):
+            # print("got service announcement from", data[len(BROADCAST_ID):])
+            q.put(data[len(BROADCAST_ID):])
     except:
         # print("socket got a timeout")
         syslog.syslog(syslog.LOG_ERR, "Socket got a timeout")
@@ -195,7 +195,7 @@ def functionalTest(ip, port):
                     if getString(repo) in line:
                         testflag = True
             if testflag is False:
-                syslog.syslog(syslog.LOG_ERR, "%s filed verification on %s" % (ip, targeturl))
+                syslog.syslog(syslog.LOG_ERR, "%s failed verification on %s" % (ip, targeturl))
                 return False
         except:
             # note that this would catch any RE errors aswell but they are
