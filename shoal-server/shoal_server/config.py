@@ -68,10 +68,10 @@ paths = [
 # find config file by checking the directory of the calling script and sets path
 if  exists(abspath(sys.path[0]+"/shoal_server.conf")):
     path = abspath(sys.path[0]+"/shoal_server.conf")
-elif exists("/etc/shoal/shoal_server.conf"):
-    path = "/etc/shoal/shoal_server.conf"
 elif exists(abspath(homedir + "/.shoal/shoal_server.conf")):
     path = abspath(homedir + "/.shoal/shoal_server.conf")
+elif exists("/etc/shoal/shoal_server.conf"):
+    path = "/etc/shoal/shoal_server.conf"
 else:
     print ("Configuration file problem: There doesn't " \
            "seem to be a configuration file. " \

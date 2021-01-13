@@ -21,7 +21,6 @@ import shoal_server.config as config
 GEOLITE_DB = os.path.join(config.geolitecity_path, "GeoLiteCity.mmdb")
 GEOLITE_URL = config.geolitecity_url
 GEOLITE_UPDATE = config.geolitecity_update
-GEODOMAIN_DB = os.path.join(config.geodomain_path, "GeoIP2-Domain.mmdb")
 
 level = logging.getLevelName(config.logging_level)
 logger = logging.getLogger('shoal_server')
@@ -64,7 +63,7 @@ def get_nearest_verified_squids(ip, count=10):
     """
     request_data = get_geolocation(ip)
     if not request_data:
-        print ("no geolocation")
+        logger.debug("No geolocation for %s", str(ip))
         return None
 
     try:
@@ -121,11 +120,6 @@ def get_all_squids():
     return squids
 
 def lookupDomain(temp_ip):
-#    name = socket.getfqdn(temp_ip)
-#    if name == temp_ip:
-#       	return None
-#    domain = name.split('.')
-#    return domain[-2]+'.'+domain[-1]
     try:
         findDomain = subprocess.Popen('dig +nocomments  -x' + temp_ip + 'soa', shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
         result = findDomain.communicate()[0].decode('utf-8').splitlines()
@@ -133,7 +127,8 @@ def lookupDomain(temp_ip):
             if entry != '' and not entry.startswith(';'):
                 return entry.split()[5]
         return None
-    except:
+    except Exception as exc:
+        logger.error(exc)
         logger.error("Could not get the domain of ip %s", temp_ip)
         return None 
 
@@ -150,7 +145,7 @@ def checkDomain(req_ip, squid_ip):
             return False
     except Exception as exc:
         logger.error(exc)
-        logger.error("Could not compare the domain for the two ips")
+        logger.error("Could not compare the domain for the request ip %s and squid ip %s", req_ip, squid_ip)
         return False
 
 
@@ -272,7 +267,7 @@ def _is_available(squid):
                 logger.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing", targeturl, badpaths, len(paths))
             finally:
                 #Keep going
-                logger.info("Next...")
+                logger.debug("Next...")
         else:
             logger.error('%s repos failing, squid failed on verification', badpaths)
             return False
@@ -283,13 +278,10 @@ def _is_available(squid):
     else:
         # todo: rewrite the error cases when squid doesn't have a domain_access attribute
         if squid.global_access:
-            squid.error = "Configuration conflict detected! %s is configured " \
-                          "for both Local Access Only and Global Access."  % (hostname)
-
-        if not squid.global_access:
-            squid.error = "Squid is configured for Local Access Only. Cannot verify %s" % (hostname)
-        else:
             squid.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. %s has " \
                           "been blacklisted" % (badpaths, len(paths), badflags, len(paths), hostname)
+        else:
+            squid.error = "Squid is configured for Local Access Only. Cannot verify %s" % (hostname)
+            
         logger.error(squid.error)
         return False        

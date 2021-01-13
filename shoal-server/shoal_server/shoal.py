@@ -525,9 +525,8 @@ class RabbitMQConsumer(Thread):
             drift_detected = True
         elif curr - time_sent < -10:
             logger.error(
-                "Recived message from %s seconds in the future from %s",
-                (-1*(curr-time_sent)),
-                public_ip)
+                "Message received from %s is %s seconds in the future",
+                public_ip, (-1*(curr-time_sent)))
             drift_detected = True
         # this else is redundant because the var is initally set to
         # false but this works well as a failsafe
@@ -592,7 +591,8 @@ class SquidVerifier(Thread):
         INTERVAL = config.squid_verify_interval
         self.running = True
         while self.running:
-            for squid_key in list(web.shoal):
+            squid_key_list = list(web.shoal)
+            for squid_key in squid_key_list:
                 try:
                     squid = web.shoal[squid_key]
                     current_time = time()
