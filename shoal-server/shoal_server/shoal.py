@@ -14,9 +14,8 @@ import pika
 from shoal_server import config
 from shoal_server import utilities
 
-level = logging.getLevelName(config.logging_level)
 logger = logging.getLogger('shoal_server')
-logger.setLevel(level)
+logger.setLevel(config.logging_level)
 
 # Basic class to store and update information about each squid server.
 class SquidNode(object):

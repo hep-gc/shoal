@@ -22,9 +22,8 @@ GEOLITE_DB = os.path.join(config.geolitecity_path, "GeoLiteCity.mmdb")
 GEOLITE_URL = config.geolitecity_url
 GEOLITE_UPDATE = config.geolitecity_update
 
-level = logging.getLevelName(config.logging_level)
 logger = logging.getLogger('shoal_server')
-logger.setLevel(level)
+logger.setLevel(config.logging_level)
 logging.getLogger("requests").setLevel(logging.WARNING)
 
 def get_geolocation(ip):
@@ -276,12 +275,6 @@ def _is_available(squid):
         #if all the IP is able to connect to the test URLs, return True
         return True
     else:
-        # todo: rewrite the error cases when squid doesn't have a domain_access attribute
-        if squid.global_access:
-            squid.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. %s has " \
-                          "been blacklisted" % (badpaths, len(paths), badflags, len(paths), hostname)
-        else:
-            squid.error = "Squid is configured for Local Access Only. Cannot verify %s" % (hostname)
-            
+        squid.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. Squid is configured for Local Access Only. Cannot verify %s" % (badpaths, len(paths), badflags, len(paths), hostname)
         logger.error(squid.error)
         return False        
