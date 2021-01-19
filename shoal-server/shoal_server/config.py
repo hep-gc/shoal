@@ -1,4 +1,4 @@
-from os.path import join, expanduser, exists, abspath
+from os.path import join, exists, abspath
 import sys
 import configparser
 
@@ -39,8 +39,6 @@ logging_level = 'WARNING'
 error_reconnect_time = 30
 error_reconnect_attempts = 10
 
-homedir = expanduser('~')
-
 #radius of earth used to calculate distnace vs load cost after haversine and a tuneable constant for the same calculation
 earthradius = 6378
 
@@ -66,11 +64,7 @@ paths = [
 ]
 
 # find config file by checking the directory of the calling script and sets path
-if  exists(abspath(sys.path[0]+"/shoal_server.conf")):
-    path = abspath(sys.path[0]+"/shoal_server.conf")
-elif exists(abspath(homedir + "/.shoal/shoal_server.conf")):
-    path = abspath(homedir + "/.shoal/shoal_server.conf")
-elif exists("/etc/shoal/shoal_server.conf"):
+if exists("/etc/shoal/shoal_server.conf"):
     path = "/etc/shoal/shoal_server.conf"
 else:
     print ("Configuration file problem: There doesn't " \
