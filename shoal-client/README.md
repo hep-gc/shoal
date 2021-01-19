@@ -1,5 +1,5 @@
 # Shoal Client README
-# Version: v0.6.X
+# Version: v1.0.X
 
 shoal-client will configure cvmfs to use the closest squid server to you by contacting the shoal server
 and using cvmfs-talk to update the active proxy configuration.
