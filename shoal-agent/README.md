@@ -1,5 +1,5 @@
 # Shoal Agent README
-# Version: v0.9.X
+# Version: v1.0.X
 
 
 ## Important to know about the configuration
@@ -44,5 +44,4 @@ In either case, the Shoal agent does not require root privilege to run. The init
   4. Start shoal agent: `service shoal-agent start`
   
   
- _**Note**: A geoip domain database is requied on the shoal-server to use these boolean features.
 
