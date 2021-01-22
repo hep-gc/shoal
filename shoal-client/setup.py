@@ -27,6 +27,7 @@ def postInstallation():
             src="conf/shoal_client.conf"
             dst="/etc/shoal/shoal_client_new.conf"
             shutil.copy(src,dst)
+            print('There is a new version of the configuration file, placed it at /etc/shoal/shoal_client_new.conf, please review it to check the difference between the new version and the current configuration file')
         else:
             if not os.path.isdir('/etc/shoal'):
                 os.makedirs('/etc/shoal')
@@ -35,7 +36,7 @@ def postInstallation():
             shutil.copy(src,dst)
     except Exception as exc:
         print(exc)
-        print('Could not auto copy the configuration file to the path /etc/shoal/, please review and copy it from /usr/share/shoal-client/ manually if you need')
+        print('Could not auto copy the configuration file to the path /etc/shoal/, could copy the configuration file from /usr/share/shoal-client/ manually')
 
 setup(name='shoal-client',
       version=version,
