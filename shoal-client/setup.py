@@ -1,6 +1,7 @@
 import os
 from os.path import isfile, join
 import sys
+import shutil
 import io
 try:
     from setuptools import setup
@@ -20,6 +21,22 @@ except:
     print("Couldn't read description from the README.md")
     long_description = ''
 
+def postInstallation():
+    try:
+        if os.path.isfile('/etc/shoal/shoal_client.conf'):
+            src="conf/shoal_client.conf"
+            dst="/etc/shoal/shoal_client_new.conf"
+            shutil.copy(src,dst)
+        else:
+            if not os.path.isdir('/etc/shoal'):
+                os.makedirs('/etc/shoal')
+            src="conf/shoal_client.conf"
+            dst="/etc/shoal/shoal_client.conf"
+            shutil.copy(src,dst)
+    except Exception as exc:
+        print(exc)
+        print('Could not auto copy the configuration file to the path /etc/shoal/, please review and copy it from /usr/share/shoal-client/ manually if you need')
+
 setup(name='shoal-client',
       version=version,
       license="'GPL3' or 'Apache 2'",
@@ -35,6 +52,7 @@ setup(name='shoal-client',
       url='http://github.com/hep-gc/shoal',
       packages=['shoal_client'],
       scripts=['shoal-client'],
-      data_files=[('share/shoal-client', ['conf/shoal_client.conf'])
-                  ],
+      data_files=[('share/shoal-client', ['conf/shoal_client.conf'])],
 )
+
+postInstallation()
