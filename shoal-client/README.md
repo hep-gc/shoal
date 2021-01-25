@@ -18,7 +18,7 @@ proxies via cvmfs-talk. See Usage below for more information.
 **Note**: Requires Python 2.4+
 
 **Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if installed 
-root permissions.
+root permissions. The latest config files are available at [git repository](https://github.com/hep-gc/shoal).
 
 ### Recommended Instalation Method: Use pip
 

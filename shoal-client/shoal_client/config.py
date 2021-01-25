@@ -18,7 +18,7 @@ import logging
 """
 # set default values
 shoal_server_url = 'http://localhost:8080/nearest'
-default_squid_proxy   = ""
+default_squid_proxy = "DIRECT"
 paths = [
 "http://cvmfs-stratum-one.cern.ch/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
 "http://cernvmfs.gridpp.rl.ac.uk/cvmfs/sft.cern.ch/.cvmfswhitelist",
@@ -66,7 +66,6 @@ if config_file.has_option("general", "shoal_server_url"):
 if config_file.has_option("general", "default_squid_proxy"):
     default_squid_proxy = config_file.get("general", "default_squid_proxy")
 else:
-    print("Configuration file problem: default_squid_proxy must be set. " \
+    print("No default settings found in the config file, will use DIRECT as default. " \
           "Please check configuration file:", path)
-    sys.exit(1)
 
