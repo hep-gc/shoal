@@ -86,7 +86,9 @@ if [ -f "$CONFIG_FILE" ]; then
 
     setNewValues
 else
-    mkdir $CONFIG_DIRECTORY
+    if [ ! -d "$CONFIG_DIRECTORY" ]; then
+        mkdir $CONFIG_DIRECTORY
+    fi
     cp $SOURCE_FILE $CONFIG_DIRECTORY
 
     setNewValues
