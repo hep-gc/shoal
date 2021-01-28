@@ -1,6 +1,6 @@
 #!/bin/bash
 
-systemctl stop shoal-agent
+service stop shoal-agent
 
 groupadd shoal
 useradd shoal -g shoal
@@ -14,7 +14,7 @@ CONFIG_FILE_OLD=/etc/shoal/shoal_agent_old.conf
 SOURCE_FILE=/usr/share/shoal-agent/shoal_agent.conf
 CONFIG_DIRECTORY=/etc/shoal/
 
-CFG_CONTENT=$(cat $SOURCE_FILE | sed -r '/[^=]+=[^=]+/!d' | sed -r 's/\s+=\s/=/g')
+CFG_CONTENT=$(grep -v "^#\|\[" $SOURCE_FILE)
 eval "$CFG_CONTENT"
 
 DEFAULT_INTERVAL=$interval
@@ -26,10 +26,11 @@ DEFAULT_LOG_FILE=$log_file
 DEFAULT_LOGGING_LEVEL=$logging_level
 
 setEachNewValue() {
-    label=$1
-    info=$2
-    default=$3
-    old=$4
+    local label=$1
+    local info=$2
+    local default=$3
+    local old=$4
+    local enter_value
 
     if [ ! -z "$old" ]; then
         echo $"Please enter a value for setting the $label, $info. Your currently $label value is '$old', and the default value is '$default'. If you want to use the default, press 'Enter':"
@@ -70,7 +71,7 @@ setNewValues() {
 }
 
 if [ -f "$CONFIG_FILE" ]; then
-    OLD_CFG_CONTENT=$(cat $CONFIG_FILE | sed -r '/[^=]+=[^=]+/!d' | sed -r 's/\s+=\s/=/g')
+    OLD_CFG_CONTENT=$(grep -v "^#\|\[" $CONFIG_FILE)
     eval "$OLD_CFG_CONTENT"
 
     OLD_INTERVAL=$interval
@@ -95,7 +96,7 @@ else
 fi
 
 systemctl daemon-reload
-systemctl start shoal-agent
+service start shoal-agent
 
 echo Start the shoal-agent, check your configuration file at $CONFIG_FILE
 if [ -f "$CONFIG_FILE_OLD" ]; then
