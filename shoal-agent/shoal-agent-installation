@@ -1,6 +1,6 @@
 #!/bin/bash
 
-service stop shoal-agent
+service shoal-agent stop
 
 groupadd shoal
 useradd shoal -g shoal
@@ -96,7 +96,7 @@ else
 fi
 
 systemctl daemon-reload
-service start shoal-agent
+service shoal-agent start
 
 echo Start the shoal-agent, check your configuration file at $CONFIG_FILE
 if [ -f "$CONFIG_FILE_OLD" ]; then
