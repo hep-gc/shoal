@@ -12,16 +12,13 @@ EXECUTABLEPATH="shoal-agent"
 # Non-default python.
 PYTHON=""
 
-SHOAL_USER=nobody
+SHOAL_USER=shoal
 EXTRA_OPTIONS=""
 SERVICE=shoal_agent
 LOG=/var/log/${SERVICE}.log
 PIDFILE=/var/run/$SERVICE.pid
 COMMAND=$1
 
-if [ -f /etc/sysconfig/shoal-agent ] ;  then
-   . /etc/sysconfig/shoal-agent
-fi
 
 shift
 
