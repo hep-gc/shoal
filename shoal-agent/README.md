@@ -32,16 +32,7 @@ In either case, the Shoal agent does not require root privilege to run. The init
 
 ### Recommended Method: Use pip (est. ~5 min)
   1. Install python library: `pip install shoal-agent`
-  2. Move configuration files from `/usr/share/shoal-agent/` to their proper locations:
-  * `/usr/share/shoal-agent/shoal_agent.conf` --> `/etc/shoal/shoal_agent.conf`
-  * `/usr/share/shoal-agent/shoal-agent.init` --> `/etc/init.d/shoal-agent`
-  * `/usr/share/shoal-agent/shoal-agent.logrotate` --> `/etc/logrotate.d/shoal-agent`
-  * `/usr/share/shoal-agent/shoal-agent.sysconfig` --> `/etc/sysconfig/shoal/shoal-agent`
-  * `/usr/share/shoal-agent/shoal-agent.service` --> `/usr/lib/systemd/system/shoal-agent.service` (if necessary)
-  3. Modify the settings in `shoal_agent.conf` as needed.
-  5. Create the user and group `shoal`
-  6. Create a log file for shoal `/var/log/shoal_agent.log` owned by `shoal:shoal` with `0644`
-  4. Start shoal agent: `service shoal-agent start`
+  2. Run installation script `sudo /usr/local/bin/shoal-agent-installation shoal-agent-installation`, and set your config options with the installation script
   
   
 

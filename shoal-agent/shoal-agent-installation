@@ -5,13 +5,13 @@ service shoal-agent stop
 groupadd shoal
 useradd shoal -g shoal
 
-cp /usr/share/shoal-agent/shoal-agent.init /etc/init.d/
-cp /usr/share/shoal-agent/shoal-agent.logrotate /etc/logrotate.d/
-cp /usr/share/shoal-agent/shoal-agent.service /usr/lib/systemd/system/
+cp /usr/local/share/shoal-agent/shoal-agent.init /etc/init.d/
+cp /usr/local/share/shoal-agent/shoal-agent.logrotate /etc/logrotate.d/
+cp /usr/local/share/shoal-agent/shoal-agent.service /usr/lib/systemd/system/
 
 CONFIG_FILE=/etc/shoal/shoal_agent.conf
 CONFIG_FILE_OLD=/etc/shoal/shoal_agent_old.conf
-SOURCE_FILE=/usr/share/shoal-agent/shoal_agent.conf
+SOURCE_FILE=/usr/local/share/shoal-agent/shoal_agent.conf
 CONFIG_DIRECTORY=/etc/shoal/
 
 CFG_CONTENT=$(grep -v "^#\|\[" $SOURCE_FILE)
@@ -71,6 +71,8 @@ setNewValues() {
 }
 
 if [ -f "$CONFIG_FILE" ]; then
+    echo $"No configuration file has been found at '$CONFIG_FILE', we will walk you through the configuration options and allow you to set the values. If there is a configuration file stored at other locations, please be aware that shoal-agent only uses the configuration file to be at '$CONFIG_FILE'"
+ 
     OLD_CFG_CONTENT=$(grep -v "^#\|\[" $CONFIG_FILE)
     eval "$OLD_CFG_CONTENT"
 
@@ -87,6 +89,8 @@ if [ -f "$CONFIG_FILE" ]; then
 
     setNewValues
 else
+    echo $"No configuration file has been found at '$CONFIG_FILE', we will walk you through the configuration options and allow you to set the values. If there is a configuration file stored at other locations, please be aware that shoal-agent only uses the configuration file to be at '$CONFIG_FILE'"   
+ 
     if [ ! -d "$CONFIG_DIRECTORY" ]; then
         mkdir $CONFIG_DIRECTORY
     fi

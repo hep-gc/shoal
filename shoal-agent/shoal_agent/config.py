@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from os.path import exists, join, expanduser, abspath, dirname
+from os.path import exists, join, abspath
 import sys
 import logging
 try:
@@ -17,12 +17,8 @@ import netifaces
 
 """
 Setup shoal using config file.
-setup will look for a configuration file specified in the following order:
-directory of shoal-agent script
+setup will look for a configuration file specified in the following directory:
 /etc/shoal/shoal_agent.conf
-~/.shoal/shoal_agent.conf
-   
-The first config found will be used.
 """
 
 # set default values
@@ -56,8 +52,6 @@ email_content = 'Hello, there is no available squid running on the agent, please
 last_sent_email = '/var/tmp/last_sent_email'
 
 test_targeturl = "http://cvmfs-stratum-one.cern.ch/cvmfs/atlas.cern.ch/.cvmfswhitelist"
-
-homedir = expanduser('~')
 
 # auto config
 # get squid_port
@@ -107,11 +101,7 @@ except:
     print("Couldn't auto config the interface speed for max_load, use the default one")
 
 # find config file by checking the directory of the calling script and sets path
-if exists(abspath(dirname(sys.path[0])+"/shoal_agent.conf")):
-    path = abspath(dirname(sys.path[0])+"/shoal_agent.conf")
-elif exists(abspath(homedir + "/.shoal/shoal_agent.conf")):
-    path = abspath(homedir + "/.shoal/shoal_agent.conf")
-elif exists("/etc/shoal/shoal_agent.conf"):
+if exists("/etc/shoal/shoal_agent.conf"):
     path = "/etc/shoal/shoal_agent.conf"
 else:
     print( "Configuration file problem: There doesn't " \
