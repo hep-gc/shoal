@@ -2,16 +2,49 @@
 
 service shoal-agent stop
 
-groupadd shoal
+groupadd -f shoal
 useradd shoal -g shoal
 
-cp /usr/local/share/shoal-agent/shoal-agent.init /etc/init.d/
-cp /usr/local/share/shoal-agent/shoal-agent.logrotate /etc/logrotate.d/
-cp /usr/local/share/shoal-agent/shoal-agent.service /usr/lib/systemd/system/
+shoal_python=($(pip show shoal-agent 2>/dev/null|grep Version))
+shoal_python_three=($(pip3 show shoal-agent 2>/dev/null|grep Version))
+
+if [ ! -z "$shoal_python" ] && [ ! -z "${shoal_python[1]}" ]; then
+    shoal_python_version=${shoal_python[1]}
+fi 
+if [ ! -z "$shoal_python_three" ] && [ ! -z "${shoal_python_three[1]}" ]; then
+    shoal_python_three_version=${shoal_python_three[1]}
+fi 
+
+compareVersion() {
+    lower=$(printf '%s\n' "$shoal_python_version" "$shoal_python_three_version"|sort -V|head -n1)
+    if [ "$lower" == "$shoal_python_version" ]; then
+        SOURCE_PATH=/usr/local/share/shoal-agent
+    else
+        SOURCE_PATH=/usr/share/shoal-agent
+    fi
+}
+
+if [ ! -z "$shoal_python_version" ] && [ ! -z "$shoal_python_three_version" ]; then
+    compareVersion
+elif [ ! -z "$shoal_python_version" ]; then
+    SOURCE_PATH=/usr/share/shoal-agent
+elif [ ! -z "$shoal_python_three_version" ]; then
+    SOURCE_PATH=/usr/local/share/shoal-agent
+else
+    echo Could not find the shoal-agent package, please check your pip install
+    exit 0
+fi
+
+cp "$SOURCE_PATH/shoal-agent.init" /etc/init.d/
+cp "$SOURCE_PATH/shoal-agent.logrotate" /etc/logrotate.d/
+#if [ -f "/usr/lib/systemd/system/shoal-agent.service" ] || [ -L "/usr/lib/systemd/system/shoal-agent.service" ]; then
+#    rm /usr/lib/systemd/system/shoal-agent.service
+#fi
+cp "$SOURCE_PATH/shoal-agent.service" /usr/lib/systemd/system/
 
 CONFIG_FILE=/etc/shoal/shoal_agent.conf
 CONFIG_FILE_OLD=/etc/shoal/shoal_agent_old.conf
-SOURCE_FILE=/usr/local/share/shoal-agent/shoal_agent.conf
+SOURCE_FILE="$SOURCE_PATH/shoal_agent.conf"
 CONFIG_DIRECTORY=/etc/shoal/
 
 CFG_CONTENT=$(grep -v "^#\|\[" $SOURCE_FILE)
@@ -71,7 +104,7 @@ setNewValues() {
 }
 
 if [ -f "$CONFIG_FILE" ]; then
-    echo $"No configuration file has been found at '$CONFIG_FILE', we will walk you through the configuration options and allow you to set the values. If there is a configuration file stored at other locations, please be aware that shoal-agent only uses the configuration file to be at '$CONFIG_FILE'"
+    echo Fould an existing config file at $CONFIG_FILE, backed it up at $CONFIG_FILE_OLD. We will walk you through the configuration options and allow you to set the values
  
     OLD_CFG_CONTENT=$(grep -v "^#\|\[" $CONFIG_FILE)
     eval "$OLD_CFG_CONTENT"
@@ -89,7 +122,7 @@ if [ -f "$CONFIG_FILE" ]; then
 
     setNewValues
 else
-    echo $"No configuration file has been found at '$CONFIG_FILE', we will walk you through the configuration options and allow you to set the values. If there is a configuration file stored at other locations, please be aware that shoal-agent only uses the configuration file to be at '$CONFIG_FILE'"   
+    echo No configuration file has been found at $CONFIG_FILE, we will walk you through the configuration options and allow you to set the values
  
     if [ ! -d "$CONFIG_DIRECTORY" ]; then
         mkdir $CONFIG_DIRECTORY
@@ -102,7 +135,7 @@ fi
 systemctl daemon-reload
 service shoal-agent start
 
-echo Start the shoal-agent, check your configuration file at $CONFIG_FILE
+echo Start the shoal-agent, check your configuration file at $CONFIG_FILE. If you are using a configuration file stored at other locations previously, please be aware that shoal-agent now only uses the configuration file at $CONFIG_FILE
 if [ -f "$CONFIG_FILE_OLD" ]; then
     echo Your old configuration file is now at $CONFIG_FILE_OLD
 fi
