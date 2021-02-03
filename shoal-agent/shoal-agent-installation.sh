@@ -44,7 +44,7 @@ CONFIG_FILE_OLD=/etc/shoal/shoal_agent_old.conf
 SOURCE_FILE="$SOURCE_PATH/shoal_agent.conf"
 CONFIG_DIRECTORY=/etc/shoal/
 
-CFG_CONTENT=$(grep -v "^#\|\[" $SOURCE_FILE)
+CFG_CONTENT=$(grep -v "^#\|\[" $SOURCE_FILE|sed -r 's/\s+=\s/=/g')
 eval "$CFG_CONTENT"
 
 DEFAULT_INTERVAL=$interval
@@ -103,7 +103,7 @@ setNewValues() {
 if [ -f "$CONFIG_FILE" ]; then
     echo Found an existing config file at $CONFIG_FILE, backed it up at $CONFIG_FILE_OLD. We will walk you through the configuration options and allow you to set the values
  
-    OLD_CFG_CONTENT=$(grep -v "^#\|\[" $CONFIG_FILE)
+    OLD_CFG_CONTENT=$(grep -v "^#\|\[" $CONFIG_FILE|sed -r 's/\s+=\s/=/g')
     eval "$OLD_CFG_CONTENT"
 
     OLD_INTERVAL=$interval
