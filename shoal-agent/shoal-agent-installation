@@ -1,6 +1,9 @@
 #!/bin/bash
 
-service shoal-agent stop
+SERVICE_STATUS=$(systemctl is-active shoal-agent)
+if [ "$SERVICE_STATUS" == "active" ]; then
+    service shoal-agent stop
+fi
 
 groupadd -f shoal
 useradd shoal -g shoal
@@ -104,7 +107,7 @@ setNewValues() {
 }
 
 if [ -f "$CONFIG_FILE" ]; then
-    echo Fould an existing config file at $CONFIG_FILE, backed it up at $CONFIG_FILE_OLD. We will walk you through the configuration options and allow you to set the values
+    echo Found an existing config file at $CONFIG_FILE, backed it up at $CONFIG_FILE_OLD. We will walk you through the configuration options and allow you to set the values
  
     OLD_CFG_CONTENT=$(grep -v "^#\|\[" $CONFIG_FILE)
     eval "$OLD_CFG_CONTENT"
@@ -133,10 +136,9 @@ else
 fi
 
 systemctl daemon-reload
-service shoal-agent start
+echo Reloaded units for shoal-agent.service 
 
-echo Start the shoal-agent, check your configuration file at $CONFIG_FILE. If you are using a configuration file stored at other locations previously, please be aware that shoal-agent now only uses the configuration file at $CONFIG_FILE
-if [ -f "$CONFIG_FILE_OLD" ]; then
-    echo Your old configuration file is now at $CONFIG_FILE_OLD
-fi
+service shoal-agent restart
+echo Started the shoal-agent, check your configuration file at $CONFIG_FILE. If you are using a configuration file stored at other locations previously, please be aware that shoal-agent now only uses the configuration file at $CONFIG_FILE
+
 
