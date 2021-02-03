@@ -1,12 +1,13 @@
 #!/bin/bash
 
-SERVICE_STATUS=$(systemctl is-active shoal-agent)
-if [ "$SERVICE_STATUS" == "active" ]; then
-    service shoal-agent stop
-fi
+#SERVICE_STATUS=$(systemctl is-active shoal-agent)
+#if [ "$SERVICE_STATUS" == "active" ]; then
+#    service shoal-agent stop
+#fi
+service shoal-agent stop 2>/dev/null
 
 groupadd -f shoal
-useradd shoal -g shoal
+useradd shoal -g shoal 2>/dev/null
 
 shoal_python=($(pip show shoal-agent 2>/dev/null|grep Version))
 shoal_python_three=($(pip3 show shoal-agent 2>/dev/null|grep Version))
@@ -40,10 +41,7 @@ fi
 
 cp "$SOURCE_PATH/shoal-agent.init" /etc/init.d/
 cp "$SOURCE_PATH/shoal-agent.logrotate" /etc/logrotate.d/
-#if [ -f "/usr/lib/systemd/system/shoal-agent.service" ] || [ -L "/usr/lib/systemd/system/shoal-agent.service" ]; then
-#    rm /usr/lib/systemd/system/shoal-agent.service
-#fi
-cp "$SOURCE_PATH/shoal-agent.service" /usr/lib/systemd/system/
+cp "$SOURCE_PATH/shoal-agent.service" /usr/lib/systemd/system/ 2>/dev/null
 
 CONFIG_FILE=/etc/shoal/shoal_agent.conf
 CONFIG_FILE_OLD=/etc/shoal/shoal_agent_old.conf
