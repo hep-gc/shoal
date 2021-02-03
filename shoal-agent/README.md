@@ -32,7 +32,7 @@ In either case, the Shoal agent does not require root privilege to run. The init
 
 ### Recommended Method: Use pip (est. ~5 min)
   1. Install python library: `pip install shoal-agent`
-  2. Run installation script `sudo /usr/local/bin/shoal-agent-installation shoal-agent-installation`, and set your config options with the installation script
+  2. With python version 2+, run the installation script `sudo shoal-agent-installation`, and set your config options with the installation script; With python version 3+, first run as root `sudo su -`, then run the installation script `shoal-agent-installation`, and set your config options with the installation script
   
   
 
