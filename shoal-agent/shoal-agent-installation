@@ -1,9 +1,5 @@
 #!/bin/bash
 
-#SERVICE_STATUS=$(systemctl is-active shoal-agent)
-#if [ "$SERVICE_STATUS" == "active" ]; then
-#    service shoal-agent stop
-#fi
 service shoal-agent stop 2>/dev/null
 
 groupadd -f shoal
@@ -133,8 +129,10 @@ else
     setNewValues
 fi
 
-systemctl daemon-reload
-echo Reloaded units for shoal-agent.service 
+if [ ! -z "$(command -v systemctl)" ]; then
+    systemctl daemon-reload
+    echo Reloaded units for shoal-agent.service 
+fi
 
 service shoal-agent restart
 echo Started the shoal-agent, check your configuration file at $CONFIG_FILE. If you are using a configuration file stored at other locations previously, please be aware that shoal-agent now only uses the configuration file at $CONFIG_FILE
