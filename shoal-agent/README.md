@@ -31,8 +31,9 @@ In either case, the Shoal agent does not require root privilege to run. The init
  _**Note**: Requires you have Python 2.6+, and the pika python module (available from EPEL)._
 
 ### Recommended Method: Use pip (est. ~5 min)
-  1. Install python library: `pip install shoal-agent`
-  2. With python version 2+, run the installation script `sudo shoal-agent-installation`, and set your config options with the installation script; With python version 3+, first run as root `sudo su -`, then run the installation script `shoal-agent-installation`, and set your config options with the installation script
+  1. Login as root or become root via "sudo su -"
+  2. Install shoal-agent using pip/pip3, e.g. "pip3 install shoal-agent"
+  3. Run the installation script, shoal-agent-installation.sh, to setup your configuration
   
   
 
