@@ -16,16 +16,20 @@ if [ ! -z "$shoal_python_three" ] && [ ! -z "${shoal_python_three[1]}" ]; then
 fi 
 
 compareVersion() {
-    lower=$(printf '%s\n' "$shoal_python_version" "$shoal_python_three_version"|sort -V|head -n1)
-    if [ "$lower" == "$shoal_python_version" ]; then
-        SOURCE_PATH=/usr/local/share/shoal-agent
+    local path
+    local first_version=$1
+    local second_version=$2
+    local lower=$(printf '%s\n' "$first_version" "$second_version"|sort -V|head -n1)
+    if [ "$lower" == "$first_version" ]; then
+        path=/usr/local/share/shoal-agent
     else
-        SOURCE_PATH=/usr/share/shoal-agent
+        path=/usr/share/shoal-agent
     fi
+    echo "$path"
 }
 
 if [ ! -z "$shoal_python_version" ] && [ ! -z "$shoal_python_three_version" ]; then
-    compareVersion
+    SOURCE_PATH=$(compareVersion $shoal_python_version $shoal_python_three_version)
 elif [ ! -z "$shoal_python_version" ]; then
     SOURCE_PATH=/usr/share/shoal-agent
 elif [ ! -z "$shoal_python_three_version" ]; then
@@ -89,17 +93,6 @@ setEachNewValue() {
 
 }
 
-setNewValues() {
-    setEachNewValue interval "interval is at which the shoal-agent will contact the shoal server" $DEFAULT_INTERVAL $OLD_INTERVAL
-    setEachNewValue admin_email "admin email is used for contact in case of issues with the shoal-agent or squid" root@localhost
-    setEachNewValue amqp_server_url "this is the RabbitMQ server ip" $DEFAULT_AMQP_SERVER_URL $OLD_AMQP_SERVER_URL
-    setEachNewValue amqp_port "this is the port number for amqp connection" $DEFAULT_AMQP_PORT $OLD_AMQP_PORT
-    setEachNewValue amqp_virtual_host "this is used for RabbitMQ virtual host" $DEFAULT_AMQP_VIRTUAL_HOST $OLD_AMQP_VIRTUAL_HOST
-    setEachNewValue amqp_exchange "this is the RabbitMQ exchange name" $DEFAULT_AMQP_EXCHANGE $OLD_AMQP_EXCHANGE
-    setEachNewValue log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE $OLD_LOG_FILE
-    setEachNewValue logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL $OLD_LOGGING_LEVEL
-}
-
 if [ -f "$CONFIG_FILE" ]; then
     echo Found an existing config file at $CONFIG_FILE, backed it up at $CONFIG_FILE_OLD. We will walk you through the configuration options and allow you to set the values
  
@@ -117,7 +110,14 @@ if [ -f "$CONFIG_FILE" ]; then
     mv $CONFIG_FILE $CONFIG_FILE_OLD
     cp $SOURCE_FILE $CONFIG_FILE
 
-    setNewValues
+    setEachNewValue interval "interval is at which the shoal-agent will contact the shoal server" $DEFAULT_INTERVAL $OLD_INTERVAL
+    setEachNewValue admin_email "admin email is used for contact in case of issues with the shoal-agent or squid" root@localhost
+    setEachNewValue amqp_server_url "this is the RabbitMQ server ip" $DEFAULT_AMQP_SERVER_URL $OLD_AMQP_SERVER_URL
+    setEachNewValue amqp_port "this is the port number for amqp connection" $DEFAULT_AMQP_PORT $OLD_AMQP_PORT
+    setEachNewValue amqp_virtual_host "this is used for RabbitMQ virtual host" $DEFAULT_AMQP_VIRTUAL_HOST $OLD_AMQP_VIRTUAL_HOST
+    setEachNewValue amqp_exchange "this is the RabbitMQ exchange name" $DEFAULT_AMQP_EXCHANGE $OLD_AMQP_EXCHANGE
+    setEachNewValue log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE $OLD_LOG_FILE
+    setEachNewValue logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL $OLD_LOGGING_LEVEL
 else
     echo No configuration file has been found at $CONFIG_FILE, we will walk you through the configuration options and allow you to set the values
  
@@ -126,7 +126,14 @@ else
     fi
     cp $SOURCE_FILE $CONFIG_DIRECTORY
 
-    setNewValues
+    setEachNewValue interval "interval is at which the shoal-agent will contact the shoal server" $DEFAULT_INTERVAL
+    setEachNewValue admin_email "admin email is used for contact in case of issues with the shoal-agent or squid" root@localhost
+    setEachNewValue amqp_server_url "this is the RabbitMQ server ip" $DEFAULT_AMQP_SERVER_URL
+    setEachNewValue amqp_port "this is the port number for amqp connection" $DEFAULT_AMQP_PORT
+    setEachNewValue amqp_virtual_host "this is used for RabbitMQ virtual host" $DEFAULT_AMQP_VIRTUAL_HOST
+    setEachNewValue amqp_exchange "this is the RabbitMQ exchange name" $DEFAULT_AMQP_EXCHANGE
+    setEachNewValue log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE
+    setEachNewValue logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL
 fi
 
 if [ ! -z "$(command -v systemctl)" ]; then
@@ -136,5 +143,6 @@ fi
 
 service shoal-agent restart
 echo Started the shoal-agent, check your configuration file at $CONFIG_FILE. If you are using a configuration file stored at other locations previously, please be aware that shoal-agent now only uses the configuration file at $CONFIG_FILE
+
 
 
