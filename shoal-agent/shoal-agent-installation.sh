@@ -48,7 +48,7 @@ CONFIG_FILE_OLD=/etc/shoal/shoal_agent_old.conf
 SOURCE_FILE="$SOURCE_PATH/shoal_agent.conf"
 CONFIG_DIRECTORY=/etc/shoal/
 
-CFG_CONTENT=$(grep -v "^#\|\[" $SOURCE_FILE|sed -r 's/\s+=\s/=/g')
+CFG_CONTENT=$(grep -v "^#\|\[" $SOURCE_FILE)
 eval "$CFG_CONTENT"
 
 DEFAULT_INTERVAL=$interval
@@ -93,6 +93,14 @@ setEachNewValue() {
 
 }
 
+OLD_INTERVAL=''
+OLD_AMQP_SERVER_URL=''
+OLD_AMQP_PORT=''
+OLD_AMQP_VIRTUAL_HOST=''
+OLD_AMQP_EXCHANGE=''
+OLD_LOG_FILE=''
+OLD_LOGGING_LEVEL=''
+
 if [ -f "$CONFIG_FILE" ]; then
     echo Found an existing config file at $CONFIG_FILE, backed it up at $CONFIG_FILE_OLD. We will walk you through the configuration options and allow you to set the values
  
@@ -108,33 +116,23 @@ if [ -f "$CONFIG_FILE" ]; then
     OLD_LOGGING_LEVEL=$logging_level
 
     mv $CONFIG_FILE $CONFIG_FILE_OLD
-    cp $SOURCE_FILE $CONFIG_FILE
-
-    setEachNewValue interval "interval is at which the shoal-agent will contact the shoal server" $DEFAULT_INTERVAL $OLD_INTERVAL
-    setEachNewValue admin_email "admin email is used for contact in case of issues with the shoal-agent or squid" root@localhost
-    setEachNewValue amqp_server_url "this is the RabbitMQ server ip" $DEFAULT_AMQP_SERVER_URL $OLD_AMQP_SERVER_URL
-    setEachNewValue amqp_port "this is the port number for amqp connection" $DEFAULT_AMQP_PORT $OLD_AMQP_PORT
-    setEachNewValue amqp_virtual_host "this is used for RabbitMQ virtual host" $DEFAULT_AMQP_VIRTUAL_HOST $OLD_AMQP_VIRTUAL_HOST
-    setEachNewValue amqp_exchange "this is the RabbitMQ exchange name" $DEFAULT_AMQP_EXCHANGE $OLD_AMQP_EXCHANGE
-    setEachNewValue log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE $OLD_LOG_FILE
-    setEachNewValue logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL $OLD_LOGGING_LEVEL
 else
     echo No configuration file has been found at $CONFIG_FILE, we will walk you through the configuration options and allow you to set the values
  
     if [ ! -d "$CONFIG_DIRECTORY" ]; then
         mkdir $CONFIG_DIRECTORY
     fi
-    cp $SOURCE_FILE $CONFIG_DIRECTORY
-
-    setEachNewValue interval "interval is at which the shoal-agent will contact the shoal server" $DEFAULT_INTERVAL
-    setEachNewValue admin_email "admin email is used for contact in case of issues with the shoal-agent or squid" root@localhost
-    setEachNewValue amqp_server_url "this is the RabbitMQ server ip" $DEFAULT_AMQP_SERVER_URL
-    setEachNewValue amqp_port "this is the port number for amqp connection" $DEFAULT_AMQP_PORT
-    setEachNewValue amqp_virtual_host "this is used for RabbitMQ virtual host" $DEFAULT_AMQP_VIRTUAL_HOST
-    setEachNewValue amqp_exchange "this is the RabbitMQ exchange name" $DEFAULT_AMQP_EXCHANGE
-    setEachNewValue log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE
-    setEachNewValue logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL
 fi
+
+cp $SOURCE_FILE $CONFIG_DIRECTORY
+setEachNewValue interval "interval is at which the shoal-agent will contact the shoal server" $DEFAULT_INTERVAL $OLD_INTERVAL
+setEachNewValue admin_email "admin email is used for contact in case of issues with the shoal-agent or squid" root@localhost
+setEachNewValue amqp_server_url "this is the RabbitMQ server ip" $DEFAULT_AMQP_SERVER_URL $OLD_AMQP_SERVER_URL
+setEachNewValue amqp_port "this is the port number for amqp connection" $DEFAULT_AMQP_PORT $OLD_AMQP_PORT
+setEachNewValue amqp_virtual_host "this is used for RabbitMQ virtual host" $DEFAULT_AMQP_VIRTUAL_HOST $OLD_AMQP_VIRTUAL_HOST
+setEachNewValue amqp_exchange "this is the RabbitMQ exchange name" $DEFAULT_AMQP_EXCHANGE $OLD_AMQP_EXCHANGE
+setEachNewValue log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE $OLD_LOG_FILE
+setEachNewValue logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL $OLD_LOGGING_LEVEL
 
 if [ ! -z "$(command -v systemctl)" ]; then
     systemctl daemon-reload
