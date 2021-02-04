@@ -58,6 +58,7 @@ DEFAULT_AMQP_VIRTUAL_HOST=$amqp_virtual_host
 DEFAULT_AMQP_EXCHANGE=$amqp_exchange
 DEFAULT_LOG_FILE=$log_file
 DEFAULT_LOGGING_LEVEL=$logging_level
+DEFAULT_ADMIN_EMAIL=root@localhost
 
 setEachNewValue() {
     local label=$1
@@ -100,6 +101,7 @@ OLD_AMQP_VIRTUAL_HOST=''
 OLD_AMQP_EXCHANGE=''
 OLD_LOG_FILE=''
 OLD_LOGGING_LEVEL=''
+OLD_ADMIN_EMAIL=''
 
 if [ -f "$CONFIG_FILE" ]; then
     echo Found an existing config file at $CONFIG_FILE, backed it up at $CONFIG_FILE_OLD. We will walk you through the configuration options and allow you to set the values
@@ -114,6 +116,7 @@ if [ -f "$CONFIG_FILE" ]; then
     OLD_AMQP_EXCHANGE=$amqp_exchange
     OLD_LOG_FILE=$log_file
     OLD_LOGGING_LEVEL=$logging_level
+    OLD_ADMIN_EMAIL=$admin_email
 
     mv $CONFIG_FILE $CONFIG_FILE_OLD
 else
@@ -126,7 +129,7 @@ fi
 
 cp $SOURCE_FILE $CONFIG_DIRECTORY
 setEachNewValue interval "interval is at which the shoal-agent will contact the shoal server" $DEFAULT_INTERVAL $OLD_INTERVAL
-setEachNewValue admin_email "admin email is used for contact in case of issues with the shoal-agent or squid" root@localhost
+setEachNewValue admin_email "admin email is used for contact in case of issues with the shoal-agent or squid" $DEFAULT_ADMIN_EMAIL $OLD_ADMIN_EMAIL
 setEachNewValue amqp_server_url "this is the RabbitMQ server ip" $DEFAULT_AMQP_SERVER_URL $OLD_AMQP_SERVER_URL
 setEachNewValue amqp_port "this is the port number for amqp connection" $DEFAULT_AMQP_PORT $OLD_AMQP_PORT
 setEachNewValue amqp_virtual_host "this is used for RabbitMQ virtual host" $DEFAULT_AMQP_VIRTUAL_HOST $OLD_AMQP_VIRTUAL_HOST
