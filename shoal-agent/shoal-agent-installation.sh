@@ -154,7 +154,7 @@ if [ -f "$CONFIG_FILE" ]; then
             ;;
             "logging_level") OLD_LOGGING_LEVEL=${line_array[1]}
             ;;
-            "admin_email") OLD_ADMIN_EMAIL==${line_array[1]}
+            "admin_email") OLD_ADMIN_EMAIL=${line_array[1]}
         esac
     done <<< "$OLD_LINES"
 
