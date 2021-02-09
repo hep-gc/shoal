@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from os.path import exists, join, expanduser, abspath, dirname
+from os.path import exists, join, abspath
 import sys
 import logging
 try:
@@ -9,15 +9,16 @@ except ImportError:  # python < 3
     import ConfigParser as configparser
 
 # Shoal Options Module
+from socket import gethostbyaddr
+from subprocess import check_output
+from pwd import getpwnam
+import stun
+import netifaces
 
 """
 Setup shoal using config file.
-setup will look for a configuration file specified in the following order:
-directory of shoal-agent script
+setup will look for a configuration file specified in the following directory:
 /etc/shoal/shoal_agent.conf
-~/.shoal/shoal_agent.conf
-   
-The first config found will be used.
 """
 
 # set default values
@@ -35,26 +36,73 @@ interface = None
 interval = 30
 cloud = ''
 squid_port = 3128
+squid_auto_config = False
 log_file = '/var/log/shoal_agent.log'
 logging_level = logging.ERROR
 #this value should be false unless you wish the shoal server to neglect verifying this squid
 verified = False
-#squid server accessible globally
-global_access = "True"
-#squid serve accessible by same domain only
-domain_access = "False"
-#this is the max load of the server in terms of kb/s
+#this is the speed of the network interface card in terms of KB/s
 max_load = 122000
+load_factor = 0.9
 
-homedir = expanduser('~')
+sender_email = 'root@localhost'
+receiver_email = 'root@localhost'
+email_subject = 'Shoal Agent Notification'
+email_content = 'Hello, there is no available squid running on the agent, please review the squid status. Trying to find a squid process automatically will be retried in 30 min. Thanks!'
+last_sent_email = '/var/tmp/last_sent_email'
+
+test_targeturl = "http://cvmfs-stratum-one.cern.ch/cvmfs/atlas.cern.ch/.cvmfswhitelist"
+
+# auto config
+# get squid_port
+try:
+    squid_uid = getpwnam('squid')[2]
+    squid_pid = int(check_output(['pidof', '-s', 'squid']))
+    def get_squid_port(filename):
+        with open(filename) as f:
+            for i, line in enumerate(f):
+                if i != 0:
+                    lineList = line.strip().split()
+                    if int(lineList[7]) == int(squid_uid):
+                        if int(lineList[1].split(':')[0],16) == 0:
+                            return int(lineList[1].split(':')[1],16)
+            return None
+    squid_port = get_squid_port('/proc/' + str(squid_pid) + '/net/tcp') or squid_port
+    squid_port = get_squid_port('/proc/' + str(squid_pid) + '/net/tcp6') or squid_port
+    squid_auto_config = True
+except:
+    print("Couldn't auto config the squid port, use the default one ", squid_port)
+# get external_ip
+external_ip = stun.get_ip_info()[1]
+# get dnsname
+try:
+    dnsname = gethostbyaddr(external_ip)[0]
+    sender_email = 'root@' + dnsname
+except:
+    print("Couldn't auto config the domain name, use the default one ")
+# get interface
+for each_interface in netifaces.interfaces():
+    try:
+        for link in netifaces.ifaddresses(each_interface)[netifaces.AF_INET]:
+            if link['addr'] == external_ip:
+                interface = each_interface
+                break
+            elif not link['addr'].startswith('127.'):
+                interface = each_interface
+                break
+    except Exception:
+        continue
+# get max_load
+try:
+    with open('/sys/class/net/' + interface + '/speed') as f:
+        speed = int(f.readlines()[0])
+        max_load = int(speed * 1000 * load_factor / 8)
+except:
+    print("Couldn't auto config the interface speed for max_load, use the default one")
 
 # find config file by checking the directory of the calling script and sets path
-if exists(abspath(dirname(sys.path[0])+"/shoal_agent.conf")):
-    path = abspath(dirname(sys.path[0])+"/shoal_agent.conf")
-elif exists("/etc/shoal/shoal_agent.conf"):
+if exists("/etc/shoal/shoal_agent.conf"):
     path = "/etc/shoal/shoal_agent.conf"
-elif exists(abspath(homedir + "/.shoal/shoal_agent.conf")):
-    path = abspath(homedir + "/.shoal/shoal_agent.conf")
 else:
     print( "Configuration file problem: There doesn't " \
               "seem to be a configuration file. " \
@@ -141,42 +189,12 @@ if config_file.has_option("logging", "logging_level"):
         print("Configuration file problem: Invalid logging level")
         sys.exit(1)
 
-if config_file.has_option("general", "squid_port"):
-    try:
-        squid_port = config_file.getint("general", "squid_port")
-    except ValueError:
-        print("Configuration file problem: squid_port must be an " \
-              "integer value.")
-        sys.exit(1)
- 
-if config_file.has_option("general", "external_ip"):
-    external_ip = config_file.get("general", "external_ip")
-
-if config_file.has_option("general", "dnsname"):
-    dnsname = config_file.get("general", "dnsname")
-
-if config_file.has_option("general", "interface"):
-    interface = config_file.get("general", "interface")
-
-if config_file.has_option("general", "global_access"):
-    global_access = config_file.get("general","global_access")
-
-if config_file.has_option("general", "domain_access"):
-    domain_access = config_file.get("general","domain_access")
-
-if config_file.has_option("general", "access_level"):
-    access_level = config_file.get("general","access_level").lower()
-    if access_level == "global":
-        global_access = "True"
-        domain_access = "True"
-    elif access_level == "servelocal":
-        global_access = "False"
-        domain_access = "True"
-    elif access_level == "private":
-        global_access = "False"
-        domain_access = "False"
-    else:
-        logging.error("access_level not set to known value in config - Defaulting to Global")
+if config_file.has_option("general", "squid_port") and not squid_auto_config:
+    squid_port = config_file.get("general", "squid_port")
 
 if config_file.has_option("general", "max_load"):
-    max_load = config_file.get("general","max_load")
+    max_load = config_file.get("general", "max_load")
+
+if config_file.has_option("general", "admin_email"):
+    receiver_email = config_file.get("general", "admin_email")
+
