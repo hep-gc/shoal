@@ -360,7 +360,8 @@ if frontier:
     new_defaults = ''
     tmpproxies = default_http_proxy.split(';')
     for proxy in tmpproxies:
-        new_defaults += '(proxyurl=%s)' % proxy
+        if proxy != 'DIRECT':
+            new_defaults += '(proxyurl=%s)' % proxy
     default_http_proxy = new_defaults
 
 if local_squid:

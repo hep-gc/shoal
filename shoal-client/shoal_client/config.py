@@ -26,6 +26,24 @@ paths = [
 "http://cvmfs.fnal.gov/cvmfs/grid.cern.ch/.cvmfswhitelist"
 ]
 
+# get default http proxy from cvmfs config file
+try:
+    with open('/etc/cvmfs/default.local') as f:
+        for line in f:
+            info = line.split('=')
+            if info[0] == 'CVMFS_HTTP_PROXY' and info[1]:
+                cvmfs_proxies = info[1].strip()
+                if cvmfs_proxies.startswith('"'):
+                    cvmfs_proxies = cvmfs_proxies[1:]
+                if cvmfs_proxies.endswith('"'):
+                    cvmfs_proxies = cvmfs_proxies[:-1]
+                each_proxies = cvmfs_proxies.split(';')
+                for proxy in each_proxies:
+                    if proxy not in default_squid_proxy: 
+                        default_squid_proxy = proxy + ';' + default_squid_proxy 
+except:
+    print("No default cmfs http proxy found")
+
 homedir = expanduser('~')
 # find config file by checking the directory of the calling script and sets path
 if  exists(abspath(sys.path[0]+"/shoal_client.conf")):
@@ -34,7 +52,6 @@ elif exists(abspath(homedir + "/.shoal/shoal_client.conf")):
     path =  abspath(homedir + "/.shoal/shoal_client.conf")
 elif exists("/etc/shoal/shoal_client.conf"):
     path = "/etc/shoal/shoal_client.conf"
-
 else:
     print("Configuration file problem: There doesn't " \
                          "seem to be a configuration file. " \

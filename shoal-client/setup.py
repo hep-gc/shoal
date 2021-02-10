@@ -36,6 +36,6 @@ setup(name='shoal-client',
       url='http://github.com/hep-gc/shoal',
       packages=['shoal_client'],
       scripts=['shoal-client'],
-      data_files=[('/etc/shoal', ['conf/shoal_client.conf'])],
+      data_files=[('share/shoal-client', ['conf/shoal_client.conf'])],
 )
 
