@@ -85,5 +85,5 @@ Shoal client now uses the cvmfs_talk protocol. To view the list of returned squi
 2. `cd shoal/shoal-client/`
 3. `python setup.py install`
 4. Copy the configuration file to proper location `cp conf/shoal_client.conf /etc/shoal/`
-4. Check settings in `shoal_client.conf` update as needed
+5. Check settings in `shoal_client.conf` update as needed
 
