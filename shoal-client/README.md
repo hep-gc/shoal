@@ -24,13 +24,13 @@ root permissions.
 
 1. `pip install shoal-client`
 2. Copy the configuration file to proper location
-
+    ```
     # For python3
     cp /usr/local/share/shoal-client/shoal_client.conf /etc/shoal/
     
     # For python2
     cp /usr/share/shoal-client/shoal_client.conf /etc/shoal/
-
+    ````
 3. Check settings in `shoal_client.conf` update as needed
 
     
@@ -71,13 +71,13 @@ Shoal client now uses the cvmfs_talk protocol. To view the list of returned squi
 
 1. `pip install shoal-client`
 2. Copy the configuration file to proper location
-
+    ```
     # For python3
     cp /usr/local/share/shoal-client/shoal_client.conf /etc/shoal/
     
     # For python2
     cp /usr/share/shoal-client/shoal_client.conf /etc/shoal/
-
+    ```
 3. Check settings in `shoal_client.conf` update as needed
 
 ### Using Git
