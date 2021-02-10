@@ -4,7 +4,9 @@
 
 ## Important to know about the configuration
 The configuration has been simplified compared to previous versions and most settings are automatically configured at runtime.
-
+There is also a setup script which should be run right after the pip install which will help to set the right options for the shoal-agent.
+The config file is placed in /etc/shoal/shoal_agent.conf by the setup script and can be edited manually later on too.
+The new shoal-agent is compatible with python3 as well as python2. It is recommended to use the python3 version.
 
 ## Basic Commands
 With the basic `shoal_agent` init script you can do the following:
@@ -12,15 +14,14 @@ With the basic `shoal_agent` init script you can do the following:
 ```
 service shoal-agent start
 service shoal-agent stop
-service shoal-agent reload 
-service shoal-agent status
-service shoal-agent force-restart
+service shoal-agent restart
 ```
 
 ## Installation
 
 The **recommended** way to install is with pip.
-The Shoal agent does not require root privilege to run; by default the `shoal` user and group is used. If the shoal user and group do not exist then the install script will create the entries in the system.
+Although, the Shoal agent does not require root privilege to run; by default the `shoal` user and group is used; it should be installed as root.
+If the shoal user and group do not exist then the install script will create the entries in the system.
 
  _**Note**: Requires you have Python 2.6+, and the pika python module (available from EPEL)._
 
