@@ -18,12 +18,19 @@ proxies via cvmfs-talk. See Usage below for more information.
 **Note**: Requires Python 2.4+
 
 **Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if installed 
-root permissions. The latest config files are available at [git repository](https://github.com/hep-gc/shoal).
+root permissions.
 
 ### Recommended Instalation Method: Use pip
 
 1. `pip install shoal-client`
-2. For python2, copy the configuration file from `/usr/share/shoal-client/shoal_client.conf` to `/etc/shoal/`; For python3, copy the configuration file from `/usr/local/share/shoal-client/shoal_client.conf` to `/etc/shoal/`
+2. Copy the configuration file to proper location
+
+    # For python3
+    cp /usr/local/share/shoal-client/shoal_client.conf /etc/shoal/
+    
+    # For python2
+    cp /usr/share/shoal-client/shoal_client.conf /etc/shoal/
+
 3. Check settings in `shoal_client.conf` update as needed
 
     
@@ -63,13 +70,20 @@ Shoal client now uses the cvmfs_talk protocol. To view the list of returned squi
 ### Using Pip
 
 1. `pip install shoal-client`
-2. For python2, copy the configuration file from `/usr/share/shoal-client/shoal_client.conf` to `/etc/shoal/`; For python3, copy the configuration file from `/usr/local/share/shoal-client/shoal_client.conf` to `/etc/shoal/`
+2. Copy the configuration file to proper location
+
+    # For python3
+    cp /usr/local/share/shoal-client/shoal_client.conf /etc/shoal/
+    
+    # For python2
+    cp /usr/share/shoal-client/shoal_client.conf /etc/shoal/
+
 3. Check settings in `shoal_client.conf` update as needed
 
 ### Using Git
 1. `git clone git://github.com/hep-gc/shoal.git`
 2. `cd shoal/shoal-client/`
 3. `python setup.py install`
-4. Copy the configuration file from `conf/shoal_client.conf` to `/etc/shoal/`
+4. Copy the configuration file to proper location `cp conf/shoal_client.conf /etc/shoal/`
 4. Check settings in `shoal_client.conf` update as needed
 
