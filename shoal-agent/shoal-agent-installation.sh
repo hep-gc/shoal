@@ -1,7 +1,11 @@
 #!/bin/bash
 
+#stop a running agent to apply changes to the config
 service shoal-agent stop 2>/dev/null
 
+#########################
+# global variables used #
+#########################
 SHOAL_PYTHON=($(pip show shoal-agent 2>/dev/null|grep Version))
 SHOAL_PYTHON_THREE=($(pip3 show shoal-agent 2>/dev/null|grep Version))
 SHOAL_PYTHON_VERSION=''
@@ -30,6 +34,8 @@ OLD_LOG_FILE=''
 OLD_LOGGING_LEVEL=''
 OLD_ADMIN_EMAIL=''
 
+##################################################
+
 compareShoalVersion() {
     local path
     local first_version=$1
@@ -44,10 +50,11 @@ compareShoalVersion() {
 }
 
 setEachNewValue() {
-    local label=$1
-    local info=$2
-    local default=$3
-    local old=$4
+    local config_file=$1
+    local label=$2
+    local info=$3
+    local default=$4
+    local old=$5
     local enter_value
 
     if [ ! -z "$old" ]; then
@@ -68,7 +75,7 @@ setEachNewValue() {
             origin=$"$label=$default"
         fi
         replace=$"$label=$enter_value"
-        sed -i "s|$origin|$replace|g" $CONFIG_FILE
+        sed -i "s|$origin|$replace|g" $config_file
     else
         if [ "$label" == "log_file" ]; then
             # create log value and change ownership
@@ -79,7 +86,12 @@ setEachNewValue() {
 
 }
 
-# find source file path for python2 or python3
+
+###############################
+#  MAIN                       #
+###############################
+
+# test if python2 or python3 was used for the install
 if [ ! -z "$SHOAL_PYTHON" ] && [ ! -z "${SHOAL_PYTHON[1]}" ]; then
     SHOAL_PYTHON_VERSION=${SHOAL_PYTHON[1]}
 fi 
@@ -94,7 +106,7 @@ elif [ ! -z "$SHOAL_PYTHON_VERSION" ]; then
 elif [ ! -z "$SHOAL_PYTHON_THREE_VERSION" ]; then
     SOURCE_PATH=/usr/local/share/shoal-agent
 else
-    echo Could not find the shoal-agent package, please check your pip install
+    echo "Could not find the shoal-agent package. Please check your pip install."
     exit 0
 fi
 
@@ -133,7 +145,6 @@ do
 done <<< "$LINES"
 
 if [ -f "$CONFIG_FILE" ]; then
-    echo Found an existing config file at $CONFIG_FILE, backed it up at $CONFIG_FILE_OLD. We will walk you through the configuration options and allow you to set the values
 
     OLD_LINES=$(grep -v "^#\|\[" $CONFIG_FILE|sed -r "s/=/ /g")
     while read line
@@ -160,8 +171,10 @@ if [ -f "$CONFIG_FILE" ]; then
 
     # rename the existing cofig file
     mv $CONFIG_FILE $CONFIG_FILE_OLD
+    echo "Found an existing config file at $CONFIG_FILE. It is renamed to $CONFIG_FILE_OLD and its content is used in the following steps. We will walk you through the configuration options and allow you to set the values as you wish."
+
 else
-    echo No configuration file has been found at $CONFIG_FILE, we will walk you through the configuration options and allow you to set the values
+    echo "No previous configuration file has been found at $CONFIG_FILE.  We will walk you through the configuration options to set new values."
  
     if [ ! -d "$CONFIG_DIRECTORY" ]; then
         mkdir $CONFIG_DIRECTORY
@@ -170,21 +183,21 @@ fi
 
 # copy the new config file to the preper location, and rewrite values based on user input
 cp $SOURCE_CONFIG_FILE $CONFIG_DIRECTORY
-setEachNewValue interval "interval is at which the shoal-agent will contact the shoal server" $DEFAULT_INTERVAL $OLD_INTERVAL
-setEachNewValue admin_email "admin email is used for contact in case of issues with the shoal-agent or squid" $DEFAULT_ADMIN_EMAIL $OLD_ADMIN_EMAIL
-setEachNewValue amqp_server_url "this is the RabbitMQ server ip" $DEFAULT_AMQP_SERVER_URL $OLD_AMQP_SERVER_URL
-setEachNewValue amqp_port "this is the port number for amqp connection" $DEFAULT_AMQP_PORT $OLD_AMQP_PORT
-setEachNewValue amqp_virtual_host "this is used for RabbitMQ virtual host" $DEFAULT_AMQP_VIRTUAL_HOST $OLD_AMQP_VIRTUAL_HOST
-setEachNewValue amqp_exchange "this is the RabbitMQ exchange name" $DEFAULT_AMQP_EXCHANGE $OLD_AMQP_EXCHANGE
-setEachNewValue log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE $OLD_LOG_FILE
-setEachNewValue logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL $OLD_LOGGING_LEVEL
+setEachNewValue $CONFIG_FILE interval "interval is at which the shoal-agent will contact the shoal server" $DEFAULT_INTERVAL $OLD_INTERVAL
+setEachNewValue $CONFIG_FILE admin_email "admin email is used for contact in case of issues with the shoal-agent or squid" $DEFAULT_ADMIN_EMAIL $OLD_ADMIN_EMAIL
+setEachNewValue $CONFIG_FILE amqp_server_url "this is the RabbitMQ server ip" $DEFAULT_AMQP_SERVER_URL $OLD_AMQP_SERVER_URL
+setEachNewValue $CONFIG_FILE amqp_port "this is the port number for amqp connection" $DEFAULT_AMQP_PORT $OLD_AMQP_PORT
+setEachNewValue $CONFIG_FILE amqp_virtual_host "this is used for RabbitMQ virtual host" $DEFAULT_AMQP_VIRTUAL_HOST $OLD_AMQP_VIRTUAL_HOST
+setEachNewValue $CONFIG_FILE amqp_exchange "this is the RabbitMQ exchange name" $DEFAULT_AMQP_EXCHANGE $OLD_AMQP_EXCHANGE
+setEachNewValue $CONFIG_FILE log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE $OLD_LOG_FILE
+setEachNewValue $CONFIG_FILE logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL $OLD_LOGGING_LEVEL
 
 if [ ! -z "$(command -v systemctl)" ]; then
     systemctl daemon-reload
-    echo Reloaded units for shoal-agent.service 
+    echo "Reloaded units for shoal-agent.service" 
 fi
 
 service shoal-agent restart
-echo Started the shoal-agent, check your configuration file at $CONFIG_FILE. If you are using a configuration file stored at other locations previously, please be aware that shoal-agent now only uses the configuration file at $CONFIG_FILE
+echo "Started the shoal-agent using the configuration file at $CONFIG_FILE. If you used a configuration file stored at other locations previously, please be aware that shoal-agent now only uses the configuration file at $CONFIG_FILE."
 
 

@@ -1,3 +1,0 @@
-#!/bin/bash
-touch /var/log/shoal_agent.log
-chown nobody:nobody /var/log/shoal_agent.log
