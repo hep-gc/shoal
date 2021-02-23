@@ -57,10 +57,10 @@ def broadcast_my_ip():
     while 1:
         if squid_available:
             data = (BROADCAST_ID + str(my_ip) + ":" + str(config.squid_port)).encode()
+            s.sendto(data, ('<broadcast>', PORT))
+            logging.info("sent service announcement")
         else:
-            data = (str(my_ip) + ":" + str(config.squid_port)).encode()
-        s.sendto(data, ('<broadcast>', PORT))
-        logging.info("sent service announcement")
+            pass
         sleep(60)
 
 # Time interval to send data
