@@ -1,7 +1,8 @@
 %define name shoal-server
-%define version 0.7.5
-%define unmangled_version 0.7.5
+%define version 0.7.7
+%define unmangled_version 0.7.7
 %define release 1
+%define __python /usr/bin/python3
 
 Summary: A squid cache publishing and advertising tool designed to work in fast changing environments
 Name: %{name}
@@ -25,10 +26,10 @@ It also provides a web interface for viewing the list.
 %setup -n %{name}-%{unmangled_version}
 
 %build
-python setup.py build
+python3 setup.py build
 
 %install
-python setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT
+python3 setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT
 #Dish out the files and change permissions and any other requires setup here
 
 mkdir -p $RPM_BUILD_ROOT/etc/{shoal,logrotate.d}
@@ -60,4 +61,4 @@ touch $RPM_BUILD_ROOT/var/log/shoal_server.log
 %config(noreplace) /etc/httpd/conf.d/shoal.conf
 
 %post
-python /var/www/shoal/scripts/setup_files.py
+python3 /var/www/shoal/scripts/setup_files.py

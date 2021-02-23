@@ -1,5 +1,5 @@
 # Shoal Server README
-# Version: v0.7.X
+# Version: v1.0.X
 ## Services
 **Shoal Server** provides two services that can be utilized by clients.
 
@@ -39,7 +39,7 @@ The new release of shoal has several new optional features
 
 ## Installation
 
- _**Note**: Requires you have a working RabbitMQ AMQP Server, and Python 2.6+_.
+ _**Note**: Requires you have a working RabbitMQ AMQP Server, and Python 3.6+_.
 _Recommended to use a system wide install (sudo), but works in a virtualenv with tweaks_.
 
 
@@ -80,7 +80,7 @@ Visit `http://localhost`
 ### Using Pip
 _**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details._
 
-_**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and apache with a working version of mod_wsgi_
+_**Note**: Requires you have a working RabbitMQ AMQP Server, Python 3.6+, and apache with a working version of mod_wsgi_
 
 1. `pip install shoal-server`
 
@@ -102,7 +102,7 @@ _**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and ap
 
 _**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details._
 
-_**Note**: Requires you have a working RabbitMQ AMQP Server, Python 2.6+, and apache with a working version of mod_wsgi_
+_**Note**: Requires you have a working RabbitMQ AMQP Server, Python 3.6+, and apache with a working version of mod_wsgi_
 
 _**Reference Reading**:_
   - [Install RabbitMQ Server on CentOS 7](https://www.howtoforge.com/tutorial/how-to-install-rabbitmq-server-on-centos-7/)

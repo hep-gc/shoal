@@ -19,14 +19,14 @@ shoal_list = {}
 try:
     logging.basicConfig(level=logging.ERROR, format=LOG_FORMAT, filename=LOG_FILE)
 except IOError as e:
-    print "Could not set logger.", e
+    print("Could not set logger.", e)
     sys.exit(1)
 
 # change working directory so webpy static files load correctly.
 try:
     os.chdir(DIRECTORY)
 except OSError as e:
-    print "{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server config file to the location of the shoal-server static files.".format(DIRECTORY)
+    print("{0} doesn't seem to exist. Please set `shoal_dir` in shoal-server config file to the location of the shoal-server static files.".format(DIRECTORY))
     sys.exit(1)
 
 monitor_thread = shoal.ThreadMonitor(shoal_list)

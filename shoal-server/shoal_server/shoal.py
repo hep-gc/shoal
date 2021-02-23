@@ -14,10 +14,13 @@ import pika
 from shoal_server import config
 from shoal_server import utilities
 
+logger = logging.getLogger('shoal_server')
+logger.setLevel(config.logging_level)
+
 # Basic class to store and update information about each squid server.
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, domain_access, drift_detected, drift_time, max_load=122000, last_active=time()):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, allow_verification, drift_detected, drift_time, local, max_load=122000, last_active=time()):
         """
         constructor for SquidNode, time created is current time
         """
@@ -33,12 +36,13 @@ class SquidNode(object):
         self.load = load
         self.verified = verified
         self.global_access = global_access
-        self.domain_access = domain_access
+        self.allow_verification = allow_verification
         self.max_load = max_load
         self.drift_detected = drift_detected
         self.drift_time = drift_time
         self.last_verified = 0
         self.error = 'All systems OK!'
+        self.local = local
 
     def update(self, load, drift_detected, drift_time):
         """
@@ -64,8 +68,8 @@ class SquidNode(object):
             "load": self.load,
             "verified": self.verified,
             "global_access": self.global_access,
-            "domain_access": self.domain_access,
-            "max_load": self.max_load,},)
+            "max_load": self.max_load,
+            "local": self.local,},)
 
 # Main application that will monitor RabbitMQ and ShoalUpdate threads.
 class ThreadMonitor(Thread):
@@ -76,7 +80,7 @@ class ThreadMonitor(Thread):
 
         # check if geolitecity database needs updating
         if utilities.check_geolitecity_need_update():
-            utilities.download_geolitecity()
+            logger.warning('GeoLiteCity database needs manually updating.')
 
         Thread.__init__(self)
 
@@ -103,12 +107,12 @@ class ThreadMonitor(Thread):
         runs ThreadMonitor threads
         """
         for thread in self.threads:
-            logging.info("starting", thread)
+            logger.info("starting", thread)
             thread.start()
         while True:
             for thread in self.threads:
                 if not thread.is_alive():
-                    logging.error('%s died. Stopping application...', thread)
+                    logger.error('%s died. Stopping application...', thread)
                     sys.exit(1)
             sleep(1)
 
@@ -116,12 +120,12 @@ class ThreadMonitor(Thread):
         """
         stops ThreadMonitor threads
         """
-        logging.info("Shutting down Shoal-Server... Please wait.")
+        logger.info("Shutting down Shoal-Server... Please wait.")
         try:
             self.rabbitmq.stop()
             self.update.stop()
         except Exception as exc:
-            logging.error(exc)
+            logger.error(exc)
             sys.exit(1)
         finally:
             sleep(2)
@@ -156,7 +160,9 @@ class ShoalUpdate(Thread):
         updates and pops squid from shoal if it's inactive
         """
         curr = time()
-        for squid in self.shoal.values():
+        squid_key_list = list(self.shoal)
+        for squid_key in squid_key_list:
+            squid = self.shoal[squid_key]
             if curr - squid.last_active > self.INACTIVE:
                 self.shoal.pop(squid.key)
 
@@ -193,7 +199,7 @@ class WebpyServer(Thread):
             self.app = web.application(self.urls, globals())
             self.app.run()
         except Exception as exc:
-            logging.error("Could not start webpy server.\n%s", exc)
+            logger.error("Could not start webpy server.\n%s", exc)
             sys.exit(1)
 
     def wsgi(self):
@@ -225,7 +231,7 @@ class RabbitMQConsumer(Thread):
         # and uses values from config file
 
         Thread.__init__(self)
-        self.host = "{0}/{1}".format(config.amqp_server_url, urllib.quote_plus(config.amqp_virtual_host))
+        self.host = "{0}/{1}".format(config.amqp_server_url, urllib.parse.quote_plus(config.amqp_virtual_host))
         self.shoal = shoal
         self._connection = None
         self._channel = None
@@ -247,8 +253,8 @@ class RabbitMQConsumer(Thread):
             else:
                 sslOptions = None
         except Exception as exc:
-            logging.error("Could not read SSL files")
-            logging.error(exc)
+            logger.error("Could not read SSL files")
+            logger.error(exc)
 
         # tries to establish a connection with AMQP server
         # will retry a number of times before passing the exception up
@@ -267,12 +273,12 @@ class RabbitMQConsumer(Thread):
             except pika.exceptions.AMQPConnectionError as exc:
                 failedConnectionAttempts += 1
                 if failedConnectionAttempts >= config.error_reconnect_attempts:
-                    logging.error(
+                    logger.error(
                         "Was not able to establish connection to AMQP server after %s attempts.",
                         failedConnectionAttempts)
-                    logging.error(exc)
+                    logger.error(exc)
                     raise exc
-                logging.error(
+                logger.error(
                     "Could not connect to AMQP Server. Retrying in %s seconds...",
                     config.error_reconnect_time)
                 sleep(config.error_reconnect_time)
@@ -298,7 +304,7 @@ class RabbitMQConsumer(Thread):
         if self._closing:
             self._connection.ioloop.stop()
         else:
-            logging.warning(
+            logger.warning(
                 'Connection closed, reopening in 5 seconds: %s',
                 reply_text)
             self._connection.add_timeout(5, self.reconnect)
@@ -332,7 +338,7 @@ class RabbitMQConsumer(Thread):
         """
         closes connection on channel
         """
-        logging.warning('Channel was closed: %s', reply_text)
+        logger.warning('Channel was closed: %s', reply_text)
         self._connection.close()
 
     def on_channel_open(self, channel):
@@ -435,13 +441,13 @@ class RabbitMQConsumer(Thread):
         try:
             self._connection = self.connect()
         except Exception as exc:
-            logging.error(exc)
-            logging.error("Unable to connect ot RabbitMQ Server. %s", exc)
+            logger.error(exc)
+            logger.error("Unable to connect ot RabbitMQ Server. %s", exc)
             sys.exit(1)
         try:
             self._connection.ioloop.start()
         except Exception as exc:
-            logging.error("rabbitmq connection died %s", exc)
+            logger.error("rabbitmq connection died %s", exc)
 
     def stop(self):
         """
@@ -461,7 +467,9 @@ class RabbitMQConsumer(Thread):
         """
         external_ip = public_ip = private_ip = None
         #assume global access unless otherwise indicated
-        globalaccess = domainaccess = True
+        globalaccess = False
+        allow_verification = True
+        local = None
         drift_detected = False
         drift_time = 0
         curr = time()
@@ -470,7 +478,7 @@ class RabbitMQConsumer(Thread):
         try:
             data = json.loads(body)
         except ValueError:
-            logging.error("Message body could not be decoded. Message: %s", body[1])
+            logger.error("Message body could not be decoded. Message: %s", body[1])
             self.acknowledge_message(basic_deliver.delivery_tag)
             return
         try:
@@ -481,7 +489,7 @@ class RabbitMQConsumer(Thread):
             squid_port = data['squid_port']
 
         except KeyError as exc:
-            logging.error(
+            logger.error(
                 "Message received was not the proper format (missing:%s), discarding...", exc)
             self.acknowledge_message(basic_deliver.delivery_tag)
             return
@@ -505,35 +513,19 @@ class RabbitMQConsumer(Thread):
             maxload = data['max_load']
         except KeyError:
             maxload = config.squid_max_load
-        try:
-            # it seems these can contain proper booleans now and strings
-            if isinstance(data['global_access'], (bool)):
-                globalaccess = data['global_access']
-            else:
-                globalaccess = bool('True' in data['global_access'])
-        except KeyError:
-            pass
-        try:
-            if isinstance(data['domain_access'], (bool)):
-                domainaccess = data['domain_access']
-            else:
-                domainaccess = bool('True' in data['domain_access'])
-        except KeyError:
-            pass
 
         # attempt to detect misconfigured clocks and clock drifts,
         # allows for a 10 second grace period
         if curr - time_sent > 10:
-            logging.error(
+            logger.error(
                 "Potential clock drift dectected: %s second descrepency on %s",
                 (curr-time_sent),
                 public_ip)
             drift_detected = True
         elif curr - time_sent < -10:
-            logging.error(
-                "Recived message from %s seconds in the future from %s",
-                (-1*(curr-time_sent)),
-                public_ip)
+            logger.error(
+                "Message received from %s is %s seconds in the future",
+                public_ip, (-1*(curr-time_sent)))
             drift_detected = True
         # this else is redundant because the var is initally set to
         # false but this works well as a failsafe
@@ -552,7 +544,7 @@ class RabbitMQConsumer(Thread):
             if not geo_data:
                 geo_data = utilities.get_geolocation(external_ip)
             if not geo_data:
-                logging.error("Unable to generate geo location data, discarding message")
+                logger.error("Unable to generate geo location data, discarding message")
             else:
                 new_squid = SquidNode(
                     key,
@@ -565,9 +557,10 @@ class RabbitMQConsumer(Thread):
                     geo_data,
                     verified,
                     globalaccess,
-                    domainaccess,
+                    allow_verification,
                     drift_detected,
                     drift_time,
+                    local,
                     maxload,
                     time_sent)
                 self.shoal[key] = new_squid
@@ -597,17 +590,24 @@ class SquidVerifier(Thread):
         INTERVAL = config.squid_verify_interval
         self.running = True
         while self.running:
-            for squid in web.shoal.values():
-                current_time = time()
-                # In an ideal scenario shoal would continuously try to verify those
-                # that are not verified. However since many squids use old agents
-                # its likely that they are not configured correctly and this would
-                # make the verification loop try and verify them over and over when
-                # they can't be. Instead they will be verified once every interval
-                # greatly reducing computing resource requirements for misconfigured agents.
-                if (current_time - squid.last_verified) >= INTERVAL:
-                    utilities.verify(squid)
-                    squid.last_verified = time()
+            squid_key_list = list(web.shoal)
+            for squid_key in squid_key_list:
+                try:
+                    squid = web.shoal[squid_key]
+                    current_time = time()
+                    # In an ideal scenario shoal would continuously try to verify those
+                    # that are not verified. However since many squids use old agents
+                    # its likely that they are not configured correctly and this would
+                    # make the verification loop try and verify them over and over when
+                    # they can't be. Instead they will be verified once every interval
+                    # greatly reducing computing resource requirements for misconfigured agents.
+                    if (current_time - squid.last_verified) >= INTERVAL:
+                        utilities.verify(squid)
+                        squid.last_verified = time()
+                except:
+                    logger.error("squid key %s has been removed during the loop", squid_key)
+                    continue
+            sleep(5)
 
     def stop(self):
         """

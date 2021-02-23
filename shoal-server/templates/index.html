@@ -41,7 +41,6 @@ $$(document).ready(function () {
           <th class="hidden-phone">Last Received</th>
           <th>Alive</th>
           <th>Clock Sync</th>
-          <th>Verified</th>
           <th>Access Level</th>
        </tr>
       </thead>
@@ -50,8 +49,8 @@ $$(document).ready(function () {
             $ last_msg = int(now - squid.last_active)
             $ alive_time = int(now - squid.created); 
             $ hour = int(alive_time/60/60)
-            $ minute = (alive_time - hour*60*60) / 60
-            $ second = alive_time - hour*60*60 - minute*60
+            $ minute = int((alive_time - hour*60*60) / 60)
+            $ second = int(alive_time - hour*60*60 - minute*60)
     
             $if last_msg < squid_active_time/3:
                 $ state = 'success'
@@ -61,16 +60,10 @@ $$(document).ready(function () {
                 $ state = 'error'
             $if squid.global_access == True:
                 $ access = 'Global'
-            $elif squid.domain_access == True:
-                $ access = 'Local Access Only'
             $else:
                 $ access = 'Private'
-            $if squid.verified:
-                $ verified = '✔' 
-            $else:
-                $ verified = '✘'
-                $if squid.global_access == True:
-                    $ state = 'warning'
+            $if not squid.verified and squid.allow_verification == True:
+                $ state = 'warning'
             $if squid.drift_detected == True:
                 $ state = 'error'
             <tr class="$state squid-row$i squid-list">
@@ -89,7 +82,6 @@ $$(document).ready(function () {
                     <td style="text-align: center;"><b>$("%.1fs" % squid.drift_time)</b></td>
                 $else:
                     <td style="text-align: center;">✔</td>
-                <td style="text-align: center;">$verified</td>
                 <td>$access</td>
             </tr>
             <tr class="$state squid-panel$i" style="display:none">
