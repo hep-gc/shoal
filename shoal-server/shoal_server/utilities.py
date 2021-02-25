@@ -263,11 +263,12 @@ def _is_available(squid):
                 # specified in the config and all fit the pattern.
                 badpaths = badpaths + 1
                 #logging.error(sys.exc_info()[1])
-                logger.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing", targeturl, badpaths, len(paths))
+                logger.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing on testing %s", targeturl, badpaths, len(paths), ip)
             finally:
                 #Keep going
                 logger.debug("Next...")
         else:
+            squid.error = "%s repos failing, squid failed on verification" % (badpaths)
             logger.error('%s repos failing, squid failed on verification', badpaths)
             return False
 

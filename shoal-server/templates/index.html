@@ -71,7 +71,7 @@ $$(document).ready(function () {
                 <td>$squid.hostname</td>
                 <td class="hidden-phone">$squid.public_ip</td>
                 <td class="hidden-phone">$squid.private_ip</td>
-                <td>$squid.load kB/s</td>
+                <td>$float("{:.3f}".format(squid.load)) kB/s</td>
                 <td>$squid.geo_data.city.name</td>
                 <td class="hidden-phone">$squid.geo_data.country.name</td>
                 <td class="hidden-phone">$squid.geo_data.location.latitude</td>

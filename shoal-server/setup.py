@@ -20,12 +20,11 @@ setup(name='shoal-server',
       install_requires=[
           'pygeoip>=0.2.5',
           'pika>=0.9.11',
-          'web.py>=0.3',
+          'web.py>=0.61',
           'requests>=2.3.0',
           'geoip2>=0.6.0',
           'maxminddb>=1.1.1',
           'ipaddr>=2.1.9',
-          
       ],
       description='A squid cache publishing and advertising tool designed to work in fast changing environments',
       author='Mike Chester, Colson Drimiel, Ian Gable, Alex Lam, Rob Prior, Ryan Taylor, Marcus Ebert, Da Meng',
