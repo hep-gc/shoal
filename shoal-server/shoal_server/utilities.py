@@ -241,7 +241,7 @@ def _is_available(squid):
     for targeturl in paths:
         #if a url checks out testflag set to true, otherwise fails verification at end of loop
         testflag = False
-        if badpaths < 4:
+        if badpaths < 4 and badflags < 4:
             try:
                 logger.info("Trying %s", targeturl)
                 repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
@@ -253,6 +253,10 @@ def _is_available(squid):
                     if line.startswith(bytes('N', 'utf-8')):
                         if bytes(repo, 'utf-8') in line:
                             testflag = True
+                    if bytes('ERR_ACCESS_DENIED', 'utf-8') in line:
+                        squid.error = "The squid is configured to prevent external access. Squid is configured for Local Access Only. Cannot verify %s" % (hostname)
+                        logger.error(squid.error)
+                        return False
                 if testflag is False:
                     badflags = badflags + 1
                     logger.error(
@@ -268,8 +272,8 @@ def _is_available(squid):
                 #Keep going
                 logger.debug("Next...")
         else:
-            squid.error = "%s repos failing, squid failed on verification" % (badpaths)
-            logger.error('%s repos failing, squid failed on verification', badpaths)
+            squid.error = "%s repos failing, squid failed on verification. Squid is configured for Local Access Only. Cannot verify %s" % (badpaths, hostname)
+            logger.error(squid.error)
             return False
 
     if badpaths < len(paths) and badflags < len(paths):
