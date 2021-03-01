@@ -272,8 +272,8 @@ def _is_available(squid):
                 #Keep going
                 logger.debug("Next...")
         else:
-            squid.error = "%s repos failing, squid failed on verification. Squid is configured for Local Access Only. Cannot verify %s" % (badpaths, hostname)
-            logger.error(squid.error)
+            squid.error = "The squid firewall blocks the external access. Squid is configured for Local Access Only. Cannot verify %s" % (hostname)
+            logger.error("%s repos failing, squid failed on verification. Squid is configured for Local Access Only. Cannot verify %s", badpaths, hostname)
             return False
 
     if badpaths < len(paths) and badflags < len(paths):
