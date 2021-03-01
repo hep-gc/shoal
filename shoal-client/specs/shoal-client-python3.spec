@@ -12,8 +12,8 @@ License: 'GPL3' or 'Apache 2'
 Group: Development/Libraries
 BuildArch: noarch
 Vendor: UVic HEPRC <rsobie@uvic.ca>
-Requires: python >= 2.4
-Requires: python-netifaces
+Requires: python3 >= 3.2
+Requires: python36-netifaces python36-requests
 Url: http://github.com/hep-gc/shoal
 
 %description
@@ -28,19 +28,20 @@ configured correctly
 %setup -n %{name}-%{unmangled_version}
 
 %build
-python setup.py build
+python3 setup.py build
 
 %install
-python setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT
+python3 setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/etc/shoal
 mkdir -p $RPM_BUILD_ROOT/var/log
 mv $RPM_BUILD_ROOT/usr/share/shoal-client/shoal_client.conf $RPM_BUILD_ROOT/etc/shoal/shoal_client.conf
 touch $RPM_BUILD_ROOT/var/log/shoal_client.log
-rm -rf $RPM_BUILD_ROOT/%{python_sitelib}/shoal_client-%{unmangled_version}-py%{python_version}.egg-info
+rm -rf $RPM_BUILD_ROOT/%{python3_sitelib}/shoal_client-%{unmangled_version}-py%{python3_version}.egg-info
 
 %files
 %defattr(-,root,root)
-%{python_sitelib}/shoal_client
+%{python3_sitelib}/shoal_client
 %{_bindir}/shoal-client
 %config(noreplace) /etc/shoal/shoal_client.conf
 %attr(-,nobody,nobody) /var/log/shoal_client.log
+

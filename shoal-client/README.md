@@ -1,5 +1,5 @@
 # Shoal Client README
-# Version: v0.6.X
+# Version: v1.0.0
 
 shoal-client will configure cvmfs to use the closest squid server to you by contacting the shoal server
 and using cvmfs-talk to update the active proxy configuration.
@@ -23,7 +23,15 @@ root permissions.
 ### Recommended Instalation Method: Use pip
 
 1. `pip install shoal-client`
-2. Check settings in `shoal_client.conf` update as needed.
+2. Copy the configuration file to proper location
+    ```
+    # For python3
+    cp /usr/local/share/shoal-client/shoal_client.conf /etc/shoal/
+    
+    # For python2
+    cp /usr/share/shoal-client/shoal_client.conf /etc/shoal/
+    ````
+3. Check settings in `shoal_client.conf` update as needed
 
     
 ## Usage
@@ -62,12 +70,20 @@ Shoal client now uses the cvmfs_talk protocol. To view the list of returned squi
 ### Using Pip
 
 1. `pip install shoal-client`
-2. Check settings in `shoal_client.conf` update as needed.
-
+2. Copy the configuration file to proper location
+    ```
+    # For python3
+    cp /usr/local/share/shoal-client/shoal_client.conf /etc/shoal/
+    
+    # For python2
+    cp /usr/share/shoal-client/shoal_client.conf /etc/shoal/
+    ```
+3. Check settings in `shoal_client.conf` update as needed
 
 ### Using Git
 1. `git clone git://github.com/hep-gc/shoal.git`
 2. `cd shoal/shoal-client/`
 3. `python setup.py install`
-4. Check settings in `shoal_client.conf` update as needed
+4. Copy the configuration file to proper location `cp conf/shoal_client.conf /etc/shoal/`
+5. Check settings in `shoal_client.conf` update as needed
 
