@@ -23,7 +23,7 @@ The **recommended** way to install is with pip.
 Although, the Shoal agent does not require root privilege to run; by default the `shoal` user and group is used; it should be installed as root.
 If the shoal user and group do not exist then the install script will create the entries in the system.
 
- _**Note**: Requires you have Python 2.6+, and the pika python module (available from EPEL)._
+ _**Note**: Requires you have Python 2.6+, and the pika, netifaces python module (available from EPEL)._
 
 ### Recommended Method: Use pip (est. ~5 min)
   1. Login as root or become root via `sudo su -`
