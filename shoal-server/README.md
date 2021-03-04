@@ -47,57 +47,6 @@ _**Note**: Shoal static files will be located either at `~/shoal_server/` or `/v
 
 _**Note**: Shoal config files will be located either at `~/.shoal/` or `/etc/shoal/` if sudo was used_
 
-### Recommended Method: Use yum (Apache) (est. ~10 min)
-The Yum rpm will Install all the dependencies including apache and configure them for shoal.
-**The Yum install does NOT [install the rabbitmq-server](https://www.rabbitmq.com/install-rpm.html) which will be required if one is not already running somewhere.**
-
-First install [EPEL](http://fedoraproject.org/wiki/EPEL) 
-
-    sudo yum install epel-release
-    sudo yum update
-
-Get the Shoal yum repository:
-
-    For SL6:
-    sudo curl http://shoal.heprc.uvic.ca/repo/shoal-sl6x.repo -o /etc/yum.repos.d/shoal.repo
-
-    For SL7:
-    sudo curl http://shoal.heprc.uvic.ca/repo/shoal-sl7x.repo -o /etc/yum.repos.d/shoal.repo
-   
-Install the server:
-
-    sudo rpm --import http://shoal.heprc.uvic.ca/repo/pubkeys/heprc.asc
-    sudo yum install shoal-server
-    
-Configure the server and start it:
-
-    vim /etc/shoal/shoal_server.conf
-    #If the server is to be external facing be sure to open port 80 for apache
-    service apachctl start
-
-Visit `http://localhost`
-
-### Using Pip
-_**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details._
-
-_**Note**: Requires you have a working RabbitMQ AMQP Server, Python 3.6+, and apache with a working version of mod_wsgi_
-
-1. `pip install shoal-server`
-
-2. Move data and configuration files from `/usr/share/shoal-server/` to their proper locations:
-	- `/usr/share/shoal-server/shoal_server.conf` --> `/etc/shoal/shoal_server.conf`   (file)
-	- `/usr/share/shoal-server/shoal-server.logrotate --> `/etc/logrotate.d/shoal-server` (file)
-	- `/usr/share/shoal-server/scripts/` --> `/var/www/shoal/scripts/` (folder)
-	- `/usr/share/shoal-server/static/`  --> `/var/www/shoal/static/` (folder)
-	- `/usr/share/shoal-server/templates/` --> `/var/www/shoal/templates/` (folder)
-
-3. Check settings in `shoal_server.conf` update as needed. Make sure RabbitMQ server is running.
-
-4. Run the Apache service `service httpd start
-  - _First run may take a few seconds to start as it needs to download the GeoLiteCity database (~12MB)._
-
-5. Visit `http://localhost`
-
 ### Using Git (requires manual file placemet)
 
 _**Note**: Some file permissions may need to be changed, check /var/log/shoal_server.log and /var/log/httpd/error_log for details._
