@@ -82,7 +82,9 @@ def get_nearest_verified_squids(ip, count=10):
     b = config.squid_loadconstant
     w = config.squid_distloadweight
     maxload = -1
-    for squid in web.shoal.values():
+    squid_key_list = list(web.shoal)
+    for squid_key in squid_key_list:
+        squid = web.shoal[squid_key]
         try:
             maxload = squid.maxload
         except:
@@ -91,7 +93,8 @@ def get_nearest_verified_squids(ip, count=10):
 
         # check if squid is verified or if verification is turned off in the config. or
         # if there is no global access but the requester is from the same domain
-        if ((squid.verified or not config.squid_verification) and squid.global_access) or checkDomain(ip, squid.public_ip):
+        same_domain = checkDomain(ip, squid.public_ip)
+        if ((squid.verified or not config.squid_verification) and squid.global_access) or same_domain:
 
             s_lat = float(squid.geo_data.location.latitude)
             s_long = float(squid.geo_data.location.longitude)
@@ -100,7 +103,7 @@ def get_nearest_verified_squids(ip, count=10):
             distancecost = distance/(earthrad * 3.14159265359) * (w)
             loadcost = ((squid.load/maxload)**b) * (1-w)
             new_squid = copy.deepcopy(squid)
-            if checkDomain(ip, new_squid.public_ip): 
+            if same_domain: 
                 new_squid.local = True
             nearest_squids.append((new_squid, distancecost+loadcost))
 
@@ -113,7 +116,9 @@ def get_all_squids():
     """
     squids = []
 
-    for squid in web.shoal.values():
+    squid_key_list = list(web.shoal)
+    for squid_key in squid_key_list:
+        squid = web.shoal[squid_key]
         squids.append(squid)
 
     return squids
