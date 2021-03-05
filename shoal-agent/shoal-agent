@@ -227,12 +227,6 @@ def main():
     MEDIUM_INTERVAL = 60 * 60 * 6
     LONG_INTERVAL = 60 * 60 * 24
 
-    try:
-        logging.basicConfig(level=config.logging_level, format=LOG_FORMAT, filename=config.log_file)
-    except IOError as exc:
-        print("Could not set logging file. Please check config file.", exc)
-        sys.exit(1)
-
     data = {
         'uuid': uuid.uuid1().hex,
         'hostname': socket.gethostname(),
@@ -367,6 +361,11 @@ def main():
             sys.exit()
 
 if __name__ == '__main__':
+    try:
+        logging.basicConfig(level=config.logging_level, format=LOG_FORMAT, filename=config.log_file)
+    except IOError as exc:
+        print("Could not set logging file. Please check config file.", exc)
+        sys.exit(1)
     logging.info("starting shoal-agent broadcast thread")
     try:
         thread.start_new_thread( broadcast_my_ip, () )
