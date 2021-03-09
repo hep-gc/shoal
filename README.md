@@ -33,7 +33,7 @@ instructions:
 - [shoal-agent/README.md](shoal-agent/README.md)
 - [shoal-client/README.md](shoal-client/README.md)
 
-For people familiar with it, everything is available from PyPI.
+For people familiar with it, shoal-client and shoal-agent are available from PyPI.
 
 ## Development Roadmap
 
@@ -44,19 +44,34 @@ For people familiar with it, everything is available from PyPI.
 #### Version 0.9.11
 - Better network bandwith and traffic monitoring for server usage
 
+#### Version 1.0.0
+- Python3 support
+- Auto configuration
+- Agent side squid availability check
+- Email notification for unavailable squid
+- New installation script
 
 ### Client
 #### Version 0.6.6
 - Client side testing of served squids
 
+#### Version 1.0.0
+- Python3 support
+- Return ordered server squids based on testing time cost
+- Added default squids for frontier option
 
 ### Server
 #### Version 0.7.8
-- python 3 support
+- Python 3 support
 
 #### Version 0.7.9
 - Improved squid verification proccess (exit test after # of failures)
 - Logging & log level configuration
+
+#### Version 1.0.0
+- Improved method to compare domain of ips
+- Use "local" attritube in json to identify local squid
+- Updated web interface columns, format numbers
 
 
 ## License

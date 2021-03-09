@@ -12,6 +12,7 @@ License: 'GPL3' or 'Apache 2'
 Group: Development/Libraries
 BuildArch: noarch
 Vendor: UVic HEPRC <rsobie@uvic.ca>
+BuildRequires: python3-devel
 Requires: python3 >= 3.2
 Requires: python36-netifaces python36-requests
 Url: http://github.com/hep-gc/shoal
