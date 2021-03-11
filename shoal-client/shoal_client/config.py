@@ -42,7 +42,7 @@ try:
                     if proxy not in default_squid_proxy: 
                         default_squid_proxy = proxy + ';' + default_squid_proxy 
 except:
-    print("No default cmfs http proxy found")
+    print("No default cvmfs http proxy found", file=sys.stderr)
 
 homedir = expanduser('~')
 # find config file by checking the directory of the calling script and sets path
@@ -73,7 +73,7 @@ except configparser.ParsingError:
     raise
 except:
     print("Configuration file problem: There is something wrong with " \
-          "your config file.")
+          "your config file.", file=sys.stderr)
     raise
 
 # sets defaults to the options in config_file
@@ -84,5 +84,5 @@ if config_file.has_option("general", "default_squid_proxy"):
     default_squid_proxy = config_file.get("general", "default_squid_proxy")
 else:
     print("No default settings found in the config file, will use DIRECT as default. " \
-          "Please check configuration file:", path)
+          "Please check configuration file: %s" % path, file=sys.stderr)
 

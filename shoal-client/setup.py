@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 from os.path import isfile, join
 import sys
@@ -9,7 +10,7 @@ except:
     try:
         from distutils.core import setup
     except:
-        print("Couldn't use either setuptools or distutils. Install one of those.")
+        print("Couldn't use either setuptools or distutils. Install one of those.", file=sys.stderr)
         sys.exit(1)
 
 from shoal_client.__version__ import version
@@ -18,7 +19,7 @@ try:
     with io.open("README.md", "r", encoding="utf-8") as fh:
         long_description = fh.read()
 except:
-    print("Couldn't read description from the README.md")
+    print("Couldn't read description from the README.md", file=sys.stderr)
     long_description = ''
 
 setup(name='shoal-client',
