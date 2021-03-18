@@ -47,6 +47,9 @@ For people familiar with it, shoal-client and shoal-agent are available from PyP
 - New installation script
 
 ### Client
+#### Version 1.0.1
+- changed Warnings to be print on stderr instead of stdout to have a clean Frontier output
+ 
 #### Version 1.0.0
 - Python3 support
 - Return ordered server squids based on testing time cost
