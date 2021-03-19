@@ -1,6 +1,6 @@
 %define name shoal-server
-%define version 0.7.7
-%define unmangled_version 0.7.7
+%define version 1.0.0
+%define unmangled_version 1.0.0
 %define release 1
 %define __python /usr/bin/python3
 
