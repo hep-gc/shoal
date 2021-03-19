@@ -35,14 +35,9 @@ instructions:
 
 For people familiar with it, shoal-client and shoal-agent are available from PyPI.
 
-## Development Roadmap
+## Changelog
 
 ### Agent
-#### Version 0.9.10
-- Smart//Autoconfiguration to reduce poorly configured shoal-agents
-
-#### Version 0.9.11
-- Better network bandwith and traffic monitoring for server usage
 
 #### Version 1.0.0
 - Python3 support
@@ -52,23 +47,19 @@ For people familiar with it, shoal-client and shoal-agent are available from PyP
 - New installation script
 
 ### Client
-#### Version 0.6.6
-- Client side testing of served squids
-
+#### Version 1.0.1
+- changed Warnings to be print on stderr instead of stdout to have a clean Frontier output
+ 
 #### Version 1.0.0
 - Python3 support
 - Return ordered server squids based on testing time cost
 - Added default squids for frontier option
 
 ### Server
-#### Version 0.7.8
+#### Version 1.0.0
 - Python 3 support
-
-#### Version 0.7.9
 - Improved squid verification proccess (exit test after # of failures)
 - Logging & log level configuration
-
-#### Version 1.0.0
 - Improved method to compare domain of ips
 - Use "local" attritube in json to identify local squid
 - Updated web interface columns, format numbers
