@@ -2,6 +2,8 @@
 %define version 1.0.0
 %define unmangled_version 1.0.0
 %define release 1
+%define group_shoal_num %(grep -c "^shoal" /etc/group)
+%define user_shoal_num %(grep -c "^shoal" /etc/passwd)
 
 Summary: A squid cache publishing and advertising tool designed to work in fast changing environments
 Name: %{name}
@@ -43,8 +45,12 @@ python setup.py build
 
 %install
 python setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT
+%if %{group_shoal_num} == 0
 sudo groupadd shoal
+%endif
+%if %{user_shoal_num} == 0
 sudo useradd shoal -g shoal
+%endif
 sudo python -m pip install pystun
 mkdir -p $RPM_BUILD_ROOT/etc/{shoal,init.d,logrotate.d}
 mkdir -p $RPM_BUILD_ROOT/var/log
