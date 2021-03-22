@@ -14,8 +14,9 @@ License: 'GPL3' or 'Apache 2'
 Group: Development/Libraries
 BuildArch: noarch
 Vendor: UVic HEPRC <rsobie@uvic.ca>
-Requires: python-netifaces >= 0.5 
-Requires: python-pika >= 0.9.5
+BuildRequires: python3-devel
+Requires: python3 >= 3.2
+Requires: python36-netifaces python36-requests python36-pika
 %if 0%{?el6}
 %else
 Requires(post): systemd
@@ -41,17 +42,17 @@ nearest squid proxy.
 %setup -n %{name}-%{unmangled_version}
 
 %build
-python setup.py build
+python3 setup.py build
 
 %install
-python setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT
-%if %{group_shoal_num} == 0
+python3 setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT
+%if %{group_shoal_num} == 0 
 sudo groupadd shoal
 %endif
 %if %{user_shoal_num} == 0
 sudo useradd shoal -g shoal
 %endif
-sudo python -m pip install pystun
+sudo python3 -m pip install pystun3
 mkdir -p $RPM_BUILD_ROOT/etc/{shoal,init.d,logrotate.d}
 mkdir -p $RPM_BUILD_ROOT/var/log
 mv $RPM_BUILD_ROOT/usr/share/shoal-agent/shoal_agent.conf $RPM_BUILD_ROOT/etc/shoal/shoal_agent.conf
@@ -65,7 +66,7 @@ mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
 mv $RPM_BUILD_ROOT/usr/share/shoal-agent/shoal-agent.service $RPM_BUILD_ROOT/%{_unitdir}/shoal-agent.service
 rm $RPM_BUILD_ROOT/usr/share/shoal-agent/shoal-agent.init
 %endif
-rm -rf $RPM_BUILD_ROOT/%{python_sitelib}/shoal_agent-%{unmangled_version}-py%{python_version}.egg-info
+rm -rf $RPM_BUILD_ROOT/%{python3_sitelib}/shoal_agent-%{unmangled_version}-py%{python3_version}.egg-info
 touch $RPM_BUILD_ROOT/var/log/shoal_agent.log
 
 %post
@@ -86,8 +87,8 @@ touch $RPM_BUILD_ROOT/var/log/shoal_agent.log
 %systemd_postun_with_restart shoal-agent.service
 %endif
 
-%files 
-%{python_sitelib}/shoal_agent
+%files
+%{python3_sitelib}/shoal_agent
 %{_bindir}/shoal-agent
 %attr(-,shoal,shoal) /var/log/shoal_agent.log
 %if 0%{?el6}
@@ -98,5 +99,6 @@ touch $RPM_BUILD_ROOT/var/log/shoal_agent.log
 %config(noreplace) /etc/shoal/shoal_agent.conf
 %config(noreplace) /etc/logrotate.d/shoal-agent
 %config(noreplace) /usr/bin/shoal-agent-installation.sh
+
 
 
