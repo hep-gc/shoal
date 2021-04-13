@@ -6,6 +6,8 @@ service shoal-agent stop 2>/dev/null
 #########################
 # global variables used #
 #########################
+USE_DEFAULT=false
+
 SHOAL_PYTHON=($(pip show shoal-agent 2>/dev/null|grep Version))
 SHOAL_PYTHON_THREE=($(pip3 show shoal-agent 2>/dev/null|grep Version))
 SHOAL_PYTHON_VERSION=''
@@ -40,7 +42,7 @@ compareShoalVersion() {
     local path
     local first_version=$1
     local second_version=$2
-    local lower=$(printf '%s\n' "$first_version" "$second_version"|sort -V|head -n1)
+    local lower=$(printf '%s\n' "$first_version" "$second_version"|sort -V|head -n1)    
     if [ "$lower" == "$first_version" ]; then
         path=/usr/local/share/shoal-agent
     else
@@ -121,76 +123,90 @@ cp "$SOURCE_PATH/shoal-agent.service" /usr/lib/systemd/system/ 2>/dev/null
 
 SOURCE_CONFIG_FILE="$SOURCE_PATH/shoal_agent.conf"
 
-# read default values of config options
-LINES=$(grep -v "^#\|\[" $SOURCE_CONFIG_FILE|sed -r "s/=/ /g")
-while read line
+while getopts b flag
 do
-    line_array=($line)
-    case "${line_array[0]}" in
-        "interval") DEFAULT_INTERVAL=${line_array[1]}
-        ;;
-        "amqp_server_url") DEFAULT_AMQP_SERVER_URL=${line_array[1]}
-        ;;
-        "amqp_port") DEFAULT_AMQP_PORT=${line_array[1]}
-        ;;
-        "amqp_virtual_host") DEFAULT_AMQP_VIRTUAL_HOST=${line_array[1]}
-        ;;
-        "amqp_exchange") DEFAULT_AMQP_EXCHANGE=${line_array[1]}
-        ;;
-        "log_file") DEFAULT_LOG_FILE=${line_array[1]}
-        ;;
-        "logging_level") DEFAULT_LOGGING_LEVEL=${line_array[1]}
-        ;;
+    case "${flag}" in
+        b) USE_DEFAULT=true;;
     esac
-done <<< "$LINES"
+done
 
-if [ -f "$CONFIG_FILE" ]; then
-
-    OLD_LINES=$(grep -v "^#\|\[" $CONFIG_FILE|sed -r "s/=/ /g")
+if $USE_DEFAULT; then
+    if [ ! -d "$CONFIG_DIRECTORY" ]; then
+        mkdir $CONFIG_DIRECTORY
+    fi
+    cp $SOURCE_CONFIG_FILE $CONFIG_DIRECTORY
+else
+    # read default values of config options
+    LINES=$(grep -v "^#\|\[" $SOURCE_CONFIG_FILE|sed -r "s/=/ /g")
     while read line
     do
         line_array=($line)
         case "${line_array[0]}" in
-            "interval") OLD_INTERVAL=${line_array[1]}
+            "interval") DEFAULT_INTERVAL=${line_array[1]}
             ;;
-            "amqp_server_url") OLD_AMQP_SERVER_URL=${line_array[1]}
+            "amqp_server_url") DEFAULT_AMQP_SERVER_URL=${line_array[1]}
             ;;
-            "amqp_port") OLD_AMQP_PORT=${line_array[1]}
+            "amqp_port") DEFAULT_AMQP_PORT=${line_array[1]}
             ;;
-            "amqp_virtual_host") OLD_AMQP_VIRTUAL_HOST=${line_array[1]}
+            "amqp_virtual_host") DEFAULT_AMQP_VIRTUAL_HOST=${line_array[1]}
             ;;
-            "amqp_exchange") OLD_AMQP_EXCHANGE=${line_array[1]}
+            "amqp_exchange") DEFAULT_AMQP_EXCHANGE=${line_array[1]}
             ;;
-            "log_file") OLD_LOG_FILE=${line_array[1]}
+            "log_file") DEFAULT_LOG_FILE=${line_array[1]}
             ;;
-            "logging_level") OLD_LOGGING_LEVEL=${line_array[1]}
+            "logging_level") DEFAULT_LOGGING_LEVEL=${line_array[1]}
             ;;
-            "admin_email") OLD_ADMIN_EMAIL=${line_array[1]}
         esac
-    done <<< "$OLD_LINES"
+    done <<< "$LINES"
 
-    # rename the existing cofig file
-    mv $CONFIG_FILE $CONFIG_FILE_OLD
-    echo "Found an existing config file at $CONFIG_FILE. It is renamed to $CONFIG_FILE_OLD and its content is used in the following steps. We will walk you through the configuration options and allow you to set the values as you wish."
+    if [ -f "$CONFIG_FILE" ]; then
 
-else
-    echo "No previous configuration file has been found at $CONFIG_FILE.  We will walk you through the configuration options to set new values."
+        OLD_LINES=$(grep -v "^#\|\[" $CONFIG_FILE|sed -r "s/=/ /g")
+        while read line
+        do
+            line_array=($line)
+            case "${line_array[0]}" in
+                "interval") OLD_INTERVAL=${line_array[1]}
+                ;;
+                "amqp_server_url") OLD_AMQP_SERVER_URL=${line_array[1]}
+                ;;
+                "amqp_port") OLD_AMQP_PORT=${line_array[1]}
+                ;;
+                "amqp_virtual_host") OLD_AMQP_VIRTUAL_HOST=${line_array[1]}
+                ;;
+                "amqp_exchange") OLD_AMQP_EXCHANGE=${line_array[1]}
+                ;;
+                "log_file") OLD_LOG_FILE=${line_array[1]}
+                ;;
+                "logging_level") OLD_LOGGING_LEVEL=${line_array[1]}
+                ;;
+                "admin_email") OLD_ADMIN_EMAIL=${line_array[1]}
+            esac
+        done <<< "$OLD_LINES"
+
+        # rename the existing cofig file
+        mv $CONFIG_FILE $CONFIG_FILE_OLD
+        echo "Found an existing config file at $CONFIG_FILE. It is renamed to $CONFIG_FILE_OLD and its content is used in the following steps. We will walk you through the configuration options and allow you to set the values as you wish."
+
+    else
+        echo "No previous configuration file has been found at $CONFIG_FILE.  We will walk you through the configuration options to set new values."
  
-    if [ ! -d "$CONFIG_DIRECTORY" ]; then
-        mkdir $CONFIG_DIRECTORY
+        if [ ! -d "$CONFIG_DIRECTORY" ]; then
+            mkdir $CONFIG_DIRECTORY
+        fi
     fi
-fi
 
-# copy the new config file to the preper location, and rewrite values based on user input
-cp $SOURCE_CONFIG_FILE $CONFIG_DIRECTORY
-setEachNewValue $CONFIG_FILE interval "interval is at which the shoal-agent will contact the shoal server" $DEFAULT_INTERVAL $OLD_INTERVAL
-setEachNewValue $CONFIG_FILE admin_email "admin email is used for contact in case of issues with the shoal-agent or squid" $DEFAULT_ADMIN_EMAIL $OLD_ADMIN_EMAIL
-setEachNewValue $CONFIG_FILE amqp_server_url "this is the RabbitMQ server ip" $DEFAULT_AMQP_SERVER_URL $OLD_AMQP_SERVER_URL
-setEachNewValue $CONFIG_FILE amqp_port "this is the port number for amqp connection" $DEFAULT_AMQP_PORT $OLD_AMQP_PORT
-setEachNewValue $CONFIG_FILE amqp_virtual_host "this is used for RabbitMQ virtual host" $DEFAULT_AMQP_VIRTUAL_HOST $OLD_AMQP_VIRTUAL_HOST
-setEachNewValue $CONFIG_FILE amqp_exchange "this is the RabbitMQ exchange name" $DEFAULT_AMQP_EXCHANGE $OLD_AMQP_EXCHANGE
-setEachNewValue $CONFIG_FILE log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE $OLD_LOG_FILE
-setEachNewValue $CONFIG_FILE logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL $OLD_LOGGING_LEVEL
+    # copy the new config file to the preper location, and rewrite values based on user input
+    cp $SOURCE_CONFIG_FILE $CONFIG_DIRECTORY
+    setEachNewValue $CONFIG_FILE interval "interval is at which the shoal-agent will contact the shoal server" $DEFAULT_INTERVAL $OLD_INTERVAL
+    setEachNewValue $CONFIG_FILE admin_email "admin email is used for contact in case of issues with the shoal-agent or squid" $DEFAULT_ADMIN_EMAIL $OLD_ADMIN_EMAIL
+    setEachNewValue $CONFIG_FILE amqp_server_url "this is the RabbitMQ server ip" $DEFAULT_AMQP_SERVER_URL $OLD_AMQP_SERVER_URL
+    setEachNewValue $CONFIG_FILE amqp_port "this is the port number for amqp connection" $DEFAULT_AMQP_PORT $OLD_AMQP_PORT
+    setEachNewValue $CONFIG_FILE amqp_virtual_host "this is used for RabbitMQ virtual host" $DEFAULT_AMQP_VIRTUAL_HOST $OLD_AMQP_VIRTUAL_HOST
+    setEachNewValue $CONFIG_FILE amqp_exchange "this is the RabbitMQ exchange name" $DEFAULT_AMQP_EXCHANGE $OLD_AMQP_EXCHANGE
+    setEachNewValue $CONFIG_FILE log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE $OLD_LOG_FILE
+    setEachNewValue $CONFIG_FILE logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL $OLD_LOGGING_LEVEL
+fi
 
 if [ ! -z "$(command -v systemctl)" ]; then
     systemctl daemon-reload
