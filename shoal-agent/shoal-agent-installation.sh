@@ -123,6 +123,10 @@ cp "$SOURCE_PATH/shoal-agent.service" /usr/lib/systemd/system/ 2>/dev/null
 
 SOURCE_CONFIG_FILE="$SOURCE_PATH/shoal_agent.conf"
 
+if [ ! -d "$CONFIG_DIRECTORY" ]; then
+    mkdir $CONFIG_DIRECTORY
+fi
+
 while getopts b flag
 do
     case "${flag}" in
@@ -131,9 +135,7 @@ do
 done
 
 if $USE_DEFAULT; then
-    if [ ! -d "$CONFIG_DIRECTORY" ]; then
-        mkdir $CONFIG_DIRECTORY
-    fi
+    # use default config options, copy the config file to the proper location
     cp $SOURCE_CONFIG_FILE $CONFIG_DIRECTORY
 else
     # read default values of config options
@@ -160,7 +162,7 @@ else
     done <<< "$LINES"
 
     if [ -f "$CONFIG_FILE" ]; then
-
+        # read values of config options from existing config file if has one
         OLD_LINES=$(grep -v "^#\|\[" $CONFIG_FILE|sed -r "s/=/ /g")
         while read line
         do
@@ -190,10 +192,6 @@ else
 
     else
         echo "No previous configuration file has been found at $CONFIG_FILE.  We will walk you through the configuration options to set new values."
- 
-        if [ ! -d "$CONFIG_DIRECTORY" ]; then
-            mkdir $CONFIG_DIRECTORY
-        fi
     fi
 
     # copy the new config file to the preper location, and rewrite values based on user input
