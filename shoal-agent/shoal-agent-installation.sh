@@ -8,8 +8,8 @@ service shoal-agent stop 2>/dev/null
 #########################
 USE_DEFAULT=false
 
-SHOAL_PYTHON=($(pip show shoal-agent 2>/dev/null|grep Version))
-SHOAL_PYTHON_THREE=($(pip3 show shoal-agent 2>/dev/null|grep Version))
+SHOAL_PYTHON=($(pip show shoal-agent 2>/dev/null|grep '^Version:'))
+SHOAL_PYTHON_THREE=($(pip3 show shoal-agent 2>/dev/null|grep '^Version:'))
 SHOAL_PYTHON_VERSION=''
 SHOAL_PYTHON_THREE_VERSION=''
 SOURCE_PATH=''
@@ -39,16 +39,10 @@ OLD_ADMIN_EMAIL=''
 ##################################################
 
 compareShoalVersion() {
-    local path
     local first_version=$1
     local second_version=$2
     local lower=$(printf '%s\n' "$first_version" "$second_version"|sort -V|head -n1)    
-    if [ "$lower" == "$first_version" ]; then
-        path=/usr/local/share/shoal-agent
-    else
-        path=/usr/share/shoal-agent
-    fi
-    echo "$path"
+    echo "$lower"
 }
 
 setEachNewValue() {
@@ -102,7 +96,14 @@ if [ ! -z "$SHOAL_PYTHON_THREE" ] && [ ! -z "${SHOAL_PYTHON_THREE[1]}" ]; then
 fi 
 
 if [ ! -z "$SHOAL_PYTHON_VERSION" ] && [ ! -z "$SHOAL_PYTHON_THREE_VERSION" ]; then
-    SOURCE_PATH=$(compareShoalVersion $SHOAL_PYTHON_VERSION $SHOAL_PYTHON_THREE_VERSION)
+    if [ "$SHOAL_PYTHON_VERSION" != "$SHOAL_PYTHON_THREE_VERSION" ]; then
+        lower_version=$(compareShoalVersion $SHOAL_PYTHON_VERSION $SHOAL_PYTHON_THREE_VERSION)
+        if [ "$lower_version" == "$SHOAL_PYTHON_VERSION" ]; then
+            echo "Could not update to a newer version using python2 when there is already a python3 version installed; please remove the python2 version shoal-agent and update the python3 version or remove the python3 version shoal-agent first before executing this install script"
+            exit 0
+        fi
+    fi
+    SOURCE_PATH=/usr/local/share/shoal-agent
 elif [ ! -z "$SHOAL_PYTHON_VERSION" ]; then
     SOURCE_PATH=/usr/share/shoal-agent
 elif [ ! -z "$SHOAL_PYTHON_THREE_VERSION" ]; then
@@ -137,6 +138,8 @@ done
 if $USE_DEFAULT; then
     # use default config options, copy the config file to the proper location
     cp $SOURCE_CONFIG_FILE $CONFIG_DIRECTORY
+    touch /var/log/shoal_agent.log
+    chown shoal:shoal /var/log/shoal_agent.log
 else
     # read default values of config options
     LINES=$(grep -v "^#\|\[" $SOURCE_CONFIG_FILE|sed -r "s/=/ /g")
