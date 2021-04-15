@@ -98,7 +98,7 @@ fi
 if [ ! -z "$SHOAL_PYTHON_VERSION" ] && [ ! -z "$SHOAL_PYTHON_THREE_VERSION" ]; then
     if [ "$SHOAL_PYTHON_VERSION" != "$SHOAL_PYTHON_THREE_VERSION" ]; then
         lower_version=$(compareShoalVersion $SHOAL_PYTHON_VERSION $SHOAL_PYTHON_THREE_VERSION)
-        if [ "$lower_version" == "$SHOAL_PYTHON_VERSION" ]; then
+        if [ "$lower_version" == "$SHOAL_PYTHON_THREE_VERSION" ]; then
             echo "Could not update to a newer version using python2 when there is already a python3 version installed; please remove the python2 version shoal-agent and update the python3 version or remove the python3 version shoal-agent first before executing this install script"
             exit 0
         fi
