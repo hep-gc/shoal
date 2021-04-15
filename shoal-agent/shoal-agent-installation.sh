@@ -17,6 +17,7 @@ SOURCE_CONFIG_FILE=''
 CONFIG_DIRECTORY=/etc/shoal/
 CONFIG_FILE=/etc/shoal/shoal_agent.conf
 CONFIG_FILE_OLD=/etc/shoal/shoal_agent_old.conf
+LOG_FILE=/var/log/shoal_agent.log
 
 DEFAULT_INTERVAL=''
 DEFAULT_AMQP_SERVER_URL=''
@@ -61,9 +62,7 @@ setEachNewValue() {
     read enter_value
     if [ ! -z "$enter_value" ]; then
         if [ "$label" == "log_file" ]; then
-            # create log value and change ownership
-            touch $enter_value
-            chown shoal:shoal $enter_value
+            LOG_FILE=$enter_value
         fi
         if [ "$label" == "admin_email" ]; then
             origin=$"#$label=$default"
@@ -72,12 +71,6 @@ setEachNewValue() {
         fi
         replace=$"$label=$enter_value"
         sed -i "s|$origin|$replace|g" $config_file
-    else
-        if [ "$label" == "log_file" ]; then
-            # create log value and change ownership
-            touch $default
-            chown shoal:shoal $default 
-        fi  
     fi
 
 }
@@ -138,8 +131,6 @@ done
 if $USE_DEFAULT; then
     # use default config options, copy the config file to the proper location
     cp $SOURCE_CONFIG_FILE $CONFIG_DIRECTORY
-    touch /var/log/shoal_agent.log
-    chown shoal:shoal /var/log/shoal_agent.log
 else
     # read default values of config options
     LINES=$(grep -v "^#\|\[" $SOURCE_CONFIG_FILE|sed -r "s/=/ /g")
@@ -208,6 +199,10 @@ else
     setEachNewValue $CONFIG_FILE log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE $OLD_LOG_FILE
     setEachNewValue $CONFIG_FILE logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL $OLD_LOGGING_LEVEL
 fi
+
+# create log file and change ownership
+touch $LOG_FILE
+chown shoal:shoal $LOG_FILE
 
 if [ ! -z "$(command -v systemctl)" ]; then
     systemctl daemon-reload
