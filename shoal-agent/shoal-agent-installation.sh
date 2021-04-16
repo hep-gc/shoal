@@ -161,7 +161,7 @@ if $USE_NOT_DEFAULT; then
         esac
     done <<< "$LINES"
 
-    if [ -f "$CONFIG_FILE_OLD" ]; then
+    if [ -e "$CONFIG_FILE_OLD" ]; then
         # read values of config options from existing config file if has one
         OLD_LINES=$(grep -v "^#\|\[" $CONFIG_FILE_OLD|sed -r "s/=/ /g")
         while read line
