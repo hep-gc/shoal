@@ -6,7 +6,7 @@ service shoal-agent stop 2>/dev/null
 #########################
 # global variables used #
 #########################
-USE_DEFAULT=false
+USE_NOT_DEFAULT=true
 
 SHOAL_PYTHON=($(pip show shoal-agent 2>/dev/null|grep '^Version:'))
 SHOAL_PYTHON_THREE=($(pip3 show shoal-agent 2>/dev/null|grep '^Version:'))
@@ -121,17 +121,23 @@ if [ ! -d "$CONFIG_DIRECTORY" ]; then
     mkdir $CONFIG_DIRECTORY
 fi
 
+# rename the existing config file if has one
+if [ -e "$CONFIG_FILE" ] || [ -L "$CONFIG_FILE" ]; then
+    mv $CONFIG_FILE $CONFIG_FILE_OLD
+    echo "Found an existing config file/symlink at $CONFIG_FILE. It is renamed to $CONFIG_FILE_OLD."
+fi
+
+# copy the new config file to the proper location
+cp $SOURCE_CONFIG_FILE $CONFIG_DIRECTORY
+
 while getopts b flag
 do
     case "${flag}" in
-        b) USE_DEFAULT=true;;
+        b) USE_NOT_DEFAULT=false;;
     esac
 done
 
-if $USE_DEFAULT; then
-    # use default config options, copy the config file to the proper location
-    cp $SOURCE_CONFIG_FILE $CONFIG_DIRECTORY
-else
+if $USE_NOT_DEFAULT; then
     # read default values of config options
     LINES=$(grep -v "^#\|\[" $SOURCE_CONFIG_FILE|sed -r "s/=/ /g")
     while read line
@@ -155,9 +161,9 @@ else
         esac
     done <<< "$LINES"
 
-    if [ -f "$CONFIG_FILE" ]; then
+    if [ -f "$CONFIG_FILE_OLD" ]; then
         # read values of config options from existing config file if has one
-        OLD_LINES=$(grep -v "^#\|\[" $CONFIG_FILE|sed -r "s/=/ /g")
+        OLD_LINES=$(grep -v "^#\|\[" $CONFIG_FILE_OLD|sed -r "s/=/ /g")
         while read line
         do
             line_array=($line)
@@ -180,16 +186,12 @@ else
             esac
         done <<< "$OLD_LINES"
 
-        # rename the existing cofig file
-        mv $CONFIG_FILE $CONFIG_FILE_OLD
-        echo "Found an existing config file at $CONFIG_FILE. It is renamed to $CONFIG_FILE_OLD and its content is used in the following steps. We will walk you through the configuration options and allow you to set the values as you wish."
+        echo "$CONFIG_FILE_OLD content is used in the following steps. We will walk you through the configuration options and allow you to set the values as you wish."
 
     else
-        echo "No previous configuration file has been found at $CONFIG_FILE.  We will walk you through the configuration options to set new values."
+        echo "We will walk you through the configuration options to set values."
     fi
 
-    # copy the new config file to the preper location, and rewrite values based on user input
-    cp $SOURCE_CONFIG_FILE $CONFIG_DIRECTORY
     setEachNewValue $CONFIG_FILE interval "interval is at which the shoal-agent will contact the shoal server" $DEFAULT_INTERVAL $OLD_INTERVAL
     setEachNewValue $CONFIG_FILE admin_email "admin email is used for contact in case of issues with the shoal-agent or squid" $DEFAULT_ADMIN_EMAIL $OLD_ADMIN_EMAIL
     setEachNewValue $CONFIG_FILE amqp_server_url "this is the RabbitMQ server ip" $DEFAULT_AMQP_SERVER_URL $OLD_AMQP_SERVER_URL
