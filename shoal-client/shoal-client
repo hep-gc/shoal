@@ -18,6 +18,7 @@ from multiprocessing import Process, Queue
 import requests
 import time
 import netifaces
+import copy
 try:
     import queue as Q
 except:
@@ -32,7 +33,8 @@ default_http_proxy = config.default_squid_proxy
 local_squid = None
 
 data = None
-avaliable_server_return = {}
+server_available_private = {}
+server_available_public = {}
 server_squids = []
 frontier = False
 numsquids = 2
@@ -197,13 +199,22 @@ def functionalTest(ip, port):
                         testflag = True
             if testflag is False:
                 syslog.syslog(syslog.LOG_ERR, "%s failed verification on %s" % (ip, targeturl))
-                return False
+                return None
         except:
             # note that this would catch any RE errors aswell but they are
             # specified in the config and all fit the pattern.
             syslog.syslog(syslog.LOG_ERR, "%s timeout or proxy error on %s repo" % (ip, targeturl))
-            return False
-    return True
+            return None
+    
+    start_time = time.time()
+    for targeturl in paths:
+        try:
+            file = requests.get(targeturl, proxies=proxies, timeout=2)
+        except Exception as exe:
+            syslog.syslog(syslog.LOG_ERR, "%s timeout or proxy error on %s repo" % (ip, targeturl))
+            return None
+    timer = time.time() - start_time
+    return timer
 
 def getAvailableIp(squid):
     """
@@ -235,9 +246,10 @@ def getAvailableIp(squid):
         local = squid['local']
     except:
         syslog.syslog(syslog.LOG_ERR, "Squid has no local attribute")
-    
+  
     return_squid_ip = None
     test_time_cost = None
+    squid_type = 'public'
     if local and squid_private_ip:
         same_subnet = False
         if client_private_ip:
@@ -245,17 +257,31 @@ def getAvailableIp(squid):
             client_subnet = '.'.join(client_private_ip.split('.')[:2])
             same_subnet = squid_subnet == client_subnet
         if (same_subnet or client_private_ip_not_found):
-            start_time = time.time()
-            if functionalTest(squid_private_ip, squid_port):
-                test_time_cost = time.time() - start_time
-                return_squid_ip = squid_private_ip  
+            test_time_cost = functionalTest(squid_private_ip, squid_port)
+            if test_time_cost:
+                return_squid_ip = squid_private_ip
+                squid_type = 'private'  
     if not return_squid_ip and squid_public_ip:
-        start_time = time.time()
-        if functionalTest(squid_public_ip, squid_port):
-            test_time_cost = time.time() - start_time
+        test_time_cost = functionalTest(squid_public_ip, squid_port)
+        if test_time_cost:
             return_squid_ip = squid_public_ip
-    return {'available_squid_ip': return_squid_ip, 'time_cost': test_time_cost}
-        
+    return {'available_squid_ip': return_squid_ip, 'time_cost': test_time_cost, 'squid_type': squid_type}
+
+def getSortedSquids(squid_dict, current_list, target_num, frontier_format):
+    return_proxy = ''
+    return_squid = copy.deepcopy(current_list)
+    if len(squid_dict.keys()) > 0:
+        for item in sorted(squid_dict.items()):
+            if len(return_squid) < target_num:
+                return_squid.append(item[1][0])
+                if frontier_format:
+                    return_proxy += '(proxyurl=http://%s:%s)' % (item[1][0], item[1][1])
+                else:
+                    return_proxy += 'http://%s:%s;' % (item[1][0], item[1][1])
+            else:
+                break
+    return return_proxy, return_squid    
+
 
 get_args()
 
@@ -323,28 +349,29 @@ if data:
         try:
             if not local_squid or not squid['private_ip'] or squid['private_ip'] != local_squid.split(':')[0]:
                 # test the squid received from shoal server
-                available_ip_with_timer = getAvailableIp(squid)
-                if available_ip_with_timer['available_squid_ip']:
-                    timer = available_ip_with_timer['time_cost']
-                    available_squid_ip = available_ip_with_timer['available_squid_ip']
-                    avaliable_server_return[timer] = (available_squid_ip, squid['squid_port'])
+                available_squid = getAvailableIp(squid)
+                available_squid_ip = available_squid['available_squid_ip']
+                if available_squid_ip:
+                    time_cost = available_squid['time_cost']
+                    if available_squid['squid_type'] == 'private':
+                        server_available_private[time_cost] = (available_squid_ip, squid['squid_port'])
+                    else:
+                        server_available_public[time_cost] = (available_squid_ip, squid['squid_port'])
         except KeyError as e:
             syslog.syslog(
                 syslog.LOG_ERR,
                 "The data returned from '%s' was missing the key: %s. "
                 "Please ensure the server is running the latest version "
                 "of Shoal-Server." % (server, e))
-    if len(avaliable_server_return.keys()) > 0:
-        for item in sorted(avaliable_server_return.items()):
-            if len(server_squids) < numsquids:
-                server_squids.append(item[1][0])
-                if frontier:
-                    best_http_proxy += '(proxyurl=http://%s:%s)' % (item[1][0], item[1][1])
-                else:
-                    best_http_proxy += 'http://%s:%s;' % (item[1][0], item[1][1])
-            else:
-                break
-
+    
+    new_proxy, new_squids = getSortedSquids(server_available_private, server_squids, numsquids, frontier)
+    best_http_proxy += new_proxy
+    server_squids = new_squids
+    
+    new_proxy, new_squids = getSortedSquids(server_available_public, server_squids, numsquids, frontier)
+    best_http_proxy += new_proxy
+    server_squids = new_squids
+    
 # remove duplicate default squid
 default_http_list = default_http_proxy.split(';')
 temp_default_http = ''
