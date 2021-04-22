@@ -1,5 +1,5 @@
 # Shoal Agent README
-# Version: v1.0.0
+# Version: v1.0.1
 
 
 ## Important to know about the configuration
