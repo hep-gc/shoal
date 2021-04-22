@@ -1,6 +1,6 @@
 %define name shoal-agent
-%define version 1.0.0
-%define unmangled_version 1.0.0
+%define version 1.0.1
+%define unmangled_version 1.0.1
 %define release 1
 %define group_shoal_num %(grep -c "^shoal" /etc/group)
 %define user_shoal_num %(grep -c "^shoal" /etc/passwd)
