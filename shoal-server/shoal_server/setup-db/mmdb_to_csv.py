@@ -11,7 +11,7 @@ import sys
 from ipaddress import IPv4Network, IPv6Network
 
 """Input the file and path names"""
-path = '/opt/shoal/shoal-server/shoal_server/setup-db/'
+path = '/tmp/'
 input_file = sys.argv[1]
 out_ipv4 = path + 'ipv4.csv'
 out_ipv6 = path + 'ipv6.csv'
