@@ -1,5 +1,5 @@
 # Shoal Server README
-# Version: v1.0.X
+# Version: v1.1.0
 ## Services
 **Shoal Server** provides two services that can be utilized by clients.
 
