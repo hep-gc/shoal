@@ -11,6 +11,7 @@ from urllib.request import urlretrieve
 import requests
 import pygeoip
 import geoip2.database
+import shoal_server.sqlgeoip as sqlgeoip
 import web
 
 import socket
@@ -21,6 +22,8 @@ import shoal_server.config as config
 GEOLITE_DB = os.path.join(config.geolitecity_path, "GeoLiteCity.mmdb")
 GEOLITE_URL = config.geolitecity_url
 GEOLITE_UPDATE = config.geolitecity_update
+
+SQL_DB =  "geoip"
 
 logger = logging.getLogger('shoal_server')
 logger.setLevel(config.logging_level)
@@ -38,8 +41,16 @@ def get_geolocation(ip):
         logger.error(exc)
         return None
     """
+    """  OLD MMDB IMPLEMENTATION
     try:
         reader = geoip2.database.Reader(GEOLITE_DB)
+        return reader.city(ip)
+    except Exception as exc:
+        logger.exception(exc)
+        return None
+    """
+    try:
+        reader = sqlgeoip.Reader(SQL_DB)
         return reader.city(ip)
     except Exception as exc:
         logger.exception(exc)
