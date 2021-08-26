@@ -4,7 +4,8 @@ set -e
 BASEDIR=$(dirname "$0")/
 TEMP=/tmp/
 
-curl "https://download.db-ip.com/free/dbip-city-lite-2021-06.mmdb.gz" | gunzip > ${TEMP}city.mmdb
+name=$(curl https://db-ip.com/db/download/ip-to-city-lite|grep mmdb\.gz|cut -d " " -f2|cut -d"'" -f2)
+curl "$name" | gunzip > ${TEMP}city.mmdb
 echo "Database download complete"
 
 echo "Converting mmdb to separate IPv4 and IPv6 csv files..."
