@@ -25,10 +25,15 @@ $$(document).ready(function () {
             }
             $$(this).siblings().removeClass('asc selected');
             $$(this).siblings().removeClass('desc selected');
+            var title = $$(this).text().toUpperCase();
             var arrData = $$('table').find('tbody>tr.squid-list:has(td)').get();
             arrData.sort(function (a, b) {
                 var val1 = $$(a).children('td').eq(col).text().toUpperCase();
                 var val2 = $$(b).children('td').eq(col).text().toUpperCase();
+                if (title == 'BYTES OUT') {
+                    val1 = val1.split(' ')[0];
+                    val2 = val2.split(' ')[0];
+                }
                 if ($$.isNumeric(val1) && $$.isNumeric(val2))
                     return sortOrder == 1 ? val1 - val2 : val2 - val1;
                 else
