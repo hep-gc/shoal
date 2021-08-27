@@ -11,8 +11,33 @@ $$(document).ready(function () {
         });
     });
 });
+
 $$(document).ready(function () {
-   $$('th').each(function (col) {
+    $$.fn.compareNumberList = function(list1, list2, order) {
+        var length2 = list2.length;
+        var flag = order == 1 ? -1 : 1;
+	for(let i = 0; i < list1.length; i++) {
+	    if (i < length2) {
+	        var n = list1[i];
+	        var m = list2[i];
+		if ((m !== 0 && !m) || n - m > 0) {
+		    flag = order == 1 ? 1 : -1;
+	 	    break;
+	        }
+	        if ((n !== 0 && !n) || n - m < 0) {
+		    flag = order == 1 ? -1 : 1;
+	            break;
+		}
+	    }
+	}
+	return flag;
+    }
+    $$.fn.getNumberList = function(data, mark) {
+        var data_list = data.split(mark);
+        data_list = data_list.map(d => parseFloat(d));
+        return data_list;
+    };
+    $$('th').each(function (col) {
         $$(this).click(function () {
             if ($$(this).is('.asc')) {
                 $$(this).removeClass('asc');
@@ -34,10 +59,27 @@ $$(document).ready(function () {
                     val1 = val1.split(' ')[0];
                     val2 = val2.split(' ')[0];
                 }
-                if ($$.isNumeric(val1) && $$.isNumeric(val2))
-                    return sortOrder == 1 ? val1 - val2 : val2 - val1;
-                else
+		if (title == 'LAST RECEIVED') {
+                    val1 = val1.slice(0,-1);
+                    val2 = val2.slice(0,-1);
+                }
+                if (title == 'PUBLIC IP' || title == 'PRIVATE IP') {
+                    val1 = $$.fn.getNumberList(val1, '.');
+		    val2 = $$.fn.getNumberList(val2, '.');
+		}
+		if (title == 'ALIVE') {
+		    val1 = $$.fn.getNumberList(val1, /[a-zA-Z]/).slice(0,-1);
+		    val2 = $$.fn.getNumberList(val2, /[a-zA-Z]/).slice(0,-1);
+		}
+                if ($$.isNumeric(val1) && $$.isNumeric(val2)) {
+                    return sortOrder == 1 ? parseFloat(val1) - parseFloat(val2) : parseFloat(val2) - parseFloat(val1);
+                }
+		else if ($$.isArray(val1) && $$.isArray(val2)) {
+		    return $$.fn.compareNumberList(val1, val2, sortOrder);
+		}
+		else {
                     return (val1 < val2) ? -sortOrder : (val1 > val2) ? sortOrder : 0;
+		}
             });
             $$.each(arrData, function (index, row) {
                 $$('tbody').append(row);
