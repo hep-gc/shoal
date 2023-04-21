@@ -19,6 +19,7 @@ import requests
 import time
 import netifaces
 import copy
+import socket
 try:
     import queue as Q
 except:
@@ -317,13 +318,17 @@ try:
     # data = json.loads(f.read())
     data = parseServerData(f.read())
     syslog.syslog(syslog.LOG_DEBUG, "Got data from %s" % server)
-except (UrlError, ValueError) as e:
+except (UrlError, ValueError, socket.timeout) as e:
     # This is where the client now exits if it can't reach shoal, might be worth
     # refactoring instead of injecting code here to reuse the proceeding code.
     #checkEnvVariable()
     #checkConfig()
     syslog.syslog(syslog.LOG_ERR, "Unable to reach shoal-server, reverting to defaults")
     #sys.exit(1)
+except Exception as ex:
+    syslog.syslog(syslog.LOG_ERR, "Encountered unknown exception during request to shoal-server:")
+    syslog.syslog(syslog.LOG_ERR, "%s" % ex)
+    syslog.syslog(syslog.LOG_ERR, "Continuing with defaults...")    
 
 
 if not frontier:
@@ -432,6 +437,12 @@ else:
         if errors:
             syslog.syslog(syslog.LOG_ERR, errors)
         if output:
+            #in some versions output is returned as a byte string instead of a normal string
+            # this check will make sure it's an actual string before attempting to log it
+            try:
+                output = output.decode()
+            except (UnicodeDecodeError, AttributeError):
+                pass
             syslog.syslog(syslog.LOG_DEBUG, output)
         if p.returncode:
             syslog.syslog(
