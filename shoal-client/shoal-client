@@ -43,7 +43,8 @@ dump = False
 best_http_proxy = ''
 env_proxy = ''
 unicode = str
-timeout = 90
+broadcast_timeout = 90
+shoal_server_timeout = 30
 paths = config.paths
 
 def get_local_squid(q, t):
@@ -314,7 +315,7 @@ try:
         server_url = server + "%s/" % (numsquids + 5)
     else:
         server_url = server + "/%s/" % (numsquids + 5)
-    f = opener.open(server_url, timeout=5)
+    f = opener.open(server_url, timeout=shoal_server_timeout)
     # data = json.loads(f.read())
     data = parseServerData(f.read())
     syslog.syslog(syslog.LOG_DEBUG, "Got data from %s" % server)
@@ -333,10 +334,10 @@ except Exception as ex:
 
 if not frontier:
     q = Queue()
-    p = Process(target=get_local_squid, args=(q,timeout))
+    p = Process(target=get_local_squid, args=(q,broadcast_timeout))
     p.start()
     try:
-       local_squid = q.get(block=True, timeout=timeout)
+       local_squid = q.get(block=True, timeout=broadcast_timeout)
     except Q.Empty:
        #continue
        #print("queue timeout !")
