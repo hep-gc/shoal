@@ -76,6 +76,7 @@ def get_args():
     global dump
     global frontier
     global numsquids
+    global skip_broadcast
 
     p = OptionParser()
     p.add_option("-s", "--server", action="store", type="string", dest="server",
@@ -90,6 +91,9 @@ def get_args():
     p.add_option("-n", "--squids", action="store", type="int", dest="numsquids",
                  help="Specifies the number of squids to retrieve" +
                  "from the shoal-server (default is 2).")
+    p.add_option("-sb", "--skip-broadcast", action="store_true",  dest="skip_broadcast",
+                 help="Tells the shoal client to skip waiting for a local squid broadcast" +
+                 "signal to avoid a fruitless timeout.")
     (options, args) = p.parse_args()
 
     if options.server:
@@ -100,6 +104,8 @@ def get_args():
         frontier = True
     if options.numsquids:
         numsquids = options.numsquids
+    if options.skip_broadcast:
+        skip_broadcast = True
 
 def convertServerData(val):
     """
@@ -436,6 +442,10 @@ else:
         p = Popen(["cvmfs_talk", "proxy", "set", cvmfs_http_proxy], stdout=PIPE, stderr=PIPE)
         output, errors = p.communicate()
         if errors:
+            try:
+                errors = errors.decode()
+            except (UnicodeDecodeError, AttributeError):
+                pass
             syslog.syslog(syslog.LOG_ERR, errors)
         if output:
             #in some versions output is returned as a byte string instead of a normal string
