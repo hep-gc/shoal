@@ -338,7 +338,7 @@ except Exception as ex:
     syslog.syslog(syslog.LOG_ERR, "Continuing with defaults...")    
 
 
-if not frontier:
+if not frontier and not skip_broadcast:
     q = Queue()
     p = Process(target=get_local_squid, args=(q,broadcast_timeout))
     p.start()
