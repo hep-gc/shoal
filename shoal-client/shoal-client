@@ -91,7 +91,7 @@ def get_args():
     p.add_option("-n", "--squids", action="store", type="int", dest="numsquids",
                  help="Specifies the number of squids to retrieve" +
                  "from the shoal-server (default is 2).")
-    p.add_option("-sb", "--skip-broadcast", action="store_true",  dest="skip_broadcast",
+    p.add_option("-k", "--skip-broadcast", action="store_true",  dest="skip_broadcast",
                  help="Tells the shoal client to skip waiting for a local squid broadcast" +
                  "signal to avoid a fruitless timeout.")
     (options, args) = p.parse_args()
