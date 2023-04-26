@@ -40,6 +40,7 @@ server_squids = []
 frontier = False
 numsquids = 2
 dump = False
+skip_broadcast = False
 best_http_proxy = ''
 env_proxy = ''
 unicode = str
