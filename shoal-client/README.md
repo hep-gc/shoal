@@ -21,7 +21,7 @@ root permissions.
 
 ### Recommended Instalation Method: Use pip
 
-1. `pip install shoal-client`
+1. `sudo python3 -m pip install shoal-client` or, if using an old python2 version of pip: `pip install shoal-client`
 2. Copy the configuration file to proper location
     ```
     # For python3
