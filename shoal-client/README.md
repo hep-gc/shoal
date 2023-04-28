@@ -1,5 +1,4 @@
 # Shoal Client README
-# Version: v1.0.1
 
 shoal-client will configure cvmfs to use the closest squid server to you by contacting the shoal server
 and using cvmfs-talk to update the active proxy configuration.
@@ -58,8 +57,9 @@ Example output when running `shoal-client --frontier`:
 | --- | --- |
 | -d or --dump | Print closest proxies to terminal for testing or debugging. |
 | -s `hostname` or --server `hostname`| Specifies URL of the desired shoal-server to contact. Takes precedence over the option in config file. |
-| -n `int` or --squids `int` | Specifies the number of squids to retrieve from the shoal-server |
-| -f or --frontier| Outputs a string appropriate for use as the frontier proxy enviroment variable instead of using cvmfs-talk to update the active proxy configuration|
+| -n `int` or --squids `int` | Specifies the number of squids to retrieve from the shoal-server. |
+| -f or --frontier | Outputs a string appropriate for use as the frontier proxy enviroment variable instead of using cvmfs-talk to update the active proxy configuration. |
+| -k or --skip-broadcast | Skips waiting to hear from a shoal-agent on the local network and goes directly to the shoal server for a squid. Only reccomended when you know there is no squid//agent on the local network. |
 
 Shoal client now uses the cvmfs_talk protocol. To view the list of returned squids issue:
 
