@@ -400,7 +400,7 @@ if frontier:
     new_defaults = ''
     tmpproxies = default_http_proxy.split(';')
     for proxy in tmpproxies:
-        if proxy != 'DIRECT':
+        if proxy != 'DIRECT' and proxy != "":
             new_defaults += '(proxyurl=%s)' % proxy
     default_http_proxy = new_defaults
 
