@@ -417,7 +417,11 @@ if frontier:
     default_http_proxy = new_defaults
 
 if local_squid:
-    best_http_proxy = "http://" + local_squid + ";" + best_http_proxy
+    if frontier:
+        best_http_proxy = "(proxyurl=http://" + local_squid + ")" + best_http_proxy
+    else:
+        best_http_proxy = "http://" + local_squid + ";" + best_http_proxy
+
 cvmfs_http_proxy = "\"" + best_http_proxy + default_http_proxy + "\""
 syslog.syslog(syslog.LOG_DEBUG, "Data parsing complete.")
 
