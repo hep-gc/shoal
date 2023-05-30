@@ -47,6 +47,7 @@ unicode = str
 broadcast_timeout = 90
 shoal_server_timeout = 30
 paths = config.paths
+force_server = False
 
 def get_local_squid(q, t):
     PORT = 50000
@@ -78,6 +79,7 @@ def get_args():
     global frontier
     global numsquids
     global skip_broadcast
+    global force_server
 
     p = OptionParser()
     p.add_option("-s", "--server", action="store", type="string", dest="server",
@@ -95,6 +97,9 @@ def get_args():
     p.add_option("-k", "--skip-broadcast", action="store_true",  dest="skip_broadcast",
                  help="Tells the shoal client to skip waiting for a local squid broadcast" +
                  "signal to avoid a fruitless timeout.")
+    p.add_option("-o", "--force-server", action="store_true",  dest="force_server",
+                 help="Forces the shoal client to contact the shoal server for additional squids" +
+                 "even if a local one is found via broadcast.")
     (options, args) = p.parse_args()
 
     if options.server:
@@ -312,34 +317,8 @@ try:
 except KeyError as e:
     syslog.syslog(syslog.LOG_ERR, "No HTTP_PROXY enviroment variable found")
 
-## read server data (if it can be read) into a dictionary called data
-try:
-    #if there is a bad proxy set we will never reach shoal-server
-    #this goes direct to avoid any bad configuration
-    proxy_handler = UrlRequest.ProxyHandler({})
-    opener = UrlRequest.build_opener(proxy_handler)
-    if server[-1] == "/":
-        server_url = server + "%s/" % (numsquids + 5)
-    else:
-        server_url = server + "/%s/" % (numsquids + 5)
-    f = opener.open(server_url, timeout=shoal_server_timeout)
-    # data = json.loads(f.read())
-    data = parseServerData(f.read())
-    syslog.syslog(syslog.LOG_DEBUG, "Got data from %s" % server)
-except (UrlError, ValueError, socket.timeout) as e:
-    # This is where the client now exits if it can't reach shoal, might be worth
-    # refactoring instead of injecting code here to reuse the proceeding code.
-    #checkEnvVariable()
-    #checkConfig()
-    syslog.syslog(syslog.LOG_ERR, "Unable to reach shoal-server, reverting to defaults")
-    #sys.exit(1)
-except Exception as ex:
-    syslog.syslog(syslog.LOG_ERR, "Encountered unknown exception during request to shoal-server:")
-    syslog.syslog(syslog.LOG_ERR, "%s" % ex)
-    syslog.syslog(syslog.LOG_ERR, "Continuing with defaults...")    
-
-
-if not frontier and not skip_broadcast:
+# Listen on local network for a local squid agent broadcast
+if not skip_broadcast:
     q = Queue()
     p = Process(target=get_local_squid, args=(q,broadcast_timeout))
     p.start()
@@ -350,6 +329,39 @@ if not frontier and not skip_broadcast:
        #print("queue timeout !")
        pass
     p.join()
+
+
+## read server data (if it can be read) into a dictionary called data
+# by default the server is only contacted if the force server flag is set or
+# no squid was found via local broadcast
+if local_squid is None or force_server:
+    try:
+        #if there is a bad proxy set we will never reach shoal-server
+        #this goes direct to avoid any bad configuration
+        proxy_handler = UrlRequest.ProxyHandler({})
+        opener = UrlRequest.build_opener(proxy_handler)
+        if server[-1] == "/":
+            server_url = server + "%s/" % (numsquids + 5)
+        else:
+            server_url = server + "/%s/" % (numsquids + 5)
+        f = opener.open(server_url, timeout=shoal_server_timeout)
+        # data = json.loads(f.read())
+        data = parseServerData(f.read())
+        syslog.syslog(syslog.LOG_DEBUG, "Got data from %s" % server)
+    except (UrlError, ValueError, socket.timeout) as e:
+        # This is where the client now exits if it can't reach shoal, might be worth
+        # refactoring instead of injecting code here to reuse the proceeding code.
+        #checkEnvVariable()
+        #checkConfig()
+        syslog.syslog(syslog.LOG_ERR, "Unable to reach shoal-server, reverting to defaults")
+        #sys.exit(1)
+    except Exception as ex:
+        syslog.syslog(syslog.LOG_ERR, "Encountered unknown exception during request to shoal-server:")
+        syslog.syslog(syslog.LOG_ERR, "%s" % ex)
+        syslog.syslog(syslog.LOG_ERR, "Continuing with defaults...")    
+
+
+
 
 # If the shoal_server was reachable
 ## iterate through the data dict and use all hostname and squid_port keys
