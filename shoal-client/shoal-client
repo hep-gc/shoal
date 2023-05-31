@@ -112,6 +112,8 @@ def get_args():
         numsquids = options.numsquids
     if options.skip_broadcast:
         skip_broadcast = True
+    if options.force_server:
+        force_server = True
 
 def convertServerData(val):
     """
