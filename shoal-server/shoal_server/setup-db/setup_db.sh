@@ -4,7 +4,7 @@ set -e
 BASEDIR=$(dirname "$0")/
 TEMP=/tmp/
 
-name=$(curl https://db-ip.com/db/download/ip-to-city-lite|grep mmdb\.gz|cut -d"'" -f2)
+name=$(curl https://db-ip.com/db/download/ip-to-city-lite|grep mmdb\.gz|cut -d"\"" -f2)
 curl "$name" | gunzip > ${TEMP}city.mmdb
 echo "Database download complete"
 
