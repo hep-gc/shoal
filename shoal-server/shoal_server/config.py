@@ -29,6 +29,8 @@ amqp_port       = 5672
 amqp_virtual_host = '/'
 amqp_exchange = 'shoal'
 amqp_exchange_type = 'topic'
+amqp_username = 'shoal'
+amqp_password = 'shoal'
 use_ssl = False
 amqp_ca_cert     = ''
 amqp_client_cert = ''
@@ -191,6 +193,12 @@ if config_file.has_option("rabbitmq", "amqp_exchange"):
 if config_file.has_option("rabbitmq", "amqp_exchange_type"):
     amqp_exchange_type = config_file.get("rabbitmq", "amqp_exchange_type")
 
+if config_file.has_option("rabbitmq", "amqp_username"):
+    amqp_username = config_file.get("rabbitmq", "amqp_username")
+    
+if config_file.has_option("rabbitmq", "amqp_password"):
+    amqp_password = config_file.get("rabbitmq", "amqp_password")
+    
 if config_file.has_option("rabbitmq", "use_ssl") and config_file.getboolean("rabbitmq", "use_ssl"):
     try:
         use_ssl = True

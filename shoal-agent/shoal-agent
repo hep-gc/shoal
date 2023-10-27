@@ -78,7 +78,7 @@ def SIGTERM_handler(signal, frame):
     logging.info("shoal-agent exiting")
     sys.exit(0)
 
-def amqp_send(data, topics=['info']):
+def amqp_send(data, topics=['#']):
 
     # amqp_send sends the passed in data to the rabbitMQ exchange with a routing key that is
     # a concatenation of all items in topics separated by periods This method on each call
@@ -87,12 +87,14 @@ def amqp_send(data, topics=['info']):
 
     routing_key = ''.join(topics)
     logging.info('AMQP routing key: {0}'.format(routing_key))
-
+    credentials = pika.PlainCredentials(config.amqp_username, config.amqp_password)
+    
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(
             host=config.amqp_server_url,
-            port=config.amqp_port,)
-        ,)
+            port=config.amqp_port,
+            credentials=credentials)
+        )
     channel = connection.channel()
     channel.basic_publish(exchange=config.amqp_exchange,
                           routing_key=routing_key,

@@ -264,6 +264,7 @@ class RabbitMQConsumer(Thread):
                     pika.ConnectionParameters(
                         host=config.amqp_server_url,
                         port=config.amqp_port,
+                        credentials=pika.PlainCredentials(config.amqp_username, config.amqp_password),
                         #ssl=config.use_ssl,
                         ssl_options=sslOptions
                         ),
