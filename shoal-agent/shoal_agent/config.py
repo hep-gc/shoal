@@ -171,6 +171,9 @@ if config_file.has_option("general", "interval"):
 if config_file.has_option("general", "cloud"):
     cloud = config_file.get("general", "cloud")
 
+if config_file.has_option("general", "external_ip"):
+    external_ip = config_file.get("general", "external_ip")
+
 if config_file.has_option("logging", "log_file"):
     log_file = config_file.get("logging", "log_file")
 
