@@ -78,7 +78,7 @@ def SIGTERM_handler(signal, frame):
     logging.info("shoal-agent exiting")
     sys.exit(0)
 
-def amqp_send(data, topics=['#']):
+def amqp_send(data, topics=['info']):
 
     # amqp_send sends the passed in data to the rabbitMQ exchange with a routing key that is
     # a concatenation of all items in topics separated by periods This method on each call
