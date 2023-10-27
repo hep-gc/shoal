@@ -260,16 +260,22 @@ class RabbitMQConsumer(Thread):
         # will retry a number of times before passing the exception up
         while True:
             try:
-                connection = pika.SelectConnection(
-                    pika.ConnectionParameters(
+                if config.amqp_username == '':
+                    parameters = pika.ConnectionParameters(
+                        host=config.amqp_server_url,
+                        port=config.amqp_port,
+                        #ssl=config.use_ssl,
+                        ssl_options=sslOptions
+                        )
+                else:
+                    parameters = pika.ConnectionParameters(
                         host=config.amqp_server_url,
                         port=config.amqp_port,
                         credentials=pika.PlainCredentials(config.amqp_username, config.amqp_password),
                         #ssl=config.use_ssl,
                         ssl_options=sslOptions
-                        ),
-                    self.on_connection_open)
-                    #stop_ioloop_on_close=False)
+                        )
+                connection = pika.SelectConnection(parameters, self.on_connection_open) #stop_ioloop_on_close=False)
                 return connection
             except pika.exceptions.AMQPConnectionError as exc:
                 failedConnectionAttempts += 1

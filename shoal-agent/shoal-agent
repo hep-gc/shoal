@@ -87,14 +87,20 @@ def amqp_send(data, topics=['info']):
 
     routing_key = ''.join(topics)
     logging.info('AMQP routing key: {0}'.format(routing_key))
-    credentials = pika.PlainCredentials(config.amqp_username, config.amqp_password)
     
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(
+    if config.amqp_username == '':
+        parameters = pika.ConnectionParameters(
             host=config.amqp_server_url,
             port=config.amqp_port,
-            credentials=credentials)
         )
+    else: 
+        parameters = pika.ConnectionParameters(
+            host=config.amqp_server_url,
+            port=config.amqp_port,
+            credentials=pika.PlainCredentials(config.amqp_username, config.amqp_password)
+        )
+    
+    connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     channel.basic_publish(exchange=config.amqp_exchange,
                           routing_key=routing_key,
