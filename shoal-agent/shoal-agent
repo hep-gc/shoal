@@ -88,7 +88,7 @@ def amqp_send(data, topics=['info']):
     routing_key = ''.join(topics)
     logging.info('AMQP routing key: {0}'.format(routing_key))
     
-    if config.amqp_username == '':
+    if not config.use_credentials:
         parameters = pika.ConnectionParameters(
             host=config.amqp_server_url,
             port=config.amqp_port,

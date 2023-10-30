@@ -14,15 +14,15 @@ rm ${TEMP}city.mmdb
 echo "MaxMind database converted to CSV"
 
 echo "Creating SQL database..."
-mariadb -u root --password= -e "drop database if exists geoip; create database geoip;"
-mariadb -u root --password= geoip < ${BASEDIR}geodata.sql
+mysql -u root --password= -e "drop database if exists geoip; create database geoip;"
+mysql -u root --password= geoip < ${BASEDIR}geodata.sql
 rm ${TEMP}ipv4.csv
 rm ${TEMP}ipv6.csv
 echo "SQL database created"
 
 echo "Adding a shoal user..."
-mariadb -u root --password= --database=geoip -e "create user 'shoal'@'localhost'; grant all privileges on geoip.* to 'shoal'@'localhost';"
-mariadb -u root --password= geoip < ${BASEDIR}geodata_updates.sql
+mysql -u root --password= --database=geoip -e "create user 'shoal'@'localhost'; grant all privileges on geoip.* to 'shoal'@'localhost';"
+mysql -u root --password= geoip < ${BASEDIR}geodata_updates.sql
 echo "Updated MySQL data entires and created shoal user"
 
 echo "Done"

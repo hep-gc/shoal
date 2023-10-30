@@ -260,7 +260,7 @@ class RabbitMQConsumer(Thread):
         # will retry a number of times before passing the exception up
         while True:
             try:
-                if config.amqp_username == '':
+                if not config.use_credentials:
                     parameters = pika.ConnectionParameters(
                         host=config.amqp_server_url,
                         port=config.amqp_port,

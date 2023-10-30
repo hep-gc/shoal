@@ -27,8 +27,6 @@ DEFAULT_AMQP_EXCHANGE=''
 DEFAULT_LOG_FILE=''
 DEFAULT_LOGGING_LEVEL=''
 DEFAULT_ADMIN_EMAIL=root@localhost
-DEFAULT_AMQP_USERNAME=''
-DEFAULT_AMQP_PASSWORD=''
 
 OLD_INTERVAL=''
 OLD_AMQP_SERVER_URL=''
@@ -38,8 +36,6 @@ OLD_AMQP_EXCHANGE=''
 OLD_LOG_FILE=''
 OLD_LOGGING_LEVEL=''
 OLD_ADMIN_EMAIL=''
-OLD_AMQP_USERNAME=''
-OLD_AMQP_PASSWORD=''
 
 ##################################################
 
@@ -158,10 +154,6 @@ if $USE_NOT_DEFAULT; then
             ;;
             "amqp_exchange") DEFAULT_AMQP_EXCHANGE=${line_array[1]}
             ;;
-            "amqp_username") DEFAULT_AMQP_USERNAME=${line_array[1]}
-            ;;
-            "amqp_password") DEFAULT_AMQP_PASSWORD=${line_array[1]}
-            ;;
             "log_file") DEFAULT_LOG_FILE=${line_array[1]}
             ;;
             "logging_level") DEFAULT_LOGGING_LEVEL=${line_array[1]}
@@ -186,10 +178,6 @@ if $USE_NOT_DEFAULT; then
                 ;;
                 "amqp_exchange") OLD_AMQP_EXCHANGE=${line_array[1]}
                 ;;
-                "amqp_username") OLD_AMQP_USERNAME=${line_array[1]}
-                ;;
-                "amqp_password") OLD_AMQP_PASSWORD=${line_array[1]}
-                ;;
                 "log_file") OLD_LOG_FILE=${line_array[1]}
                 ;;
                 "logging_level") OLD_LOGGING_LEVEL=${line_array[1]}
@@ -210,8 +198,6 @@ if $USE_NOT_DEFAULT; then
     setEachNewValue $CONFIG_FILE amqp_port "this is the port number for amqp connection" $DEFAULT_AMQP_PORT $OLD_AMQP_PORT
     setEachNewValue $CONFIG_FILE amqp_virtual_host "this is used for RabbitMQ virtual host" $DEFAULT_AMQP_VIRTUAL_HOST $OLD_AMQP_VIRTUAL_HOST
     setEachNewValue $CONFIG_FILE amqp_exchange "this is the RabbitMQ exchange name" $DEFAULT_AMQP_EXCHANGE $OLD_AMQP_EXCHANGE
-    setEachNewValue $CONFIG_FILE amqp_username "this is the RabbitMQ username" $DEFAULT_AMQP_USERNAME $OLD_AMQP_USERNAME
-    setEachNewValue $CONFIG_FILE amqp_password "this is the RabbitMQ password" $DEFAULT_AMQP_PASSWORD $OLD_AMQP_PASSWORD
     setEachNewValue $CONFIG_FILE log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE $OLD_LOG_FILE
     setEachNewValue $CONFIG_FILE logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL $OLD_LOGGING_LEVEL
 fi
