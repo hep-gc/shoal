@@ -117,11 +117,11 @@ def get_load_data(interface):
         # get kilobytes
         return (tx2 - tx1) / 1024
     except IOError:
-        logging.error("Path '{0}' does not exist. Please change NIC to monitor in configuration file.".format(path))
-        sys.exit(1)
+        logging.warning("Path '{0}' does not exist. Please change NIC to monitor in configuration file.".format(path))
     except Exception as exc:
         logging.error(exc)
-        sys.exit(1)
+    logging.warning("Unable to read traffic on interface defaulting to 0.")
+    return 0
 
 def get_ip_addresses():
     """
