@@ -6,7 +6,7 @@ class Reader:
     def __init__(self, db_name):
         mydb = mysql.connector.connect(
             host="localhost",
-            user="root",
+            user="shoal",
             password="",
             database=db_name
         )

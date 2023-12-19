@@ -26,6 +26,9 @@ amqp_server_url = 'localhost'
 amqp_port = 5672
 amqp_virtual_host = '/'
 amqp_exchange = 'shoal'
+use_credentials = False
+amqp_username = ''
+amqp_password = ''
 use_ssl = False
 amqp_ca_cert = ''
 amqp_client_cert = ''
@@ -159,6 +162,11 @@ if config_file.has_option("rabbitmq", "amqp_virtual_host"):
 
 if config_file.has_option("rabbitmq", "amqp_exchange"):
     amqp_exchange = config_file.get("rabbitmq", "amqp_exchange")
+
+if config_file.has_option("rabbitmq", "use_credentials") and config_file.getboolean("rabbitmq", "use_credentials"):
+    use_credentials = True
+    amqp_username = config_file.get("rabbitmq", "amqp_username")
+    amqp_password = config_file.get("rabbitmq", "amqp_password")
 
 if config_file.has_option("general", "interval"):
     try:
