@@ -32,7 +32,7 @@ rm ${TEMP}ipv6.csv
 echo "SQL database created"
 
 echo "Adding a shoal user..."
-mysql -u root --password= --database=geoip -e "create user 'shoal'@'localhost'; grant all privileges on geoip.* to 'shoal'@'localhost';"
+mysql -u root --password= --database=geoip -e "create user if not exists 'shoal'@'localhost'; grant all privileges on geoip.* to 'shoal'@'localhost';"
 mysql -u root --password= geoip < ${BASEDIR}geodata_updates.sql
 echo "Updated MySQL data entires and created shoal user"
 
