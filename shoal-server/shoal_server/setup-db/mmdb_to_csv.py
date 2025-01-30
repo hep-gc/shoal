@@ -3,6 +3,10 @@
 Convert a mmdb file into two csv files: ipv4.csv and ipv6.csv
 """
 
+"""
+File currently not working needs fix in relation to _start_node attribute of reader from mmdb no longer existing
+"""
+
 import maxminddb
 import copy
 import pandas as pd
@@ -17,29 +21,28 @@ out_ipv4 = path + 'ipv4.csv'
 out_ipv6 = path + 'ipv6.csv'
 
 def iterable(self):
-    
-    if self._metadata.ip_version == 4:
-        start_node = self._start_node(32)
-        start_network = IPv4Network((0, 0))
-    else:
-        start_node = self._start_node(128)
-        start_network = IPv6Network((0, 0))
+	if self.metadata().ip_version == 4:
+		start_node = self._start_node(32)
+		start_network = IPv4Network((0, 0))
+	else:
+		start_node = self._start_node(128)
+		start_network = IPv6Network((0, 0))
 
-    search_nodes = [(start_node, start_network)]
-    while search_nodes:
-        node, network = search_nodes.pop()
+	search_nodes = [(start_node, start_network)]
+	while search_nodes:
+		node, network = search_nodes.pop()
 
-        if network.version == 6:
-            naddr = network.network_address
-            if naddr.ipv4_mapped or naddr.sixtofour:
-                # skip IPv4-Mapped IPv6 and 6to4 mapped addresses, as these are
-                # already included in the IPv4 part of the tree below
-                continue
-            elif int(naddr) < 2 ** 32 and network.prefixlen == 96:
-                # once in the IPv4 part of the tree, switch to IPv4Network
-                ipnum = int(naddr)
-                mask = network.prefixlen - 128 + 32
-                network = IPv4Network((ipnum, mask))
+		if network.version == 6:
+			naddr = network.network_address
+			if naddr.ipv4_mapped or naddr.sixtofour:
+				# skip IPv4-Mapped IPv6 and 6to4 mapped addresses, as these are
+				# already included in the IPv4 part of the tree below
+				continue
+			elif int(naddr) < 2 ** 32 and network.prefixlen == 96:
+				# once in the IPv4 part of the tree, switch to IPv4Network
+				ipnum = int(naddr)
+				mask = network.prefixlen - 128 + 32
+				network = IPv4Network((ipnum, mask))
         
         
         subnets = list(network.subnets())
