@@ -3,6 +3,10 @@
 Convert a mmdb file into two csv files: ipv4.csv and ipv6.csv
 """
 
+"""
+File currently not working needs fix in relation to _start_node attribute of reader from mmdb no longer existing
+"""
+
 import maxminddb
 import copy
 import pandas as pd
