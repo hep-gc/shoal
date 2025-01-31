@@ -16,52 +16,6 @@ input_file = sys.argv[1]
 out_ipv4 = path + 'ipv4.csv'
 out_ipv6 = path + 'ipv6.csv'
 
-def iterable(self):
-    
-    if self._metadata.ip_version == 4:
-        start_node = self._start_node(32)
-        start_network = IPv4Network((0, 0))
-    else:
-        start_node = self._start_node(128)
-        start_network = IPv6Network((0, 0))
-
-    search_nodes = [(start_node, start_network)]
-    while search_nodes:
-        node, network = search_nodes.pop()
-
-        if network.version == 6:
-            naddr = network.network_address
-            if naddr.ipv4_mapped or naddr.sixtofour:
-                # skip IPv4-Mapped IPv6 and 6to4 mapped addresses, as these are
-                # already included in the IPv4 part of the tree below
-                continue
-            elif int(naddr) < 2 ** 32 and network.prefixlen == 96:
-                # once in the IPv4 part of the tree, switch to IPv4Network
-                ipnum = int(naddr)
-                mask = network.prefixlen - 128 + 32
-                network = IPv4Network((ipnum, mask))
-        
-        
-        subnets = list(network.subnets())
-        for bit in (0, 1):
-            next_node = self._read_node(node, bit)
-            subnet = subnets[bit]
-
-            if next_node > self._metadata.node_count:
-                data = self._resolve_data_pointer(next_node)
-                # Code to output start/end IPs as integers
-                start_ip = int(subnet.network_address)
-                range = int((str(subnet).split('/'))[1])
-                if network.version == 4:
-                  addr_len = 32
-                else:
-                  addr_len = 128
-                end_ip = start_ip + 2 ** (addr_len - range) - 1
-                yield (start_ip, end_ip, data)
-            elif next_node < self._metadata.node_count:
-                search_nodes.append((next_node, subnet))
-
-
 def combine_rows(rows):
   """ Iterate through sorted list of row dicts, compare side-by-side entries, combine when possible """
   rows.sort(key=lambda k: k['start_ip'])
@@ -107,17 +61,18 @@ with maxminddb.open_database(input_file) as reader:
   ipv4_rows = []
   ipv6_rows = []
   count = 0
-  for node in iterable(reader):
+
+  for node in reader:
     #if count >= 20:
       #break
     #count += 1
 
     row = copy.deepcopy(row_format)
     
-    row['start_ip'] = node[0]
-    row['end_ip'] = node[1]
+    row['start_ip'] = int(node[0][0])
+    row['end_ip'] = int(node[0][-1])
 
-    d = node[2]
+    d = node[1]
 
     if 'continent' in d:
       if 'code' in d['continent']:
@@ -156,7 +111,7 @@ with maxminddb.open_database(input_file) as reader:
         row['longitude'] = round(lon, 5)
 
     row['hash'] = hash(row['city']+str(row['latitude'])+str(row['longitude']))
-    
+
     counter += 1
     if row['start_ip'] < 2**32:
       ipv4_rows.append(row)
