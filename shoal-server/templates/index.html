@@ -97,29 +97,29 @@ $$(document).ready(function () {
 <body>
 
 
-<div class="row-fluid">
-    <div class="span6 offset3" style="text-align:center">
+<div class="row">
+    <div class="col-md-6 col-md-offset-3" style="text-align:center">
         <h2>List of Active Squids</h2>
         $if total > 0:
             <h5 class="text-success">$total active in the last $squid_active_time seconds</h5>
         $else:
             <h5 class="text-info">None active in the last $squid_active_time seconds</h5>
         </div>
-<div class="row-fluid">
-  <div class="span12">
+<div class="row">
+  <div class="col-md-12">
     <table class="table table-condensed table-hover">
       <thead>
         <tr>
           <th>#</th>
           <th>Hostname</th>
-          <th class="hidden-phone">Public IP</th>
-          <th class="hidden-phone">Private IP</th>
+          <th class="hidden-xs">Public IP</th>
+          <th class="hidden-xs">Private IP</th>
           <th>Bytes Out</th>
           <th>City</th>
-          <th class="hidden-phone">Country</th>
-          <th class="hidden-phone">Latitude</th>
-          <th class="hidden-phone">Longitude</th>
-          <th class="hidden-phone">Last Received</th>
+          <th class="hidden-xs">Country</th>
+          <th class="hidden-xs">Latitude</th>
+          <th class="hidden-xs">Longitude</th>
+          <th class="hidden-xs">Last Received</th>
           <th>Alive</th>
           <th>Clock Sync</th>
           <th>Access Level</th>
@@ -150,14 +150,14 @@ $$(document).ready(function () {
             <tr class="$state squid-row$i squid-list">
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
                 <td>$squid.hostname</td>
-                <td class="hidden-phone">$squid.public_ip</td>
-                <td class="hidden-phone">$squid.private_ip</td>
+                <td class="hidden-xs">$squid.public_ip</td>
+                <td class="hidden-xs">$squid.private_ip</td>
                 <td>$float("{:.3f}".format(squid.load)) kB/s</td>
                 <td>$squid.geo_data.city.name</td>
-                <td class="hidden-phone">$squid.geo_data.country.name</td>
-                <td class="hidden-phone">$squid.geo_data.location.latitude</td>
-                <td class="hidden-phone">$squid.geo_data.location.longitude</td>
-                <td class="hidden-phone">$(last_msg)s</td>
+                <td class="hidden-xs">$squid.geo_data.country.name</td>
+                <td class="hidden-xs">$squid.geo_data.location.latitude</td>
+                <td class="hidden-xs">$squid.geo_data.location.longitude</td>
+                <td class="hidden-xs">$(last_msg)s</td>
                 <td>$(hour)h$(minute)m$(second)s</td>
                 $if squid.drift_detected == True:
                     <td style="text-align: center;"><b>$("%.1fs" % squid.drift_time)</b></td>
@@ -173,14 +173,14 @@ $$(document).ready(function () {
   </div>
 </div>
 $if size != 0 and pages > 1:
-  <div class="row-fluid">
-    <div class"span1">
+  <div class="row">
+    <div class"col-md-1">
       <a href="/0">Show All</a>
     </div>
   </div>
 $if pages > 1:
-  <div class="row-fluid"
-    <div class="span12">
+  <div class="row"
+    <div class="col-md-12">
       <div class="pagination pagination-centered">
         <ul>
         $if page == 1:
