@@ -34,13 +34,23 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
     <![endif]-->
 
     <!-- Fav and touch icons -->
+
+    <script>
+      $$(document).ready(function(){
+        $$('.dropdown-submenu a.test').on("click", function(e){
+          $$(this).next('ul').toggle();
+          e.stopPropagation();
+          e.preventDefault();
+        });
+      });
+      </script>
   </head>
 
   <body>
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
-        <div class="container">
-          <button type="button" class="btn navbar-btn" data-toggle="collapse" data-target="#mynavbar">
+        <div class="container-fluid">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#mynavbar">
             <span class="glyphicon glyphicon-menu-hamburger"></span>
           </button>
           <a class="navbar-brand" href='#'>Shoal</a>
@@ -53,15 +63,15 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
                   <span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="/wpad.dat"><span class="glyphicon glyphicon-file"></span> WPAD file</a></li>
-                    <li class="dropdown-submenu">
-                      <a tabindex="-1" href="#" class="test"><span class="glyphicon glyphicon-th-list"></span> Nearest Squid</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="/nearest/1"><span class="glyphicon glyphicon-play"></span> Return 1</a></li>
-                        <li><a href="/nearest/10"><span class="glyphicon glyphicon-forward"></span> Return 10</a></li>
-                        <li><a href="/nearest/100"><span class="glyphicon glyphicon-fast-forward"></span> Return 100</a></li>
-                      </ul>
-                    </li>
+                  <li><a href="/wpad.dat"><span class="glyphicon glyphicon-file"></span> WPAD file</a></li>
+                  <li class="dropdown-submenu">
+                    <a tabindex="-1" href="#" class="test"><span class="glyphicon glyphicon-th-list"></span> Nearest Squid</a>
+                    <ul class="dropdown-menu">
+                      <li><a href="/nearest/1"><span class="glyphicon glyphicon-play"></span> Return 1</a></li>
+                      <li><a href="/nearest/10"><span class="glyphicon glyphicon-forward"></span> Return 10</a></li>
+                      <li><a href="/nearest/100"><span class="glyphicon glyphicon-fast-forward"></span> Return 100</a></li>
+                    </ul>
+                  </li>
                </ul>
              </li>
             </ul>
@@ -92,15 +102,6 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <!--<script>
-      $(document).ready(function(){
-        $('.dropdown-submenu a.test').on("click", function(e){
-          $(this).next('ul').toggle();
-          e.stopPropagation();
-          e.preventDefault();
-        });
-      });
-      </script>-->
     <script src="/static/js/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
   </body>
