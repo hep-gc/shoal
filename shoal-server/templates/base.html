@@ -34,13 +34,13 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
     <![endif]-->
 
     <!-- Fav and touch icons -->
-
+    <script src="/static/js/jquery.min.js"></script>
     <script>
-      $(document).ready(function(){
-        $('.dropdown-submenu a.test').on("click", function(e){
-          $(this).next('ul').toggle();
-          $(e).stopPropagation();
-          $(e).preventDefault();
+      $$(document).ready(function(){
+        $$('.dropdown-submenu a.test').on("click", function(e){
+          $$(this).next('ul').toggle();
+          $$(e).stopPropagation();
+          $$(e).preventDefault();
         });
       });
     </script>
@@ -102,7 +102,6 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/static/js/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
   </body>
 </html>
