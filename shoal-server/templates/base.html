@@ -36,11 +36,11 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
     <!-- Fav and touch icons -->
     <script src="/static/js/jquery.min.js"></script>
     <script>
-      $$(document).ready(function(){
-        $$('.dropdown-submenu a.test').on("click", function(e){
-          $$(this).next('ul').toggle();
-          $$(e).stopPropagation();
-          $$(e).preventDefault();
+      $(document).ready(function(){
+        $('.dropdown-submenu a.test').on("click", function(e){
+          $(this).next('ul').toggle();
+          e.stopPropagation();
+          e.preventDefault();
         });
       });
     </script>
