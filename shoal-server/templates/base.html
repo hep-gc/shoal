@@ -36,14 +36,14 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
     <!-- Fav and touch icons -->
 
     <script>
-      $$(document).ready(function(){
-        $$('.dropdown-submenu a.test').on("click", function(e){
-          $$(this).next('ul').toggle();
+      jQuery(document).ready(function(){
+        jQuery('.dropdown-submenu a.test').on("click", function(e){
+          jQuery(this).next('ul').toggle();
           e.stopPropagation();
           e.preventDefault();
         });
       });
-      </script>
+    </script>
   </head>
 
   <body>
@@ -81,7 +81,7 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
     </div>
 
 
-    <div class="container-fluid">
+    <div class="container-fluid" style="padding-left: 20px; padding-right: 20px;">
       <div class="row">
         $:page
       </div>
