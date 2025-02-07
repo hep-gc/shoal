@@ -12,13 +12,21 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
     <meta name="author" content="">
 
     <!-- Le styles -->
-    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css"> 
     <style>
       body {
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
       }
+      .dropdown-submenu {
+        position: relative;
+      }
+
+      .dropdown-submenu .dropdown-menu {
+        top: 0;
+        left: 100%;
+        margin-top: -1px;
+      }
     </style>
-    <link href="/static/css/bootstrap-responsive.min.css" rel="stylesheet">
     <link href="/static/img/icons/favicon.ico" rel="shortcut icon" type="image/x-icon">
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
@@ -26,36 +34,44 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
     <![endif]-->
 
     <!-- Fav and touch icons -->
+    <script src="/static/js/jquery.min.js"></script>
+    <script>
+      $$(document).ready(function(){
+        $$('.dropdown-submenu a.dropdown-submenu-toggle').on("click", function(e){
+          $$(this).next('ul').toggle();
+          e.stopPropagation();
+          e.preventDefault();
+        });
+      });
+    </script>
   </head>
 
   <body>
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
-        <div class="container">
-          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
+        <div class="container-fluid">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#mynavbar">
+            <span class="glyphicon glyphicon-menu-hamburger"></span>
           </button>
-          <a class="brand" href='#'>Shoal</a>
-          <div class="nav-collapse collapse">
-            <ul class="nav">
+          <a class="navbar-brand" href='#'>Shoal</a>
+          <div class="navbar-collapse collapse" id="mynavbar">
+            <ul class="nav navbar-nav">
               <li class="active"><a href="#">Latest</a></li>
               <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                   Services
-                  <b class="caret"></b>
+                  <span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="/wpad.dat"><i class="icon-file"></i> WPAD file</a></li>
-                    <li class="dropdown-submenu">
-                      <a tabindex="-1" href="#"><i class="icon-th-list"></i> Nearest Squid</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="/nearest/1"><i class="icon-play"></i> Return 1</a></li>
-                        <li><a href="/nearest/10"><i class="icon-forward"></i> Return 10</a></li>
-                        <li><a href="/nearest/100"><i class="icon-fast-forward"></i> Return 100</a></li>
-                      </ul>
-                    </li>
+                  <li><a href="/wpad.dat"><span class="glyphicon glyphicon-file"></span> WPAD file</a></li>
+                  <li class="dropdown-submenu">
+                    <a tabindex="-1" href="#" class="dropdown-submenu-toggle"><span class="glyphicon glyphicon-th-list"></span> Nearest Squid</a>
+                    <ul class="dropdown-menu">
+                      <li><a href="/nearest/1"><span class="glyphicon glyphicon-play"></span> Return 1</a></li>
+                      <li><a href="/nearest/10"><span class="glyphicon glyphicon-forward"></span> Return 10</a></li>
+                      <li><a href="/nearest/100"><span class="glyphicon glyphicon-fast-forward"></span> Return 100</a></li>
+                    </ul>
+                  </li>
                </ul>
              </li>
             </ul>
@@ -64,19 +80,20 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
       </div>
     </div>
 
+
     <div class="container-fluid">
-      <div class="row-fluid">
+      <div class="row">
         $:page
       </div>
       <hr>
-      <div class="row-fluid">
-        <div class="span12">
+      <div class="row">
+        <div class="col-md-12">
           <footer id="footer" style="text-align:center">
             <div>
-              &copy; University of Victoria  ||  <a href="http://github.com/hep-gc/shoal">Visit GitHub Project</a><i class="icon-hand-up"></i>
+              &copy; University of Victoria  ||  <a href="http://github.com/hep-gc/shoal">Visit GitHub Project</a><span class="glyphicon glyphicon-hand-up"></span>
             </div>
             <div>
-              <small class='muted'>Shoal-Server v$version</small>
+              <small class='text-muted'>Shoal-Server v$version</small>
             </div>
           </footer>
         </div>
@@ -85,8 +102,7 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/static/js/jquery.min.js"></script>
-    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
   </body>
 </html>
 
