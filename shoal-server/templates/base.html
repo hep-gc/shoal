@@ -37,7 +37,7 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
     <script src="/static/js/jquery.min.js"></script>
     <script>
       $$(document).ready(function(){
-        $$('.dropdown-submenu a.drop-submenu-toggle').on("click", function(e){
+        $$('.dropdown-submenu a.dropdown-submenu-toggle').on("click", function(e){
           $$(this).next('ul').toggle();
           e.stopPropagation();
           e.preventDefault();
