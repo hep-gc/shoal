@@ -37,10 +37,10 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
     <script src="/static/js/jquery.min.js"></script>
     <script>
       $$(document).ready(function(){
-        $$('.dropdown-submenu a.test').on("click", function(e){
-          $$(e).stopPropagation();
+        $$('.dropdown-submenu a.drop-submenu-toggle').on("click", function(e){
           $$(this).next('ul').toggle();
-          $$(e).preventDefault();
+          e.stopPropagation();
+          e.preventDefault();
         });
       });
     </script>
@@ -65,7 +65,7 @@ $def with (page, title='Shoal | Realtime Squid Monitoring System')
                 <ul class="dropdown-menu">
                   <li><a href="/wpad.dat"><span class="glyphicon glyphicon-file"></span> WPAD file</a></li>
                   <li class="dropdown-submenu">
-                    <a tabindex="-1" href="#" class="test"><span class="glyphicon glyphicon-th-list"></span> Nearest Squid</a>
+                    <a tabindex="-1" href="#" class="dropdown-submenu-toggle"><span class="glyphicon glyphicon-th-list"></span> Nearest Squid</a>
                     <ul class="dropdown-menu">
                       <li><a href="/nearest/1"><span class="glyphicon glyphicon-play"></span> Return 1</a></li>
                       <li><a href="/nearest/10"><span class="glyphicon glyphicon-forward"></span> Return 10</a></li>
