@@ -138,7 +138,7 @@ $$(document).ready(function () {
             $elif last_msg >= squid_active_time/3 and last_msg < squid_active_time*2/3:
                 $ state = 'warning'
             $else:
-                $ state = 'error'
+                $ state = 'danger'
             $if squid.global_access == True:
                 $ access = 'Global'
             $else:
@@ -146,7 +146,7 @@ $$(document).ready(function () {
             $if not squid.verified and squid.allow_verification == True:
                 $ state = 'warning'
             $if squid.drift_detected == True:
-                $ state = 'error'
+                $ state = 'danger'
             <tr class="$state squid-row$i squid-list">
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
                 <td>$squid.hostname</td>
