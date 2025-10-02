@@ -43,6 +43,7 @@ class SquidNode(object):
         self.last_verified = 0
         self.error = 'All systems OK!'
         self.local = local
+	self.cache_type = cache_type 
 
     def update(self, load, drift_detected, drift_time):
         """
@@ -520,7 +521,10 @@ class RabbitMQConsumer(Thread):
             maxload = data['max_load']
         except KeyError:
             maxload = config.squid_max_load
-
+	try:
+    	    cache_type = data['cache_type']
+	except KeyError:
+            cache_type = "squid"
         # attempt to detect misconfigured clocks and clock drifts,
         # allows for a 10 second grace period
         if curr - time_sent > 10:
@@ -621,3 +625,4 @@ class SquidVerifier(Thread):
         stops Squid_Verifier
         """
         self.running = False
+
