@@ -99,7 +99,7 @@ $$(document).ready(function () {
 
 <div class="row" style="padding-left: 5%; padding-right: 5%;">
     <div class="col-md-6 col-md-offset-3" style="text-align:center">
-        <h2>List of Active Squids</h2>
+        <h2>List of Active Caches</h2>
         $if total > 0:
             <h5 class="text-success">$total active in the last $squid_active_time seconds</h5>
         $else:
@@ -114,6 +114,9 @@ $$(document).ready(function () {
           <th>Hostname</th>
           <th class="hidden-xs">Public IP</th>
           <th class="hidden-xs">Private IP</th>
+	  <th>Port</th>
+	  <th>Cache Type</th>
+          <th>Source</th>
           <th>Bytes Out</th>
           <th>City</th>
           <th class="hidden-xs">Country</th>
@@ -152,7 +155,10 @@ $$(document).ready(function () {
                 <td>$squid.hostname</td>
                 <td class="hidden-xs">$squid.public_ip</td>
                 <td class="hidden-xs">$squid.private_ip</td>
-                <td>$float("{:.3f}".format(squid.load)) kB/s</td>
+                <td>$squid.squid_port</td>
+	        <td>$squid.cache_type</td>
+                <td>$squid.cloud</td>
+		<td>$float("{:.3f}".format(squid.load)) kB/s</td>
                 <td>$squid.geo_data.city.name</td>
                 <td class="hidden-xs">$squid.geo_data.country.name</td>
                 <td class="hidden-xs">$squid.geo_data.location.latitude</td>
