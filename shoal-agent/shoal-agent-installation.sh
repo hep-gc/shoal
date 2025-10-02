@@ -259,9 +259,9 @@ if $USE_NOT_DEFAULT; then
                 ;;
                 "admin_email") OLD_ADMIN_EMAIL=${line_array[1]}
 		;;
-		"squid_port") DEFAULT_CACHE_PORT=${line_array[1]}
+		"squid_port") OLD_CACHE_PORT=${line_array[1]}
 		;;
-		"cache_type") DEFAULT_CACHE_TYPE=${line_array[1]}
+		"cache_type") OLD_CACHE_TYPE=${line_array[1]}
 		;;
             esac
         done <<< "$OLD_LINES"
