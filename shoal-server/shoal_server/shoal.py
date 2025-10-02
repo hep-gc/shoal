@@ -20,7 +20,7 @@ logger.setLevel(config.logging_level)
 # Basic class to store and update information about each squid server.
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, allow_verification, drift_detected, drift_time, local, max_load=122000, last_active=time()):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, allow_verification, drift_detected, drift_time, local, max_load=122000, last_active=time(),cache_type="squid", cloud="cvmfs":
         """
         constructor for SquidNode, time created is current time
         """
@@ -43,7 +43,8 @@ class SquidNode(object):
         self.last_verified = 0
         self.error = 'All systems OK!'
         self.local = local
-	self.cache_type = cache_type 
+        self.cache_type=cache_type
+        self.cloud = cloud
 
     def update(self, load, drift_detected, drift_time):
         """
@@ -70,8 +71,11 @@ class SquidNode(object):
             "verified": self.verified,
             "global_access": self.global_access,
             "max_load": self.max_load,
-            "local": self.local,},)
-
+            "local": self.local,
+            "cache_type": self.cache_type,
+            "cloud": self.cloud,   
+})
+                  
 # Main application that will monitor RabbitMQ and ShoalUpdate threads.
 class ThreadMonitor(Thread):
 
@@ -521,10 +525,7 @@ class RabbitMQConsumer(Thread):
             maxload = data['max_load']
         except KeyError:
             maxload = config.squid_max_load
-	try:
-    	    cache_type = data['cache_type']
-	except KeyError:
-            cache_type = "squid"
+
         # attempt to detect misconfigured clocks and clock drifts,
         # allows for a 10 second grace period
         if curr - time_sent > 10:
@@ -573,7 +574,10 @@ class RabbitMQConsumer(Thread):
                     drift_time,
                     local,
                     maxload,
-                    time_sent)
+                    time_sent,
+                    cache_type=data.get('cache_type', 'squid'),
+                    cloud=data.get('cloud', '')
+)
                 self.shoal[key] = new_squid
         self.acknowledge_message(basic_deliver.delivery_tag)
 
