@@ -75,6 +75,62 @@ setEachNewValue() {
 
 }
 
+detectCacheType() {
+    if pidof squid >/dev/null 2>&1; then
+        echo "squid"
+    elif pidof varnishd >/dev/null 2>&1; then
+        echo "varnish"
+    else
+        echo ""
+    fi
+}
+
+getCachePort() {
+    local cache_type=$1
+    local default_port=""
+    
+    case "$cache_type" in
+        "squid")
+            default_port="3128"
+            ;;
+        "varnish")
+            default_port="6081"
+            ;;
+    esac 
+    echo "$default_port"
+}
+
+promptCacheType() {
+    local detected=$(detectCacheType)
+    local cache_choice=""
+    
+    if [ ! -z "$detected" ]; then
+        echo >&2 "Detected running: $detected"
+        echo >&2 "Would you like to use $detected? (y/n) [y]:"
+        read use_detected
+        if [ -z "$use_detected" ] || [ "$use_detected" == "y" ] || [ "$use_detected" == "Y" ]; then
+            cache_choice="$detected"
+        fi
+    fi
+    
+    if [ -z "$cache_choice" ]; then
+        echo >&2 "Please select the cache type:"
+        echo >&2 "1) Squid"
+        echo >&2 "2) Varnish"
+        read -p "Enter choice (1 or 2): " choice
+        
+       case "$choice" in
+            1)	cache_choice="squid"
+                ;;
+            2)  cache_choice="varnish"
+                ;;
+            *)  echo >&2 "Invalid. Defaulting to squid."
+                cache_choice="squid"
+                ;;
+        esac
+    fi 
+    echo "$cache_choice"
+}
 
 ###############################
 #  MAIN                       #
@@ -106,9 +162,24 @@ else
     exit 0
 fi
 
+CACHE_TYPE=$(promptCacheType)
+echo "Using cache type: $CACHE_TYPE"
+
 # add user/group shoal
 groupadd -f shoal
 useradd shoal -g shoal 2>/dev/null
+
+case "$CACHE_TYPE" in
+     "squid")
+         groupadd -f squid 2>/dev/null
+         useradd squid -g squid 2>/dev/null
+         ;;
+     "varnish")
+         groupadd -f varnish 2>/dev/null
+         useradd varnish -g varnish 2>/dev/null
+         ;;
+esac
+
 
 # copy files to proper locations
 cp "$SOURCE_PATH/shoal-agent.init" /etc/init.d/
@@ -158,6 +229,10 @@ if $USE_NOT_DEFAULT; then
             ;;
             "logging_level") DEFAULT_LOGGING_LEVEL=${line_array[1]}
             ;;
+	    "squid_port") DEFAULT_CACHE_PORT=${line_array[1]}
+	    ;;
+            "cache_type") DEFAULT_CACHE_TYPE=${line_array[1]}
+	    ;;
         esac
     done <<< "$LINES"
 
@@ -183,6 +258,11 @@ if $USE_NOT_DEFAULT; then
                 "logging_level") OLD_LOGGING_LEVEL=${line_array[1]}
                 ;;
                 "admin_email") OLD_ADMIN_EMAIL=${line_array[1]}
+		;;
+		"squid_port") DEFAULT_CACHE_PORT=${line_array[1]}
+		;;
+		"cache_type") DEFAULT_CACHE_TYPE=${line_array[1]}
+		;;
             esac
         done <<< "$OLD_LINES"
 
@@ -200,6 +280,16 @@ if $USE_NOT_DEFAULT; then
     setEachNewValue $CONFIG_FILE amqp_exchange "this is the RabbitMQ exchange name" $DEFAULT_AMQP_EXCHANGE $OLD_AMQP_EXCHANGE
     setEachNewValue $CONFIG_FILE log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE $OLD_LOG_FILE
     setEachNewValue $CONFIG_FILE logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL $OLD_LOGGING_LEVEL
+
+if grep -q "^cache_type=" $CONFIG_FILE; then
+         sed -i "s|^cache_type=.*|cache_type=$CACHE_TYPE|g" $CONFIG_FILE
+     else
+         echo "cache_type=$CACHE_TYPE" >> $CONFIG_FILE
+     fi
+     
+     DEFAULT_CACHE_PORT=$(getCachePort $CACHE_TYPE)
+     setEachNewValue $CONFIG_FILE squid_port "this is the cache server port" $DEFAULT_CACHE_PORT $OLD_CACHE_PORT
+
 fi
 
 # create log file and change ownership
