@@ -78,6 +78,7 @@ setEachNewValue() {
         replace=$"$label=$enter_value"
         sed -i "s|$origin|$replace|g" $config_file
     fi
+   echo "$enter_value"
 
 }
 
@@ -231,13 +232,12 @@ if $USE_NOT_DEFAULT; then
     while true; do
         setEachNewValue $CONFIG_FILE upstream "this is the varnish server upstream (cvmfs or frontier)" $DEFAULT_UPSTREAM $OLD_UPSTREAM
 
-        ENTERED_UPSTREAM=$(grep "^upstream=" $CONFIG_FILE | cut -d'=' -f2)
+        ENTERED_UPSTREAM=$(setEachNewValue $CONFIG_FILE upstream "this is the varnish server upstream (cvmfs or frontier)" $DEFAULT_UPSTREAM $OLD_UPSTREAM)
 
         if [ "$ENTERED_UPSTREAM" == "cvmfs" ] || [ "$ENTERED_UPSTREAM" == "frontier" ]; then
             break
         else
             echo "Error: You must specify 'cvmfs' or 'frontier' for varnish upstream."
-            sed -i "s|^upstream=.*|upstream=|g" $CONFIG_FILE
         fi
     done
 fi
