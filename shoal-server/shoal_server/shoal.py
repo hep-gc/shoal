@@ -20,7 +20,7 @@ logger.setLevel(config.logging_level)
 # Basic class to store and update information about each squid server.
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, allow_verification, drift_detected, drift_time, local, max_load=122000, last_active=time(),cache_type="squid", cloud="cvmfs"):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, allow_verification, drift_detected, drift_time, local, max_load=122000, last_active=time(),cache_type="squid", upstream="both"):
         """
         constructor for SquidNode, time created is current time
         """
@@ -44,7 +44,10 @@ class SquidNode(object):
         self.error = 'All systems OK!'
         self.local = local
         self.cache_type=cache_type
-        self.cloud = cloud
+        if upstream: 
+            self.upstream = upstream
+        else:
+            self.upstream = "both"
 
     def update(self, load, drift_detected, drift_time):
         """
@@ -73,7 +76,7 @@ class SquidNode(object):
             "max_load": self.max_load,
             "local": self.local,
             "cache_type": self.cache_type,
-            "cloud": self.cloud,   
+            "upstream": self.upstream,   
 })
                   
 # Main application that will monitor RabbitMQ and ShoalUpdate threads.
@@ -576,7 +579,7 @@ class RabbitMQConsumer(Thread):
                     maxload,
                     time_sent,
                     cache_type=data.get('cache_type', 'squid'),
-                    cloud=data.get('cloud', '')
+                    upstream=data.get('upstream', 'Both')
 )
                 self.shoal[key] = new_squid
         self.acknowledge_message(basic_deliver.delivery_tag)
@@ -629,4 +632,3 @@ class SquidVerifier(Thread):
         stops Squid_Verifier
         """
         self.running = False
-
