@@ -61,14 +61,15 @@ setEachNewValue() {
     local enter_value
 
     if [ ! -z "$old" ]; then
-        echo $"Please enter a value for setting the $label, $info. Your currently $label value is '$old', and the default value is '$default'. If you want to use the default, press 'Enter':"
+        echo >&2 "Please enter a value for setting the $label, $info. Your currently $label value is '$old', and the default value is '$default'. If you want to use the default, press 'Enter':"
     else
-        echo $"Please enter a value for setting the $label, $info. The default value is '$default'. If you want to use the default, press 'Enter':"
+        echo >&2 "Please enter a value for setting the $label, $info. The default value is '$default'. If you want to use the default, press 'Enter':"
     fi
     read enter_value
     if [ ! -z "$enter_value" ]; then
         if [ "$label" == "log_file" ]; then
             LOG_FILE=$enter_value
+			enter_value="$default"
         fi
         if [ "$label" == "admin_email" ]; then
             origin=$"#$label=$default"
