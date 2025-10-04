@@ -248,10 +248,11 @@ if $USE_NOT_DEFAULT; then
     setEachNewValue $CONFIG_FILE log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE $OLD_LOG_FILE
     setEachNewValue $CONFIG_FILE logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL $OLD_LOGGING_LEVEL
     
-	detected=$(detectCacheType)
-	setEachNewValue $CONFIG_FILE squid_port "this is the cache server port" $detected $OLD_CACHE_PORT 
-	echo >&2 "Detected running: $detected"
-    setEachNewValue $CONFIG_FILE cache_type "this is the cache server type (squid or varnish)" $DEFAULT_CACHE_TYPE $OLD_CACHE_TYPE
+	detected_cache=$(detectCacheType)
+	detected_port= $(getCachePort) 
+	setEachNewValue $CONFIG_FILE squid_port "this is the cache server port" $detected_port $OLD_CACHE_PORT 
+	echo >&2 "Detected running: $detected_cache"
+    setEachNewValue $CONFIG_FILE cache_type "this is the cache server type (squid or varnish)" $detected_cache $OLD_CACHE_TYPE
        
     ENTERED_CACHE_TYPE=$(grep "^cache_type=" $CONFIG_FILE | cut -d'=' -f2) 
     if [ "$ENTERED_CACHE_TYPE" == "varnish" ]; then
