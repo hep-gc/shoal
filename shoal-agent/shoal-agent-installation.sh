@@ -266,6 +266,7 @@ if $USE_NOT_DEFAULT; then
             sed -i "s|^upstream=.*|upstream=|g" $CONFIG_FILE
         fi
     done
+    fi
 fi
 
 # create log file and change ownership
