@@ -81,6 +81,31 @@ setEachNewValue() {
 
 }
 
+detectCacheType() {
+    if pidof squid >/dev/null 2>&1; then
+        echo "squid"
+    elif pidof varnishd >/dev/null 2>&1; then
+        echo "varnish"
+    else
+        echo ""
+    fi
+}
+
+getCachePort() {
+    local cache_type=$1
+    local default_port=""
+    
+    case "$cache_type" in
+        "squid")
+            default_port="3128"
+            ;;
+        "varnish")
+            default_port="6081"
+            ;;
+    esac 
+    echo "$default_port"
+}
+
 ###############################
 #  MAIN                       #
 ###############################
@@ -167,11 +192,11 @@ if $USE_NOT_DEFAULT; then
             ;;
             "logging_level") DEFAULT_LOGGING_LEVEL=${line_array[1]}
             ;;
-	    "squid_port") DEFAULT_CACHE_PORT=${line_array[1]}
-	    ;;
-            "cache_type") DEFAULT_CACHE_TYPE=${line_array[1]}
-	    ;;
-	    "upstream") DEFAULT_UPSTREAM=${line_array[1]}
+			"squid_port") DEFAULT_CACHE_PORT=${line_array[1]}
+			;;
+		    "cache_type") DEFAULT_CACHE_TYPE=${line_array[1]}
+			;;
+			"upstream") DEFAULT_UPSTREAM=${line_array[1]}
             ;;
         esac
     done <<< "$LINES"
@@ -198,12 +223,12 @@ if $USE_NOT_DEFAULT; then
                 "logging_level") OLD_LOGGING_LEVEL=${line_array[1]}
                 ;;
                 "admin_email") OLD_ADMIN_EMAIL=${line_array[1]}
-		;;
-		"squid_port") OLD_CACHE_PORT=${line_array[1]}
-		;;
-		"cache_type") OLD_CACHE_TYPE=${line_array[1]}
-		;;
-		"upstream") OLD_UPSTREAM=${line_array[1]}
+				;;
+				"squid_port") OLD_CACHE_PORT=${line_array[1]}
+				;;
+				"cache_type") OLD_CACHE_TYPE=${line_array[1]}
+				;;
+				"upstream") OLD_UPSTREAM=${line_array[1]}
                 ;;
             esac
         done <<< "$OLD_LINES"
@@ -222,28 +247,24 @@ if $USE_NOT_DEFAULT; then
     setEachNewValue $CONFIG_FILE amqp_exchange "this is the RabbitMQ exchange name" $DEFAULT_AMQP_EXCHANGE $OLD_AMQP_EXCHANGE
     setEachNewValue $CONFIG_FILE log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE $OLD_LOG_FILE
     setEachNewValue $CONFIG_FILE logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL $OLD_LOGGING_LEVEL
-    setEachNewValue $CONFIG_FILE squid_port "this is the cache server port" $DEFAULT_CACHE_PORT $OLD_CACHE_PORT 
+    
+	detected=$(detectCacheType)
+	setEachNewValue $CONFIG_FILE squid_port "this is the cache server port" $detected $OLD_CACHE_PORT 
+	echo >&2 "Detected running: $detected"
     setEachNewValue $CONFIG_FILE cache_type "this is the cache server type (squid or varnish)" $DEFAULT_CACHE_TYPE $OLD_CACHE_TYPE
        
     ENTERED_CACHE_TYPE=$(grep "^cache_type=" $CONFIG_FILE | cut -d'=' -f2) 
     if [ "$ENTERED_CACHE_TYPE" == "varnish" ]; then
         while true; do
-            if [ ! -z "$OLD_UPSTREAM" ]; then
-                echo "Enter the varnish server upstream (cvmfs or frontier). Current value is '$OLD_UPSTREAM':"
-            else
-                echo "Enter the varnish server upstream (cvmfs or frontier):"
-            fi
-            read ENTERED_UPSTREAM
-            
-            if [ "$ENTERED_UPSTREAM" == "cvmfs" ] || [ "$ENTERED_UPSTREAM" == "frontier" ]; then
-                sed -i "s|^upstream=.*|upstream=$ENTERED_UPSTREAM|g" $CONFIG_FILE
-                break
-            else
-                echo "Error: You must enter 'cvmfs' or 'frontier'."
-            fi
-        done
-    fi
-
+        setEachNewValue $CONFIG_FILE upstream "this is the varnish server upstream (cvmfs or frontier)" $DEFAULT_UPSTREAM $OLD_UPSTREAM
+        ENTERED_UPSTREAM=$(grep "^upstream=" $CONFIG_FILE | cut -d'=' -f2)
+        if [ "$ENTERED_UPSTREAM" == "cvmfs" ] || [ "$ENTERED_UPSTREAM" == "frontier" ]; then
+            break
+        else
+            echo "Error: You must specify 'cvmfs' or 'frontier' for varnish upstream."
+            sed -i "s|^upstream=.*|upstream=|g" $CONFIG_FILE
+        fi
+    done
 fi
 
 # create log file and change ownership
