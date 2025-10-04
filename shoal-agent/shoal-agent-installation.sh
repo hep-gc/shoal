@@ -226,20 +226,23 @@ if $USE_NOT_DEFAULT; then
     setEachNewValue $CONFIG_FILE cache_type "this is the cache server type (squid or varnish)" $DEFAULT_CACHE_TYPE $OLD_CACHE_TYPE
        
     ENTERED_CACHE_TYPE=$(grep "^cache_type=" $CONFIG_FILE | cut -d'=' -f2) 
-    
     if [ "$ENTERED_CACHE_TYPE" == "varnish" ]; then
-    while true; do
-		setEachNewValue $CONFIG_FILE upstream "this is the varnish server upstream (frontier or cvmfs)" "frontier" $OLD_UPSTREAM
-        ENTERED_UPSTREAM=$(grep "^upstream=" $CONFIG_FILE | cut -d'=' -f2)
-
-        if [ "$ENTERED_UPSTREAM" == "cvmfs" ] || [ "$ENTERED_UPSTREAM" == "frontier" ]; then
-            break
-        else
-            echo "Error: You must specify 'cvmfs' or 'frontier' for varnish upstream."
-			sed -i "s|^upstream=.*|upstream=|g" $CONFIG_FILE
-        fi
-    done
-fi
+        while true; do
+            if [ ! -z "$OLD_UPSTREAM" ]; then
+                echo "Enter the varnish server upstream (cvmfs or frontier). Current value is '$OLD_UPSTREAM':"
+            else
+                echo "Enter the varnish server upstream (cvmfs or frontier):"
+            fi
+            read ENTERED_UPSTREAM
+            
+            if [ "$ENTERED_UPSTREAM" == "cvmfs" ] || [ "$ENTERED_UPSTREAM" == "frontier" ]; then
+                sed -i "s|^upstream=.*|upstream=$ENTERED_UPSTREAM|g" $CONFIG_FILE
+                break
+            else
+                echo "Error: You must enter 'cvmfs' or 'frontier'."
+            fi
+        done
+    fi
 
 fi
 
