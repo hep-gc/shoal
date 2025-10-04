@@ -236,6 +236,7 @@ if $USE_NOT_DEFAULT; then
             break
         else
             echo "Error: You must specify 'cvmfs' or 'frontier' for varnish upstream."
+			sed -i "s|^upstream=.*|upstream=|g" $CONFIG_FILE
         fi
     done
 fi
