@@ -242,7 +242,7 @@ def main():
         'squid_port': config.squid_port,
         'cache_type': config.cache_type,
         'verified': config.verified,
-        'max_load': config.max_load
+        'max_load': config.max_load,
         'upstream': config.upstream,
     }
 
