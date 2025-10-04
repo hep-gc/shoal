@@ -243,6 +243,7 @@ def main():
         'cache_type': config.cache_type,
         'verified': config.verified,
         'max_load': config.max_load
+        'upstream': config.upstream,
     }
 
     public_ip, private_ip = get_ip_addresses()
