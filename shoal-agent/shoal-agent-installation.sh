@@ -61,15 +61,14 @@ setEachNewValue() {
     local enter_value
 
     if [ ! -z "$old" ]; then
-        echo >&2 "Please enter a value for setting the $label, $info. Your currently $label value is '$old', and the default value is '$default'. If you want to use the default, press 'Enter':"
+        echo $"Please enter a value for setting the $label, $info. Your currently $label value is '$old', and the default value is '$default'. If you want to use the default, press 'Enter':"
     else
-        echo >&2 "Please enter a value for setting the $label, $info. The default value is '$default'. If you want to use the default, press 'Enter':"
+        echo $"Please enter a value for setting the $label, $info. The default value is '$default'. If you want to use the default, press 'Enter':"
     fi
     read enter_value
     if [ ! -z "$enter_value" ]; then
         if [ "$label" == "log_file" ]; then
             LOG_FILE=$enter_value
-			enter_value="$default"
         fi
         if [ "$label" == "admin_email" ]; then
             origin=$"#$label=$default"
@@ -79,7 +78,6 @@ setEachNewValue() {
         replace=$"$label=$enter_value"
         sed -i "s|$origin|$replace|g" $config_file
     fi
-   echo "$enter_value"
 
 }
 
@@ -231,9 +229,8 @@ if $USE_NOT_DEFAULT; then
     
     if [ "$ENTERED_CACHE_TYPE" == "varnish" ]; then
     while true; do
-        setEachNewValue $CONFIG_FILE upstream "this is the varnish server upstream (cvmfs or frontier)" $DEFAULT_UPSTREAM $OLD_UPSTREAM
-
-        ENTERED_UPSTREAM=$(setEachNewValue $CONFIG_FILE upstream "this is the varnish server upstream (cvmfs or frontier)" $DEFAULT_UPSTREAM $OLD_UPSTREAM)
+		setEachNewValue $CONFIG_FILE upstream "this is the varnish server upstream (frontier or cvmfs)" "frontier" $OLD_UPSTREAM
+        ENTERED_UPSTREAM=$(grep "^upstream=" $CONFIG_FILE | cut -d'=' -f2)
 
         if [ "$ENTERED_UPSTREAM" == "cvmfs" ] || [ "$ENTERED_UPSTREAM" == "frontier" ]; then
             break
