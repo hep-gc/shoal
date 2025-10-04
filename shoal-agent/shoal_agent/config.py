@@ -39,6 +39,7 @@ interface = None
 interval = 30
 cloud = ''
 cache_type = 'squid'
+upstream = 'both'
 squid_port = 3128
 squid_auto_config = False
 log_file = '/var/log/shoal_agent.log'
@@ -242,7 +243,10 @@ if config_file.has_option("general", "cache_type"):
 
 if config_file.has_option("general", "squid_port") and not squid_auto_config:
     squid_port = config_file.get("general", "squid_port")
-
+    
+if config_file.has_option("general", "upstream"):
+    upstream = config_file.get("general", "upstream").lower()
+    
 if config_file.has_option("general", "max_load"):
     max_load = config_file.get("general", "max_load")
 
