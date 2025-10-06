@@ -129,9 +129,9 @@ $$(document).ready(function () {
        </tr>
       </thead>
       <tbody>
-        $for i,squid in enumerate(shoal):
-            $ last_msg = int(now - squid.last_active)
-            $ alive_time = int(now - squid.created); 
+        $for i,cache in enumerate(shoal):
+            $ last_msg = int(now - cache.last_active)
+            $ alive_time = int(now - cache.created); 
             $ hour = int(alive_time/60/60)
             $ minute = int((alive_time - hour*60*60) / 60)
             $ second = int(alive_time - hour*60*60 - minute*60)
@@ -142,37 +142,37 @@ $$(document).ready(function () {
                 $ state = 'warning'
             $else:
                 $ state = 'danger'
-            $if squid.global_access == True:
+            $if cache.global_access == True:
                 $ access = 'Global'
             $else:
                 $ access = 'Private'
-            $if not squid.verified and squid.allow_verification == True:
+            $if not cache.verified and cache.allow_verification == True:
                 $ state = 'warning'
-            $if squid.drift_detected == True:
+            $if cache.drift_detected == True:
                 $ state = 'danger'
             <tr class="$state squid-row$i squid-list">
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
-                <td>$squid.hostname</td>
-                <td class="hidden-xs">$squid.public_ip</td>
-                <td class="hidden-xs">$squid.private_ip</td>
-                <td>$squid.squid_port</td>
-	        <td>$squid.cache_type</td>
-                <td>$squid.upstream</td>
-		<td>$float("{:.3f}".format(squid.load)) kB/s</td>
-                <td>$squid.geo_data.city.name</td>
-                <td class="hidden-xs">$squid.geo_data.country.name</td>
-                <td class="hidden-xs">$squid.geo_data.location.latitude</td>
-                <td class="hidden-xs">$squid.geo_data.location.longitude</td>
+                <td>$cache.hostname</td>
+                <td class="hidden-xs">$cache.public_ip</td>
+                <td class="hidden-xs">$cache.private_ip</td>
+                <td>$cache.squid_port</td>
+	        <td>$cache.cache_type</td>
+                <td>$cache.upstream</td>
+		<td>$float("{:.3f}".format(cache.load)) kB/s</td>
+                <td>$cache.geo_data.city.name</td>
+                <td class="hidden-xs">$cache.geo_data.country.name</td>
+                <td class="hidden-xs">$cache.geo_data.location.latitude</td>
+                <td class="hidden-xs">$cache.geo_data.location.longitude</td>
                 <td class="hidden-xs">$(last_msg)s</td>
                 <td>$(hour)h$(minute)m$(second)s</td>
-                $if squid.drift_detected == True:
-                    <td style="text-align: center;"><b>$("%.1fs" % squid.drift_time)</b></td>
+                $if cache.drift_detected == True:
+                    <td style="text-align: center;"><b>$("%.1fs" % cache.drift_time)</b></td>
                 $else:
                     <td style="text-align: center;">✔</td>
                 <td>$access</td>
             </tr>
             <tr class="$state squid-panel$i" style="display:none">
-                <td colspan="14">$squid.error</td>
+                <td colspan="14">$cache.error</td>
             </tr>
       </tbody>
     </table>
