@@ -254,8 +254,8 @@ if $USE_NOT_DEFAULT; then
 
 	setEachNewValue $CONFIG_FILE squid_port "this is the cache server port" $detected_port $OLD_CACHE_PORT	
     setEachNewValue $CONFIG_FILE cache_type "this is the cache server type (squid or varnish)" $DEFAULT_CACHE_TYPE $OLD_CACHE_TYPE
-       
-    ENTERED_CACHE_TYPE=$(grep "^cache_type=" $CONFIG_FILE | cut -d'=' -f2) 
+
+	ENTERED_CACHE_TYPE=$DEFAULT_CACHE_TYPE
     if [ "$ENTERED_CACHE_TYPE" == "varnish" ]; then
         while true; do
         setEachNewValue $CONFIG_FILE upstream "this is the varnish server upstream (cvmfs or frontier)" $DEFAULT_UPSTREAM $OLD_UPSTREAM
