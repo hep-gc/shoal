@@ -256,8 +256,8 @@ if $USE_NOT_DEFAULT; then
 	if [ ! -z "$detected_cache" ]; then
     	sed -i "s|^cache_type=.*|cache_type=$detected_cache|g" $CONFIG_FILE
 	fi
-    setEachNewValue $CONFIG_FILE cache_type "this is the cache server type (squid or varnish)" $DEFAULT_CACHE_TYPE $OLD_CACHE_TYPE
-
+	setEachNewValue $CONFIG_FILE cache_type "this is the cache server type (squid or varnish)" "$detected_cache" "$OLD_CACHE_TYPE"
+	
     ENTERED_CACHE_TYPE=$(grep "^cache_type=" $CONFIG_FILE | cut -d'=' -f2) 	
     if [ "$ENTERED_CACHE_TYPE" == "varnish" ]; then
         while true; do
