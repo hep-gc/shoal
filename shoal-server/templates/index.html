@@ -114,8 +114,8 @@ $$(document).ready(function () {
           <th>Hostname</th>
           <th class="hidden-xs">Public IP</th>
           <th class="hidden-xs">Private IP</th>
-	  <th>Port</th>
-	  <th>Cache</th>
+	      <th>Port</th>
+	      <th>Cache</th>
           <th>Upstream</th>
           <th>Bytes Out</th>
           <th>City</th>
@@ -156,9 +156,9 @@ $$(document).ready(function () {
                 <td class="hidden-xs">$cache.public_ip</td>
                 <td class="hidden-xs">$cache.private_ip</td>
                 <td>$cache.squid_port</td>
-	        <td>$cache.cache_type</td>
+	            <td>$cache.cache_type</td>
                 <td>$cache.upstream</td>
-		<td>$float("{:.3f}".format(cache.load)) kB/s</td>
+		        <td>$float("{:.3f}".format(cache.load)) kB/s</td>
                 <td>$cache.geo_data.city.name</td>
                 <td class="hidden-xs">$cache.geo_data.country.name</td>
                 <td class="hidden-xs">$cache.geo_data.location.latitude</td>
