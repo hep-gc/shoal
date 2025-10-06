@@ -72,8 +72,6 @@ setEachNewValue() {
         fi
         if [ "$label" == "admin_email" ]; then
             origin=$"#$label=$default"
-		elif [ "$label" == "cache_type" ]; then
-			origin="^#$label=.*"
         else
             origin=$"$label=$default"
         fi
@@ -252,9 +250,13 @@ if $USE_NOT_DEFAULT; then
     
 	detected_cache=$(detectCacheType)
     detected_port=$(getCachePort "$detected_cache")	
-
+	
 	setEachNewValue $CONFIG_FILE squid_port "this is the cache server port" $detected_port $OLD_CACHE_PORT	
-    setEachNewValue $CONFIG_FILE cache_type "this is the cache server type (squid or varnish)" $detected_cache $OLD_CACHE_TYPE
+
+	if [ ! -z "$detected_cache" ]; then
+    	sed -i "s|^cache_type=.*|cache_type=$detected_cache|g" $CONFIG_FILE
+	fi
+    setEachNewValue $CONFIG_FILE cache_type "this is the cache server type (squid or varnish)" $DEFAULT_CACHE_TYPE $OLD_CACHE_TYPE
 
     ENTERED_CACHE_TYPE=$(grep "^cache_type=" $CONFIG_FILE | cut -d'=' -f2) 	
     if [ "$ENTERED_CACHE_TYPE" == "varnish" ]; then
