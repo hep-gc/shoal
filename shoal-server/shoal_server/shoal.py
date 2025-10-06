@@ -194,6 +194,8 @@ class WebpyServer(Thread):
         self.urls = (
             '/all/?(\d+)?/?', 'shoal_server.view.allsquids',
             '/nearest/?(\d+)?/?', 'shoal_server.view.nearest',
+            '/nearestvarnish/?(\d+)?/?', 'shoal_server.view.nearestvarnish',
+            '/nearestsquid/?(\d+)?/?', 'shoal_server.view.nearestsquid',
             '/nearestverified/?(\d+)?/?', 'shoal_server.view.nearestverified',
             '/wpad.dat', 'shoal_server.view.wpad',
             '/(\d+)?/?', 'shoal_server.view.index',

@@ -56,15 +56,15 @@ def get_geolocation(ip):
         logger.exception(exc)
         return None
 
-def get_nearest_squids(ip, count=10):
+def get_nearest_squids(ip, count=10, cache_type=None):
     """
         Previously this function returned list of all squids ranked by geographical distance.
         It makes sence that the returned list should always be of verified or same domain squids.
         For this reason, this function now simply calls  get_nearest_verified_squids.
     """
-    return get_nearest_verified_squids(ip, count)
+    return get_nearest_verified_squids(ip, count, cache_type)
 
-def get_nearest_verified_squids(ip, count=10):
+def get_nearest_verified_squids(ip, count=10, cache_type):
     """
         Given an IP return a sorted list of nearest squids up to a given count
         Takes into account the special cases where a squid cannot be verified
@@ -96,6 +96,10 @@ def get_nearest_verified_squids(ip, count=10):
     squid_key_list = list(web.shoal)
     for squid_key in squid_key_list:
         squid = web.shoal[squid_key]
+
+        if cache_type is not None and squid.cache_type != cache_type:
+            continue
+
         try:
             maxload = squid.maxload
         except:

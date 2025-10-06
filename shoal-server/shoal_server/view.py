@@ -31,6 +31,16 @@ class nearest:
         web.header('Content-Type', 'application/json')
         return view_nearest(count)
 
+class nearestvarnish:
+    def GET(self, count):
+        web.header('Content-Type', 'application/json')
+        return view_nearest(count, 'varnish')
+
+class nearestsquid:
+    def GET(self, count):
+        web.header('Content-Type', 'application/json')
+        return view_nearest(count, 'squid')
+
 class nearestverified:
     def GET(self, count):
         web.header('Content-Type', 'application/json')
@@ -79,9 +89,9 @@ def view_index(size):
     lower, upper = int(size * (page - 1)), int(size * page)
     return render.index(time(), total, sorted_shoal[lower:upper], page, pages, size)
 
-def view_nearest(count):
+def view_nearest(count, cache_type =None):
     """
-        returns the nearest squid as a JSON formatted str
+        returns the nearest cache proxy as a JSON formatted str
     """
     try:
         count = int(count)
@@ -90,7 +100,7 @@ def view_nearest(count):
 
     ip = web.ctx['ip']
 
-    squids = utilities.get_nearest_squids(ip, count)
+    squids = utilities.get_nearest_squids(ip, count, cache_type)
     if squids:
         squid_json = {}
         for i, squid in enumerate(squids):
@@ -119,7 +129,7 @@ def view_nearest(count):
 
 def view_nearest_verified(count):
     """
-        returns the nearest squid as a JSON formatted str
+        returns the nearest cache proxy as a JSON formatted str
     """
     try:
         count = int(count)
