@@ -250,9 +250,9 @@ if $USE_NOT_DEFAULT; then
     
 	detected_cache=$(detectCacheType)
     detected_port=$(getCachePort "$detected_cache")	
-	
-	setEachNewValue $CONFIG_FILE squid_port "this is the cache server port" $detected_port $OLD_CACHE_PORT 
-	echo >&2 "Detected running: $detected_cache"
+    DEFAULT_CACHE_TYPE=$detected_cache
+
+	setEachNewValue $CONFIG_FILE squid_port "this is the cache server port" $detected_port $OLD_CACHE_PORT	
     setEachNewValue $CONFIG_FILE cache_type "this is the cache server type (squid or varnish)" $DEFAULT_CACHE_TYPE $OLD_CACHE_TYPE
        
     ENTERED_CACHE_TYPE=$(grep "^cache_type=" $CONFIG_FILE | cut -d'=' -f2) 
