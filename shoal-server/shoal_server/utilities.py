@@ -64,7 +64,7 @@ def get_nearest_squids(ip, count=10, cache_type=None):
     """
     return get_nearest_verified_squids(ip, count, cache_type)
 
-def get_nearest_verified_squids(ip, count=10, cache_type):
+def get_nearest_verified_squids(ip, count=10, cache_type= None):
     """
         Given an IP return a sorted list of nearest squids up to a given count
         Takes into account the special cases where a squid cannot be verified
@@ -303,3 +303,4 @@ def _is_available(squid):
         squid.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. Squid is configured for Local Access Only. Cannot verify %s" % (badpaths, len(paths), badflags, len(paths), hostname)
         logger.error(squid.error)
         return False        
+
