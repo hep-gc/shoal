@@ -77,7 +77,7 @@ def detect_cache_type():
     except:
         pass
 
-    return 'squid', 'squid', 3128  # default
+    return 'squid', 'squid', 3128  
 
 detected_type, detected_user, detected_port = detect_cache_type()
 cache_type = detected_type
@@ -230,14 +230,16 @@ if config_file.has_option("logging", "logging_level"):
 
 if config_file.has_option("general", "cache_type"):
     cache_type = config_file.get("general", "cache_type").lower()
+    
     if cache_type == 'varnish':
         cache_process_name = 'varnishd'
         cache_user = 'varnish'
         if not config_file.has_option("general", "squid_port"):
-            squid_port = 6081  # Default Varnish port
+            squid_port = 6081  
     elif cache_type == 'squid':
         cache_process_name = 'squid'
         cache_user = 'squid'
+        
         if not config_file.has_option("general", "squid_port"):
             squid_port = 3128
 
