@@ -56,13 +56,13 @@ def get_geolocation(ip):
         logger.exception(exc)
         return None
 
-def get_nearest_squids(ip, count=10, count=None):
+def get_nearest_squids(ip, count=10, cache_type=None):
     """
         Previously this function returned list of all squids ranked by geographical distance.
         It makes sence that the returned list should always be of verified or same domain squids.
         For this reason, this function now simply calls  get_nearest_verified_squids.
     """
-    return get_nearest_verified_squids(ip, count)
+    return get_nearest_verified_squids(ip, count,cache_type)
 
 def get_nearest_verified_squids(ip, count=10, cache_type= None):
     """
@@ -99,7 +99,8 @@ def get_nearest_verified_squids(ip, count=10, cache_type= None):
 
         if cache_type is not None and squid.cache_type != cache_type:
             continue
-
+        
+        
         try:
             maxload = squid.maxload
         except:
@@ -303,6 +304,7 @@ def _is_available(squid):
         squid.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. Squid is configured for Local Access Only. Cannot verify %s" % (badpaths, len(paths), badflags, len(paths), hostname)
         logger.error(squid.error)
         return False        
+
 
 
 
