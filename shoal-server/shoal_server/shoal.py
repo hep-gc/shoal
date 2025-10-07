@@ -20,7 +20,7 @@ logger.setLevel(config.logging_level)
 # Basic class to store and update information about each squid server.
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, allow_verification, drift_detected, drift_time, local, max_load=122000, last_active=time(),cache_type="squid", upstream="both"):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, allow_verification, drift_detected, drift_time, local, max_load=122000, last_active=time(),cache_type="squid", upstream="Both"):
         """
         constructor for SquidNode, time created is current time
         """
@@ -47,7 +47,7 @@ class SquidNode(object):
         if upstream: 
             self.upstream = upstream
         else:
-            self.upstream = "both"
+            self.upstream = "Both"
 
     def update(self, load, drift_detected, drift_time):
         """
