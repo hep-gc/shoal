@@ -56,21 +56,22 @@ def get_geolocation(ip):
         logger.exception(exc)
         return None
 
-def get_nearest_squids(ip, count=10, cache_type=None):
+def get_nearest_squids(ip, count=10, upstream_type=None):
     """
         Previously this function returned list of all squids ranked by geographical distance.
         It makes sence that the returned list should always be of verified or same domain squids.
         For this reason, this function now simply calls  get_nearest_verified_squids.
     """
-    return get_nearest_verified_squids(ip, count,cache_type)
+    return get_nearest_verified_squids(ip, count,upstream_type)
 
-def get_nearest_verified_squids(ip, count=10, cache_type= None):
+def get_nearest_verified_squids(ip, count=10, upstream_type= None):
     """
         Given an IP return a sorted list of nearest squids up to a given count
         Takes into account the special cases where a squid cannot be verified
         and will check the domain of the requester to see if it matches and if
         it does it will serve it to the requester
     """
+    upstream_list = [upstream_type, 'both']
     request_data = get_geolocation(ip)
     if not request_data:
         logger.debug("No geolocation for %s", str(ip))
@@ -97,7 +98,7 @@ def get_nearest_verified_squids(ip, count=10, cache_type= None):
     for squid_key in squid_key_list:
         squid = web.shoal[squid_key]
 
-        if cache_type is not None and squid.cache_type != cache_type:
+        if upstream_type is not None and squid.upstream.lower() not in upstream_list:
             continue
         
         
@@ -304,6 +305,7 @@ def _is_available(squid):
         squid.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. Squid is configured for Local Access Only. Cannot verify %s" % (badpaths, len(paths), badflags, len(paths), hostname)
         logger.error(squid.error)
         return False        
+
 
 
 
