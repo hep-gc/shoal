@@ -305,6 +305,9 @@ def getSortedSquids(squid_dict, current_list, target_num, frontier_format):
 
 get_args()
 
+# reads data from a URL from a Shoal server, parses it, prepares a list of proxies
+# stored in cvmfs_http_proxy, executes command to set CVMFS proxies if dump is not specified.
+
 if server == server_default:
     if frontier:
         server = server_packagemanager
