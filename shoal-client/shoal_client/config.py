@@ -18,6 +18,8 @@ import logging
 """
 # set default values
 shoal_server_url = 'http://localhost:8080/nearest'
+cvmfs_url = 'http://localhost:8080/nearestcvmfs'
+packagemanager_url = 'http://localhost:8080/nearestpackagemanager'
 default_squid_proxy = "DIRECT"
 paths = [
 "http://cvmfs-stratum-one.cern.ch/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
