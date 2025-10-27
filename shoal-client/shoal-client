@@ -29,7 +29,11 @@ from shoal_client import config as config
 
 syslog.openlog("shoal-client")
 
-server = config.shoal_server_url
+server_default = config.shoal_server_url
+server_cvmfs = config.cvmfs_url
+server_packagemanager = config.packagemanager_url
+
+server = server_default
 default_http_proxy = config.default_squid_proxy
 local_squid = None
 
@@ -301,10 +305,11 @@ def getSortedSquids(squid_dict, current_list, target_num, frontier_format):
 
 get_args()
 
-
-    # reads data from a URL from a Shoal server, parses it, prepares a list of proxies
-    # stored in cvmfs_http_proxy, executes command to set CVMFS proxies if dump is not specified.
-
+if server == server_default:
+    if frontier:
+        server = server_packagemanager
+    else:
+        server = server_cvmfs
 
 ## try to load default value from env variable
 try:
