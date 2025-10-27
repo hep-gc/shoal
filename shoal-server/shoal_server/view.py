@@ -31,15 +31,15 @@ class nearest:
         web.header('Content-Type', 'application/json')
         return view_nearest(count)
 
-class nearestvarnish:
+class nearestcvmfs:
     def GET(self, count):
         web.header('Content-Type', 'application/json')
-        return view_nearest(count, 'varnish')
+        return view_nearest(count, 'cvmfs')
 
-class nearestsquid:
+class nearestpackagemanager:
     def GET(self, count):
         web.header('Content-Type', 'application/json')
-        return view_nearest(count, 'squid')
+        return view_nearest(count, 'frontier')
 
 class nearestverified:
     def GET(self, count):
@@ -89,7 +89,7 @@ def view_index(size):
     lower, upper = int(size * (page - 1)), int(size * page)
     return render.index(time(), total, sorted_shoal[lower:upper], page, pages, size)
 
-def view_nearest(count, cache_type =None):
+def view_nearest(count, upstream_type =None):
     """
         returns the nearest cache proxy as a JSON formatted str
     """
@@ -100,7 +100,7 @@ def view_nearest(count, cache_type =None):
 
     ip = web.ctx['ip']
 
-    squids = utilities.get_nearest_squids(ip, count, cache_type)
+    squids = utilities.get_nearest_squids(ip, count, upstream_type)
     if squids:
         squid_json = {}
         for i, squid in enumerate(squids):
