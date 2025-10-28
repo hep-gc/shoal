@@ -20,7 +20,7 @@ logger.setLevel(config.logging_level)
 # Basic class to store and update information about each squid server.
 class SquidNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, allow_verification, drift_detected, drift_time, local, max_load=122000, last_active=time()):
+    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, allow_verification, drift_detected, drift_time, local, max_load=122000, last_active=time(),cache_type="squid", upstream="Both"):
         """
         constructor for SquidNode, time created is current time
         """
@@ -43,6 +43,11 @@ class SquidNode(object):
         self.last_verified = 0
         self.error = 'All systems OK!'
         self.local = local
+        self.cache_type=cache_type
+        if upstream: 
+            self.upstream = upstream
+        else:
+            self.upstream = "Both"
 
     def update(self, load, drift_detected, drift_time):
         """
@@ -69,8 +74,11 @@ class SquidNode(object):
             "verified": self.verified,
             "global_access": self.global_access,
             "max_load": self.max_load,
-            "local": self.local,},)
-
+            "local": self.local,
+            "cache_type": self.cache_type,
+            "upstream": self.upstream,   
+})
+                  
 # Main application that will monitor RabbitMQ and ShoalUpdate threads.
 class ThreadMonitor(Thread):
 
@@ -186,6 +194,8 @@ class WebpyServer(Thread):
         self.urls = (
             '/all/?(\d+)?/?', 'shoal_server.view.allsquids',
             '/nearest/?(\d+)?/?', 'shoal_server.view.nearest',
+            '/nearestcvmfs/?(\d+)?/?', 'shoal_server.view.nearestcvmfs',
+            '/nearestpackagemanager/?(\d+)?/?', 'shoal_server.view.nearestpackagemanager',
             '/nearestverified/?(\d+)?/?', 'shoal_server.view.nearestverified',
             '/wpad.dat', 'shoal_server.view.wpad',
             '/(\d+)?/?', 'shoal_server.view.index',
@@ -569,7 +579,10 @@ class RabbitMQConsumer(Thread):
                     drift_time,
                     local,
                     maxload,
-                    time_sent)
+                    time_sent,
+                    cache_type=data.get('cache_type', 'squid'),
+                    upstream=data.get('upstream', 'Both')
+)
                 self.shoal[key] = new_squid
         self.acknowledge_message(basic_deliver.delivery_tag)
 
