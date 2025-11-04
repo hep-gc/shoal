@@ -31,7 +31,7 @@ syslog.openlog("shoal-client")
 
 server_default = config.shoal_server_url
 server_cvmfs = config.cvmfs_url
-server_packagemanager = config.packagemanager_url
+server_conditions = config.conditions_url
 
 server = server_default
 default_http_proxy = config.default_squid_proxy
@@ -310,7 +310,7 @@ get_args()
 
 if server == server_default:
     if frontier:
-        server = server_packagemanager
+        server = server_conditions
     else:
         server = server_cvmfs
 
