@@ -36,7 +36,7 @@ class nearestcvmfs:
         web.header('Content-Type', 'application/json')
         return view_nearest(count, 'cvmfs')
 
-class nearestpackagemanager:
+class nearestconditions:
     def GET(self, count):
         web.header('Content-Type', 'application/json')
         return view_nearest(count, 'frontier')
