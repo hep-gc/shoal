@@ -195,7 +195,7 @@ class WebpyServer(Thread):
             '/all/?(\d+)?/?', 'shoal_server.view.allsquids',
             '/nearest/?(\d+)?/?', 'shoal_server.view.nearest',
             '/nearestcvmfs/?(\d+)?/?', 'shoal_server.view.nearestcvmfs',
-            '/nearestpackagemanager/?(\d+)?/?', 'shoal_server.view.nearestpackagemanager',
+            '/nearestconditions/?(\d+)?/?', 'shoal_server.view.nearestconditions',
             '/nearestverified/?(\d+)?/?', 'shoal_server.view.nearestverified',
             '/wpad.dat', 'shoal_server.view.wpad',
             '/(\d+)?/?', 'shoal_server.view.index',
