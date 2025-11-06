@@ -27,9 +27,6 @@ DEFAULT_AMQP_EXCHANGE=''
 DEFAULT_LOG_FILE=''
 DEFAULT_LOGGING_LEVEL=''
 DEFAULT_ADMIN_EMAIL=root@localhost
-DEFAULT_CACHE_PORT=''
-DEFAULT_CACHE_TYPE=''
-DEFAULT_UPSTREAM=''
 
 OLD_INTERVAL=''
 OLD_AMQP_SERVER_URL=''
@@ -39,135 +36,7 @@ OLD_AMQP_EXCHANGE=''
 OLD_LOG_FILE=''
 OLD_LOGGING_LEVEL=''
 OLD_ADMIN_EMAIL=''
-OLD_CACHE_PORT=''
-OLD_CACHE_TYPE=''
-OLD_UPSTREAM=''
-
-##################################################
-
-compareShoalVersion() {
-    local first_version=$1
-    local second_version=$2
-    local lower=$(printf '%s\n' "$first_version" "$second_version"|sort -V|head -n1)
-    echo "$lower"
-}
-
-setEachNewValue() {
-    local config_file=$1
-    local label=$2
-    local info=$3
-    local default=$4
-    local old=$5
-    local enter_value
-
-    if [ ! -z "$old" ]; then
-        echo $"Please enter a value for setting the $label, $info. Your currently $label value is '$old', and the default value is '$default'. If you want to use the default, press 'Enter':"
-    else
-        echo $"Please enter a value for setting the $label, $info. The default value is '$default'. If you want to use the default, press 'Enter':"
-    fi
-    read enter_value
-    if [ ! -z "$enter_value" ]; then
-        if [ "$label" == "log_file" ]; then
-            LOG_FILE=$enter_value
-        fi
-        if [ "$label" == "admin_email" ]; then
-            origin=$"#$label=$default"
-        else
-            origin=$"$label=$default"
-        fi
-        replace=$"$label=$enter_value"
-        sed -i "s|$origin|$replace|g" $config_file
-    fi
-
-}
-
-detectCacheType() {
-    if pidof squid >/dev/null 2>&1; then
-        echo "squid"
-    elif pidof varnishd >/dev/null 2>&1; then
-        echo "varnish"
-    else
-        echo ""
-    fi
-}
-
-getCachePort() {
-    local cache_type=$1
-    local default_port=""
-    
-    case "$cache_type" in
-        "squid")
-            default_port="3128"
-            ;;
-        "varnish")
-            default_port="6081"
-            ;;
-    esac 
-    echo "$default_port"
-}
-
-###############################
-#  MAIN                       #
-###############################
-
-# test if python2 or python3 was used for the install
-if [ ! -z "$SHOAL_PYTHON" ] && [ ! -z "${SHOAL_PYTHON[1]}" ]; then
-    SHOAL_PYTHON_VERSION=${SHOAL_PYTHON[1]}
-fi 
-if [ ! -z "$SHOAL_PYTHON_THREE" ] && [ ! -z "${SHOAL_PYTHON_THREE[1]}" ]; then
-    SHOAL_PYTHON_THREE_VERSION=${SHOAL_PYTHON_THREE[1]}
-fi 
-
-if [ ! -z "$SHOAL_PYTHON_VERSION" ] && [ ! -z "$SHOAL_PYTHON_THREE_VERSION" ]; then
-    if [ "$SHOAL_PYTHON_VERSION" != "$SHOAL_PYTHON_THREE_VERSION" ]; then
-        lower_version=$(compareShoalVersion $SHOAL_PYTHON_VERSION $SHOAL_PYTHON_THREE_VERSION)
-        if [ "$lower_version" == "$SHOAL_PYTHON_THREE_VERSION" ]; then
-            echo "Could not update to a newer version using python2 when there is already a python3 version installed; please remove the python2 version shoal-agent and update the python3 version or remove the python3 version shoal-agent first before executing this install script"
-            exit 0
-        fi
-    fi
-    SOURCE_PATH=/usr/local/share/shoal-agent
-elif [ ! -z "$SHOAL_PYTHON_VERSION" ]; then
-    SOURCE_PATH=/usr/share/shoal-agent
-elif [ ! -z "$SHOAL_PYTHON_THREE_VERSION" ]; then
-    SOURCE_PATH=/usr/local/share/shoal-agent
-else
-    echo "Could not find the shoal-agent package. Please check your pip install."
-    exit 0
-fi
-
-# add user/group shoal/squid/varnish
-groupadd -f shoal
-useradd shoal -g shoal 2>/dev/null
-groupadd -f squid 2>/dev/null
-useradd squid -g squid 2>/dev/null
-groupadd -f varnish 2>/dev/null
-useradd varnish -g varnish 2>/dev/null
-
-# copy files to proper locations
-cp "$SOURCE_PATH/shoal-agent.init" /etc/init.d/
-cp "$SOURCE_PATH/shoal-agent.logrotate" /etc/logrotate.d/
-cp "$SOURCE_PATH/shoal-agent.service" /usr/lib/systemd/system/ 2>/dev/null
-
-SOURCE_CONFIG_FILE="$SOURCE_PATH/shoal_agent.conf"
-
-if [ ! -d "$CONFIG_DIRECTORY" ]; then
-    mkdir $CONFIG_DIRECTORY
-fi
-
-# rename the existing config file if has one
-if [ -e "$CONFIG_FILE" ] || [ -L "$CONFIG_FILE" ]; then
-    mv $CONFIG_FILE $CONFIG_FILE_OLD
-    echo "Found an existing config file/symlink at $CONFIG_FILE. It is renamed to $CONFIG_FILE_OLD."
-fi
-
-# copy the new config file to the proper location
-cp $SOURCE_CONFIG_FILE $CONFIG_DIRECTORY
-
-while getopts b flag
-do
-    case "${flag}" in
-        b) USE_NOT_DEFAULT=false;;
+DEFAULT=false;;
     esac
 done
 
@@ -191,12 +60,6 @@ if $USE_NOT_DEFAULT; then
             "log_file") DEFAULT_LOG_FILE=${line_array[1]}
             ;;
             "logging_level") DEFAULT_LOGGING_LEVEL=${line_array[1]}
-            ;;
-			"squid_port") DEFAULT_CACHE_PORT=${line_array[1]}
-			;;
-		    "cache_type") DEFAULT_CACHE_TYPE=${line_array[1]}
-			;;
-			"upstream") DEFAULT_UPSTREAM=${line_array[1]}
             ;;
         esac
     done <<< "$LINES"
@@ -223,12 +86,6 @@ if $USE_NOT_DEFAULT; then
                 "logging_level") OLD_LOGGING_LEVEL=${line_array[1]}
                 ;;
                 "admin_email") OLD_ADMIN_EMAIL=${line_array[1]}
-				;;
-				"squid_port") OLD_CACHE_PORT=${line_array[1]}
-				;;
-				"cache_type") OLD_CACHE_TYPE=${line_array[1]}
-				;;
-				"upstream") OLD_UPSTREAM=${line_array[1]}
                 ;;
             esac
         done <<< "$OLD_LINES"
@@ -247,31 +104,6 @@ if $USE_NOT_DEFAULT; then
     setEachNewValue $CONFIG_FILE amqp_exchange "this is the RabbitMQ exchange name" $DEFAULT_AMQP_EXCHANGE $OLD_AMQP_EXCHANGE
     setEachNewValue $CONFIG_FILE log_file "this is to set the path of the log file" $DEFAULT_LOG_FILE $OLD_LOG_FILE
     setEachNewValue $CONFIG_FILE logging_level "this decides how much information to write to the log file, select one from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'" $DEFAULT_LOGGING_LEVEL $OLD_LOGGING_LEVEL
-    
-	detected_cache=$(detectCacheType)
-    detected_port=$(getCachePort "$detected_cache")	
-	
-	setEachNewValue $CONFIG_FILE squid_port "this is the cache server port" $detected_port $OLD_CACHE_PORT	
-
-	if [ ! -z "$detected_cache" ]; then
-    	sed -i "s|^cache_type=.*|cache_type=$detected_cache|g" $CONFIG_FILE
-	fi
-	setEachNewValue $CONFIG_FILE cache_type "this is the cache server type (squid or varnish)" "$detected_cache" "$OLD_CACHE_TYPE"
-	
-    ENTERED_CACHE_TYPE=$(grep "^cache_type=" $CONFIG_FILE | cut -d'=' -f2) 	
-    if [ "$ENTERED_CACHE_TYPE" == "varnish" ]; then
-        while true; do
-        setEachNewValue $CONFIG_FILE upstream "this is the varnish server upstream (cvmfs or frontier)" $DEFAULT_UPSTREAM $OLD_UPSTREAM
-        ENTERED_UPSTREAM=$(grep "^upstream=" $CONFIG_FILE | cut -d'=' -f2)
-        if [ "$ENTERED_UPSTREAM" == "cvmfs" ] || [ "$ENTERED_UPSTREAM" == "frontier" ]; then
-            break
-        else
-            echo "Error: You must specify 'cvmfs' or 'frontier' for varnish upstream."
-            sed -i "s|^upstream=.*|upstream=|g" $CONFIG_FILE
-        fi
-    done
-    fi
-fi
 
 # create log file and change ownership
 touch $LOG_FILE

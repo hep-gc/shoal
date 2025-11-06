@@ -84,6 +84,18 @@ cache_type = detected_type
 cache_process_name = detected_type if detected_type == 'squid' else 'varnishd'
 cache_user = detected_user
 default_cache_port = detected_port
+default_cache_port = detected_port
+
+if cache_type == 'varnish':
+    if exists('/etc/sysconfig/frontier-varnish'):
+        upstream = 'frontier'
+    elif exists('/etc/sysconfig/cvmfs-varnish'):
+        upstream = 'cvmfs'
+    else:
+        upstream = 'cvmfs'
+else:
+    upstream = 'both'
+
 
 try:
     cache_uid = getpwnam(cache_user)[2]
@@ -228,26 +240,8 @@ if config_file.has_option("logging", "logging_level"):
         print("Configuration file problem: Invalid logging level")
         sys.exit(1)
 
-if config_file.has_option("general", "cache_type"):
-    cache_type = config_file.get("general", "cache_type").lower()
-    
-    if cache_type == 'varnish':
-        cache_process_name = 'varnishd'
-        cache_user = 'varnish'
-        if not config_file.has_option("general", "squid_port"):
-            squid_port = 6081  
-    elif cache_type == 'squid':
-        cache_process_name = 'squid'
-        cache_user = 'squid'
-        
-        if not config_file.has_option("general", "squid_port"):
-            squid_port = 3128
-
 if config_file.has_option("general", "squid_port") and not squid_auto_config:
     squid_port = config_file.get("general", "squid_port")
-    
-if config_file.has_option("general", "upstream"):
-    upstream = config_file.get("general", "upstream").lower()
     
 if config_file.has_option("general", "max_load"):
     max_load = config_file.get("general", "max_load")
