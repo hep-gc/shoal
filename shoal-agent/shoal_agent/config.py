@@ -63,17 +63,6 @@ test_targeturl = "http://cvmfs-stratum-one.cern.ch/cvmfs/atlas.cern.ch/.cvmfswhi
 cache_process_name = 'squid'
 cache_user = 'squid'
 default_cache_port = 3128
-default_cache_port = detected_port
-
-if cache_type == 'varnish':
-    if exists('/etc/sysconfig/frontier-varnish'):
-        upstream = 'frontier'
-    elif exists('/etc/sysconfig/cvmfs-varnish'):
-        upstream = 'cvmfs'
-    else:
-        upstream = 'cvmfs'
-else:
-    upstream = 'both'
 
 def detect_cache_type():
     try:
@@ -96,6 +85,16 @@ cache_process_name = detected_type if detected_type == 'squid' else 'varnishd'
 cache_user = detected_user
 default_cache_port = detected_port
 
+if cache_type == 'varnish':
+    if exists('/etc/sysconfig/frontier-varnish'):
+        upstream = 'frontier'
+    elif exists('/etc/sysconfig/cvmfs-varnish'):
+        upstream = 'cvmfs'
+    else:
+        upstream = 'cvmfs'
+else:
+    upstream = 'both'
+    
 try:
     cache_uid = getpwnam(cache_user)[2]
     cache_pid = int(check_output(['pidof', '-s', cache_process_name]))
