@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 # Author: Colson Drimiel <heprc-shoal@uvic.ca>
 # Copyright (C) 2013 University of Victoria
@@ -174,25 +174,47 @@ def functionalTest(ip, port):
     }
     targeturl = test_targeturl   
     try:
-        # print("Trying", targeturl)
-        repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
-        if repo is None:
-            repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
-        file = requests.get(targeturl, proxies=proxies, timeout=2)
-        f = file.content
-        for line in f.splitlines():            
-            if line.startswith(getString('N')):
-                if getString(repo) in line:
+        if config.cache_type == 'varnish':
+            if config.upstream == 'cvmfs':
+                targeturl = "http://cvmfs-s1goc.opensciencegrid.org:8000/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"
+                repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+                if repo is None:
+                    repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+                file = requests.get(targeturl, timeout=2)
+                f = file.content
+                for line in f.splitlines():            
+                    if line.startswith(getString('N')):
+                        if getString(repo) in line:
+                            return True
+                logging.error("%s failed verification on %s" % (ip, targeturl))
+                return False
+            elif config.upstream == 'frontier':
+                targeturl = proxystring + "/atlr"
+                file = requests.get(targeturl, headers={"X-frontier-id": "shoal-agent-test", "Cache-Control": "max-age=0"}, timeout=2)
+                if file.status_code == 200:
                     return True
-        logging.error("%s failed verification on %s" % (ip, targeturl))
-        return False
+                logging.error("%s failed verification on %s" % (ip, targeturl))
+                return False
+        else:
+            # print("Trying", targeturl)
+            repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+            if repo is None:
+                repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+            file = requests.get(targeturl, proxies=proxies, timeout=2)
+            f = file.content
+            for line in f.splitlines():            
+                if line.startswith(getString('N')):
+                    if getString(repo) in line:
+                        return True
+            logging.error("%s failed verification on %s" % (ip, targeturl))
+            return False
     except:
         # note that this would catch any RE errors aswell but they are
         # specified in the config and all fit the pattern.
         logging.error("%s timeout or proxy error on %s repo" % (ip, targeturl))
         return False
     return True
-
+'''
 def sendEmail():
     try:
         msg = EmailMessage()
@@ -225,7 +247,7 @@ def writeEmailTime(time_to_write):
         f.close()
     except:
         logging.error("Have error when writing the time stamp to the last sent email file")
-
+'''
 def main(): 
     # Sets up uuid, hostname, cache_port, public/private/external ip, and interface
     # Establishes connection and publishes the load and ip of the cache server using
@@ -311,6 +333,7 @@ def main():
     last_test_time = time.time()
     available = functionalTest(test_ip, config.squid_port)
     cache_available = available
+    '''
     try:
         # if has history email time
         with open(config.last_sent_email) as f:
@@ -326,6 +349,7 @@ def main():
         if not available:
             sendEmail()
             writeEmailTime(last_email_time)
+    '''
     test_interval = SHORT_INTERVAL
     
     logging.info("shoal-agent configured, starting up")
@@ -354,6 +378,7 @@ def main():
                     logging.error(exc)
             else:
                 test_interval = SHORT_INTERVAL
+                '''
                 try:
                     if current_time - last_email_time > LONG_INTERVAL:
                         sendEmail()
@@ -363,6 +388,7 @@ def main():
                 except Exception as exc:
                     logging.error("Have error when reading the last sent email time")
                     logging.error(exc)
+                '''
             time.sleep(INTERVAL)
         except KeyboardInterrupt:
             logging.info("shoal-agent exiting")
