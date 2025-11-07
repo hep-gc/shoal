@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import re
 from os.path import exists, join, abspath
 import sys
 import logging
@@ -96,20 +97,29 @@ else:
     upstream = 'both'
     
 try:
-    cache_uid = getpwnam(cache_user)[2]
     cache_pid = int(check_output(['pidof', '-s', cache_process_name]))
-    def get_cache_port(filename):
-        with open(filename) as f:
-            for i, line in enumerate(f):
-                if i != 0:
-                    lineList = line.strip().split()
-                    if int(lineList[7]) == int(cache_uid):
-                        if int(lineList[1].split(':')[0],16) == 0:
-                            return int(lineList[1].split(':')[1],16)
-            return None
-    squid_port = get_cache_port('/proc/' + str(cache_pid) + '/net/tcp') or default_cache_port
-    squid_port = get_cache_port('/proc/' + str(cache_pid) + '/net/tcp6') or squid_port
-    squid_auto_config = True
+    if cache_type == 'squid':
+        cache_uid = getpwnam(cache_user)[2]
+        def get_cache_port(filename):
+            with open(filename) as f:
+                for i, line in enumerate(f):
+                    if i != 0:
+                        lineList = line.strip().split()
+                        if int(lineList[7]) == int(cache_uid):
+                            if int(lineList[1].split(':')[0],16) == 0:
+                                return int(lineList[1].split(':')[1],16)
+                return None
+        squid_port = get_cache_port('/proc/' + str(cache_pid) + '/net/tcp') or default_cache_port
+        squid_port = get_cache_port('/proc/' + str(cache_pid) + '/net/tcp6') or squid_port
+        squid_auto_config = True
+    elif cache_type == 'varnish':
+        cmdline = check_output(['ps', '-p', str(cache_pid), '-o', 'args', '--no-headers']).decode('utf-8')
+        port_match = re.search(r'-a\s+(?:http=)?:(\d+)', cmdline)
+        if port_match:
+            squid_port = int(port_match.group(1))
+            squid_auto_config = True
+        else:
+            squid_port = default_cache_port
 except:
     squid_port = default_cache_port
     print("Couldn't auto config the squid port, use the default one ", squid_port)
@@ -247,4 +257,3 @@ if config_file.has_option("general", "max_load"):
 
 if config_file.has_option("general", "admin_email"):
     receiver_email = config_file.get("general", "admin_email")
-
