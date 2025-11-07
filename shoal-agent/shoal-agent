@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 # Author: Colson Drimiel <heprc-shoal@uvic.ca>
 # Copyright (C) 2013 University of Victoria
@@ -214,7 +214,7 @@ def functionalTest(ip, port):
         logging.error("%s timeout or proxy error on %s repo" % (ip, targeturl))
         return False
     return True
-'''
+
 def sendEmail():
     try:
         msg = EmailMessage()
@@ -247,7 +247,7 @@ def writeEmailTime(time_to_write):
         f.close()
     except:
         logging.error("Have error when writing the time stamp to the last sent email file")
-'''
+
 def main(): 
     # Sets up uuid, hostname, cache_port, public/private/external ip, and interface
     # Establishes connection and publishes the load and ip of the cache server using
@@ -333,7 +333,7 @@ def main():
     last_test_time = time.time()
     available = functionalTest(test_ip, config.squid_port)
     cache_available = available
-    '''
+    
     try:
         # if has history email time
         with open(config.last_sent_email) as f:
@@ -349,7 +349,7 @@ def main():
         if not available:
             sendEmail()
             writeEmailTime(last_email_time)
-    '''
+    
     test_interval = SHORT_INTERVAL
     
     logging.info("shoal-agent configured, starting up")
@@ -378,7 +378,7 @@ def main():
                     logging.error(exc)
             else:
                 test_interval = SHORT_INTERVAL
-                '''
+                
                 try:
                     if current_time - last_email_time > LONG_INTERVAL:
                         sendEmail()
@@ -388,7 +388,7 @@ def main():
                 except Exception as exc:
                     logging.error("Have error when reading the last sent email time")
                     logging.error(exc)
-                '''
+                
             time.sleep(INTERVAL)
         except KeyboardInterrupt:
             logging.info("shoal-agent exiting")
