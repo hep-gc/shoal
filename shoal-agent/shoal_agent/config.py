@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import re
 from os.path import exists, join, abspath
+from shoal-agent import getString
 import sys
 import logging
 import requests
@@ -81,6 +82,13 @@ def detect_cache_type():
 
     return 'squid', 'squid', 3128  
 
+def getString(content):
+    try:
+        formatted = bytes(content, 'utf-8')
+    except:
+        formatted = bytes(content) # for python 2
+    return formatted
+    
 def detect_upstream(cache_type):
     if cache_type == 'varnish':
         targeturl = "http://cvmfs-s1goc.opensciencegrid.org:8000/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"
