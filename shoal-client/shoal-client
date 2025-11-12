@@ -202,38 +202,73 @@ def functionalTest(ip, port):
     proxies = {
         "http":proxystring,
     }
-    for targeturl in paths:
-        #if a url checks out testflag set to true, otherwise fails verification at end of loop
-        testflag = False
-        try:
-            # print("Trying", targeturl)
-            repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
-            if repo is None:
-                repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
-            file = requests.get(targeturl, proxies=proxies, timeout=2)
-            f = file.content
-            for line in f.splitlines():            
-                if line.startswith(getString('N')):
-                    if getString(repo) in line:
-                        testflag = True
-            if testflag is False:
-                syslog.syslog(syslog.LOG_ERR, "%s failed verification on %s" % (ip, targeturl))
-                return None
-        except:
-            # note that this would catch any RE errors aswell but they are
-            # specified in the config and all fit the pattern.
-            syslog.syslog(syslog.LOG_ERR, "%s timeout or proxy error on %s repo" % (ip, targeturl))
-            return None
+    cache_type = squid.cache_type if hasattr(squid, 'cache_type') else 'squid'
+    upstream = squid.upstream.lower() if hasattr(squid, 'upstream') else 'both'
     
-    start_time = time.time()
-    for targeturl in paths:
-        try:
-            file = requests.get(targeturl, proxies=proxies, timeout=2)
-        except Exception as exe:
-            syslog.syslog(syslog.LOG_ERR, "%s timeout or proxy error on %s repo" % (ip, targeturl))
-            return None
-    timer = time.time() - start_time
-    return timer
+    try:
+        if cache_type == 'varnish':
+            if upstream == 'cvmfs':
+                targeturl = "http://cvmfs-s1goc.opensciencegrid.org:8000/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"
+                repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+                if repo is None:
+                    repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+                file = requests.get(targeturl, timeout=2)
+                f = file.content
+                for line in f.splitlines():
+                    if line.startswith(bytes('N', 'utf-8')):
+                        if bytes(repo, 'utf-8') in line:
+                            return True
+                logger.error("%s failed verification on %s" % (ip, targeturl))
+                squid.error = "Varnish CVMFS cache failed verification"
+                return False
+            elif upstream == 'frontier':
+                targeturl = proxystring + "/atlr"
+                file = requests.get(targeturl, headers={"X-frontier-id": "shoal-server-verification", "Cache-Control": "max-age=0"}, timeout=2)
+                if file.status_code == 200:
+                    return True
+                logger.error("%s failed verification on %s" % (ip, targeturl))
+                squid.error = "Varnish Frontier cache failed verification. Status: %s" % file.status_code
+                return False
+        else:
+            for targeturl in paths:
+                #if a url checks out testflag set to true, otherwise fails verification at end of loop
+                testflag = False
+                try:
+                    # print("Trying", targeturl)
+                    repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+                    if repo is None:
+                        repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+                    file = requests.get(targeturl, proxies=proxies, timeout=2)
+                    f = file.content
+                    for line in f.splitlines():            
+                        if line.startswith(getString('N')):
+                            if getString(repo) in line:
+                                testflag = True
+                    if testflag is False:
+                        syslog.syslog(syslog.LOG_ERR, "%s failed verification on %s" % (ip, targeturl))
+                        return None
+                except:
+                    # note that this would catch any RE errors aswell but they are
+                    # specified in the config and all fit the pattern.
+                    syslog.syslog(syslog.LOG_ERR, "%s timeout or proxy error on %s repo" % (ip, targeturl))
+                    return None
+            
+            start_time = time.time()
+            for targeturl in paths:
+                try:
+                    file = requests.get(targeturl, proxies=proxies, timeout=2)
+                except Exception as exe:
+                    syslog.syslog(syslog.LOG_ERR, "%s timeout or proxy error on %s repo" % (ip, targeturl))
+                    return None
+            timer = time.time() - start_time
+            return timer
+
+    except Exception as exc:
+        logger.error("%s timeout or error: %s" % (ip, str(exc)))
+        squid.error = "Error during verification"
+        return False
+    
+    return True
 
 def getAvailableIp(squid):
     """
