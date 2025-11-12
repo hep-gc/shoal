@@ -250,61 +250,97 @@ def _is_available(squid):
     ip = str(squid.public_ip or squid.private_ip)
     port = str(squid.squid_port)
     hostname = squid.hostname
-
+    cache_type = squid.cache_type if hasattr(squid, 'cache_type') else 'squid'
+    upstream = squid.upstream.lower() if hasattr(squid, 'upstream') else 'both'
+    
     paths = config.paths
     proxystring = "http://%s:%s" % (ip, port)
     #set proxy
     proxies = {
         "http":proxystring,
     }
-    badpaths = 0
-    badflags = 0
-    # test the ip with all the urls
-    for targeturl in paths:
-        #if a url checks out testflag set to true, otherwise fails verification at end of loop
-        testflag = False
-        if badpaths < 4 and badflags < 4:
-            try:
-                logger.info("Trying %s", targeturl)
+        
+    try:
+        if cache_type == 'varnish':
+            if upstream == 'cvmfs':
+                targeturl = "http://cvmfs-s1goc.opensciencegrid.org:8000/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"
                 repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
                 if repo is None:
                     repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
-                file = requests.get(targeturl, proxies=proxies, timeout=2)
+                file = requests.get(targeturl, timeout=2)
                 f = file.content
                 for line in f.splitlines():
                     if line.startswith(bytes('N', 'utf-8')):
                         if bytes(repo, 'utf-8') in line:
-                            testflag = True
-                    if bytes('ERR_ACCESS_DENIED', 'utf-8') in line:
-                        squid.error = "The squid is configured to prevent external access. Squid is configured for Local Access Only. Cannot verify %s" % (hostname)
-                        logger.error(squid.error)
-                        return False
-                if testflag is False:
-                    badflags = badflags + 1
-                    logger.error(
-                        "%s failed verification on: %s. Currently %s out of %s IPs failing",
-                        ip, targeturl, badflags, len(paths))
-            except:
-                # note that this would catch any RE errors aswell but they are
-                # specified in the config and all fit the pattern.
-                badpaths = badpaths + 1
-                #logging.error(sys.exc_info()[1])
-                logger.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing on testing %s", targeturl, badpaths, len(paths), ip)
-            finally:
-                #Keep going
-                logger.debug("Next...")
+                            return True
+                logger.error("%s failed verification on %s" % (ip, targeturl))
+                squid.error = "Varnish CVMFS cache failed verification"
+                return False
+            elif upstream == 'frontier':
+                targeturl = proxystring + "/atlr"
+                file = requests.get(targeturl, headers={"X-frontier-id": "shoal-server-verification", "Cache-Control": "max-age=0"}, timeout=2)
+                if file.status_code == 200:
+                    return True
+                logger.error("%s failed verification on %s" % (ip, targeturl))
+                squid.error = "Varnish Frontier cache failed verification. Status: %s" % file.status_code
+                return False
         else:
-            squid.error = "The squid firewall blocks the external access. Squid is configured for Local Access Only. Cannot verify %s" % (hostname)
-            logger.error("%s repos failing, squid failed on verification. Squid is configured for Local Access Only. Cannot verify %s", badpaths, hostname)
-            return False
+            badpaths = 0
+            badflags = 0
+            # test the ip with all the urls
+            for targeturl in paths:
+                #if a url checks out testflag set to true, otherwise fails verification at end of loop
+                testflag = False
+                if badpaths < 4 and badflags < 4:
+                    try:
+                        logger.info("Trying %s", targeturl)
+                        repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+                        if repo is None:
+                            repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+                        file = requests.get(targeturl, proxies=proxies, timeout=2)
+                        f = file.content
+                        for line in f.splitlines():
+                            if line.startswith(bytes('N', 'utf-8')):
+                                if bytes(repo, 'utf-8') in line:
+                                    testflag = True
+                            if bytes('ERR_ACCESS_DENIED', 'utf-8') in line:
+                                squid.error = "The squid is configured to prevent external access. Squid is configured for Local Access Only. Cannot verify %s" % (hostname)
+                                logger.error(squid.error)
+                                return False
+                        if testflag is False:
+                            badflags = badflags + 1
+                            logger.error(
+                                "%s failed verification on: %s. Currently %s out of %s IPs failing",
+                                ip, targeturl, badflags, len(paths))
+                    except:
+                        # note that this would catch any RE errors aswell but they are
+                        # specified in the config and all fit the pattern.
+                        badpaths = badpaths + 1
+                        #logging.error(sys.exc_info()[1])
+                        logger.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing on testing %s", targeturl, badpaths, len(paths), ip)
+                    finally:
+                        #Keep going
+                        logger.debug("Next...")
+                else:
+                    squid.error = "The squid firewall blocks the external access. Squid is configured for Local Access Only. Cannot verify %s" % (hostname)
+                    logger.error("%s repos failing, squid failed on verification. Squid is configured for Local Access Only. Cannot verify %s", badpaths, hostname)
+                    return False
+        
+            if badpaths < len(paths) and badflags < len(paths):
+                #if all the IP is able to connect to the test URLs, return True
+                return True
+            else:
+                squid.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. Squid is configured for Local Access Only. Cannot verify %s" % (badpaths, len(paths), badflags, len(paths), hostname)
+                logger.error(squid.error)
+                return False  
+                
+    except Exception as exc:
+        logger.error("%s timeout or error: %s" % (ip, str(exc)))
+        squid.error = "Error during verification"
+        return False
+    
+    return True
 
-    if badpaths < len(paths) and badflags < len(paths):
-        #if all the IP is able to connect to the test URLs, return True
-        return True
-    else:
-        squid.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. Squid is configured for Local Access Only. Cannot verify %s" % (badpaths, len(paths), badflags, len(paths), hostname)
-        logger.error(squid.error)
-        return False        
 
 
 
