@@ -145,7 +145,7 @@ def parseServerData(jsonStr):
     # TODO should load this from a config file as it has to match the server
     # Nested properties (i.e geo_data) needs to be handled separately
     dataTypes = ["load", "distance", "squid_port", "last_active", "created", \
-                 "external_ip", "hostname", "public_ip", "private_ip", "local"]
+                 "external_ip", "hostname", "public_ip", "private_ip", "local","cache_type" , "upstream"]
 
     geoDataTypes = ["city", "region_name", "area_code", "time_zone", "dma_code", \
                     "metro_code", "country_code3", "latitude", "postal_code", \
