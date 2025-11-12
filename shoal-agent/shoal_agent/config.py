@@ -80,22 +80,29 @@ def detect_cache_type():
 
     return 'squid', 'squid', 3128  
 
+def detect_upstream(cache_type):
+    if cache_type == 'varnish':
+        targeturl = "http://cvmfs-s1goc.opensciencegrid.org:8000/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"
+        repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+        if repo is None:
+            repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+        file = requests.get(targeturl, timeout=2)
+        f = file.content
+        for line in f.splitlines():            
+            if line.startswith(getString('N')):
+                if getString(repo) in line:
+                    return 'cvmfs'
+        return 'frontier'
+    else:
+        return 'both'
+        
 detected_type, detected_user, detected_port = detect_cache_type()
 cache_type = detected_type
 cache_process_name = detected_type if detected_type == 'squid' else 'varnishd'
 cache_user = detected_user
 default_cache_port = detected_port
+upstream = detect_upstream(detected_type)
 
-if cache_type == 'varnish':
-    if exists('/etc/sysconfig/frontier-varnish'):
-        upstream = 'frontier'
-    elif exists('/etc/sysconfig/cvmfs-varnish'):
-        upstream = 'cvmfs'
-    else:
-        upstream = 'cvmfs'
-else:
-    upstream = 'both'
-    
 try:
     cache_pid = int(check_output(['pidof', '-s', cache_process_name]))
     if cache_type == 'squid':
