@@ -4,6 +4,7 @@ import re
 from os.path import exists, join, abspath
 import sys
 import logging
+import requests
 try:
     import configparser
 except ImportError:  # python < 3
