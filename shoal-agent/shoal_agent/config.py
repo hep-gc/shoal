@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import re
 from os.path import exists, join, abspath
-from shoal-agent import getString
 import sys
 import logging
 import requests
