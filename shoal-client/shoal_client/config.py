@@ -78,10 +78,10 @@ except:
     raise
 
 # sets defaults to the options in config_file
-    
-if config_file.has_option("general", "cvmfs_url"):
-    cvmfs_url = config_file.get("general", "cvmfs_url")
 
+if config_file.has_option("general", "shoal_server_url"):
+    shoal_server_url = config_file.get("general", "shoal_server_url")
+    
 if config_file.has_option("general", "conditions_url"):
     conditions_url = config_file.get("general", "conditions_url")
     
