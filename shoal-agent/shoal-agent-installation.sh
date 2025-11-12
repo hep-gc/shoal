@@ -108,10 +108,6 @@ fi
 # add user/group shoal/squid/varnish
 groupadd -f shoal
 useradd shoal -g shoal 2>/dev/null
-groupadd -f squid 2>/dev/null
-useradd squid -g squid 2>/dev/null
-groupadd -f varnish 2>/dev/null
-useradd varnish -g varnish 2>/dev/null
 
 # copy files to proper locations
 cp "$SOURCE_PATH/shoal-agent.init" /etc/init.d/
