@@ -29,7 +29,7 @@ from shoal_client import config as config
 
 syslog.openlog("shoal-client")
 
-server_default = config.cvmfs_url
+server_default = config.shoal_server_url
 server_conditions = config.conditions_url
 
 server = server_default
