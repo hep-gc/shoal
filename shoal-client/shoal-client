@@ -310,8 +310,6 @@ get_args()
 if server == server_default:
     if frontier:
         server = server_conditions
-    else:
-        server = server_cvmfs
 
 ## try to load default value from env variable
 try:
