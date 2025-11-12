@@ -17,7 +17,7 @@ import logging
    The first one found will be used.
 """
 # set default values
-cvmfs_url = 'http://localhost:8080/nearest'
+shoal_server_url = 'http://localhost:8080/nearest'
 conditions_url = 'http://localhost:8080/nearestconditions'
 default_squid_proxy = "DIRECT"
 paths = [
