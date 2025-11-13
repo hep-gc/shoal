@@ -193,7 +193,7 @@ def getString(content):
         formatted = bytes(content) # for python 2
     return formatted
 
-def functionalTest(ip, port):
+def functionalTest(ip, port, squid):
     """
     A list of paths are tested to see all repos are working, returns the "True" if it is verified or "False" if it cannot be
     """
@@ -202,8 +202,8 @@ def functionalTest(ip, port):
     proxies = {
         "http":proxystring,
     }
-    cache_type = squid.cache_type if hasattr(squid, 'cache_type') else 'squid'
-    upstream = squid.upstream.lower() if hasattr(squid, 'upstream') else 'both'
+    cache_type = squid.get('cache_type', 'squid')
+    upstream = squid.get('upstream', 'both').lower()
     
     try:
         if cache_type == 'varnish':
@@ -272,7 +272,7 @@ def functionalTest(ip, port):
 
 def getAvailableIp(squid):
     """
-    Functioanl test for return squids from broadcast and shoal-server
+    Functional test for return squids from broadcast and shoal-server
     Test both private and public ip and return private ip first if available
     """
     squid_private_ip = str(squid['private_ip']) if squid['private_ip'] else None
@@ -311,12 +311,12 @@ def getAvailableIp(squid):
             client_subnet = '.'.join(client_private_ip.split('.')[:2])
             same_subnet = squid_subnet == client_subnet
         if (same_subnet or client_private_ip_not_found):
-            test_time_cost = functionalTest(squid_private_ip, squid_port)
+            test_time_cost = functionalTest(squid_private_ip, squid_port, squid)
             if test_time_cost:
                 return_squid_ip = squid_private_ip
                 squid_type = 'private'  
     if not return_squid_ip and squid_public_ip:
-        test_time_cost = functionalTest(squid_public_ip, squid_port)
+        test_time_cost = functionalTest(squid_public_ip, squid_port, squid)
         if test_time_cost:
             return_squid_ip = squid_public_ip
     return {'available_squid_ip': return_squid_ip, 'time_cost': test_time_cost, 'squid_type': squid_type}
