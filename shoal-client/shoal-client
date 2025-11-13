@@ -414,6 +414,11 @@ if data:
     for squid_key in list(data):
         squid = data[squid_key]
         try:
+            if frontier:
+                squid_upstream = squid.get('upstream', 'both').lower()
+                if squid_upstream not in ['frontier', 'both']:
+                    continue 
+
             if not local_squid or not squid['private_ip'] or squid['private_ip'] != local_squid.split(':')[0]:
                 # test the squid received from shoal server
                 available_squid = getAvailableIp(squid)
