@@ -57,11 +57,11 @@ def get_local_squid(q, t):
     BROADCAST_ID = "fna349fn" #to make sure we don't confuse or get confused by other programs
 
     from socket import socket, AF_INET, SOCK_DGRAM
-    
+
     s = socket(AF_INET, SOCK_DGRAM) #create UDP socket
     s.bind(('', PORT))
     s.settimeout(t)
-    
+
     try:
         data, addr = s.recvfrom(1024) #wait for a packet
         data = data.decode('utf-8')
@@ -166,7 +166,7 @@ def parseServerData(jsonStr):
         outDict[unicode(str(i))][unicode("geo_data")] = {}
     ## creates a multidimensional dict with each key 1 being u'i' (i in unicode)
     ## and key 2 being "geo_data" for all entries
-    
+
     # TODO probably don't need seperate regexes
     # test using geodata one for both
     # for each item in dataTypes, compile a regex for that item and find all
@@ -204,7 +204,7 @@ def functionalTest(ip, port, squid):
     }
     cache_type = squid.get('cache_type', 'squid')
     upstream = squid.get('upstream', 'both').lower()
-    
+
     try:
         if cache_type == 'varnish':
             if upstream == 'cvmfs':
@@ -240,7 +240,7 @@ def functionalTest(ip, port, squid):
                         repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
                     file = requests.get(targeturl, proxies=proxies, timeout=2)
                     f = file.content
-                    for line in f.splitlines():            
+                    for line in f.splitlines():
                         if line.startswith(getString('N')):
                             if getString(repo) in line:
                                 testflag = True
@@ -252,7 +252,7 @@ def functionalTest(ip, port, squid):
                     # specified in the config and all fit the pattern.
                     syslog.syslog(syslog.LOG_ERR, "%s timeout or proxy error on %s repo" % (ip, targeturl))
                     return None
-            
+
             start_time = time.time()
             for targeturl in paths:
                 try:
@@ -267,7 +267,7 @@ def functionalTest(ip, port, squid):
         logger.error("%s timeout or error: %s" % (ip, str(exc)))
         squid.error = "Error during verification"
         return False
-    
+
     return True
 
 def getAvailableIp(squid):
@@ -277,8 +277,8 @@ def getAvailableIp(squid):
     """
     squid_private_ip = str(squid['private_ip']) if squid['private_ip'] else None
     squid_public_ip = str(squid['public_ip']) if squid['public_ip'] else None
-    squid_port = squid['squid_port']    
-    
+    squid_port = squid['squid_port']
+
     client_private_ip = None
     client_private_ip_not_found = False
     try:
@@ -300,7 +300,7 @@ def getAvailableIp(squid):
         local = squid['local']
     except:
         syslog.syslog(syslog.LOG_ERR, "Squid has no local attribute")
-  
+
     return_squid_ip = None
     test_time_cost = None
     squid_type = 'public'
@@ -314,7 +314,7 @@ def getAvailableIp(squid):
             test_time_cost = functionalTest(squid_private_ip, squid_port, squid)
             if test_time_cost:
                 return_squid_ip = squid_private_ip
-                squid_type = 'private'  
+                squid_type = 'private'
     if not return_squid_ip and squid_public_ip:
         test_time_cost = functionalTest(squid_public_ip, squid_port, squid)
         if test_time_cost:
@@ -334,7 +334,7 @@ def getSortedSquids(squid_dict, current_list, target_num, frontier_format):
                     return_proxy += 'http://%s:%s;' % (item[1][0], item[1][1])
             else:
                 break
-    return return_proxy, return_squid    
+    return return_proxy, return_squid
 
 
 get_args()
@@ -400,7 +400,7 @@ if local_squid is None or force_server:
     except Exception as ex:
         syslog.syslog(syslog.LOG_ERR, "Encountered unknown exception during request to shoal-server:")
         syslog.syslog(syslog.LOG_ERR, "%s" % ex)
-        syslog.syslog(syslog.LOG_ERR, "Continuing with defaults...")    
+        syslog.syslog(syslog.LOG_ERR, "Continuing with defaults...")
 
 
 
@@ -414,10 +414,15 @@ if data:
     for squid_key in list(data):
         squid = data[squid_key]
         try:
-            if frontier:
-                squid_upstream = squid.get('upstream', 'both').lower()
-                if squid_upstream not in ['frontier', 'both']:
-                    continue 
+            cache_type = squid.get('cache_type', 'squid').lower()
+            squid_upstream = squid.get('upstream', 'both').lower()
+            if cache_type == 'varnish':
+                if frontier:
+                    if squid_upstream not in ['frontier', 'both']:
+                        continue
+                else:
+                    if squid_upstream not in ['cvmfs', 'both']:
+                        continue
 
             if not local_squid or not squid['private_ip'] or squid['private_ip'] != local_squid.split(':')[0]:
                 # test the squid received from shoal server
@@ -435,21 +440,23 @@ if data:
                 "The data returned from '%s' was missing the key: %s. "
                 "Please ensure the server is running the latest version "
                 "of Shoal-Server." % (server, e))
-    
+
     new_proxy, new_squids = getSortedSquids(server_available_private, server_squids, numsquids, frontier)
     best_http_proxy += new_proxy
     server_squids = new_squids
-    
+    syslog.syslog(syslog.LOG_INFO, "best_http_proxy: %s" % best_http_proxy)
+    syslog.syslog(syslog.LOG_INFO, "server_squids: %s" % str(server_squids))
+
     new_proxy, new_squids = getSortedSquids(server_available_public, server_squids, numsquids, frontier)
     best_http_proxy += new_proxy
     server_squids = new_squids
-    
+
 # remove duplicate default squid
 default_http_list = default_http_proxy.split(';')
 temp_default_http = ''
 for i, each_default in enumerate(default_http_list):
     each_default_ip = each_default.split('//')[1].split(':')[0] if len(each_default.split('//')) > 1 else each_default.split('//')[0].split(':')[0]
-    if (not local_squid or each_default_ip not in local_squid) and each_default_ip not in server_squids:            
+    if (not local_squid or each_default_ip not in local_squid) and each_default_ip not in server_squids:
         addon = '' if i == len(default_http_list) - 1 else ';'
         temp_default_http += each_default + addon
 default_http_proxy = temp_default_http
