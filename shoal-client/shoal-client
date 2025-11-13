@@ -444,8 +444,6 @@ if data:
     new_proxy, new_squids = getSortedSquids(server_available_private, server_squids, numsquids, frontier)
     best_http_proxy += new_proxy
     server_squids = new_squids
-    syslog.syslog(syslog.LOG_INFO, "best_http_proxy: %s" % best_http_proxy)
-    syslog.syslog(syslog.LOG_INFO, "server_squids: %s" % str(server_squids))
 
     new_proxy, new_squids = getSortedSquids(server_available_public, server_squids, numsquids, frontier)
     best_http_proxy += new_proxy
