@@ -105,7 +105,7 @@ else
     exit 0
 fi
 
-# add user/group shoal/cache/varnish
+# add user/group shoal/squid/varnish
 groupadd -f shoal
 useradd shoal -g shoal 2>/dev/null
 
