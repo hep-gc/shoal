@@ -13,7 +13,7 @@ from shoal_server.__version__ import version
 t_globals = dict(
     datestr=web.datestr,
     version=version,
-    squid_active_time=config.squid_inactive_time,
+    cache_active_time=config.cache_inactive_time,
 )
 
 CACHE = config.webpy_cache
@@ -46,10 +46,10 @@ class nearestverified:
         web.header('Content-Type', 'application/json')
         return view_nearest_verified(count)
 
-class allsquids:
+class allcaches:
     def GET(self, count):
         web.header('Content-Type', 'application/json')
-        return view_allsquids()
+        return view_allcaches()
 
 class wpad:
     def GET(self):
@@ -100,13 +100,13 @@ def view_nearest(count, upstream_type =None):
 
     ip = web.ctx['ip']
 
-    squids = utilities.get_nearest_squids(ip, count, upstream_type)
-    if squids:
-        squid_json = {}
-        for i, squid in enumerate(squids):
-            squid_json[i] = squid[0].jsonify()
-            squid_json[i]['distance'] = squid[1]
-            geo_obj = squid_json[i]['geo_data']
+    caches = utilities.get_nearest_caches(ip, count, upstream_type)
+    if caches:
+        cache_json = {}
+        for i, cache in enumerate(caches):
+            cache_json[i] = cache[0].jsonify()
+            cache_json[i]['distance'] = cache[1]
+            geo_obj = cache_json[i]['geo_data']
             geo_dict = {
                 "city":   geo_obj.city.name,
                 "region_code":  geo_obj.subdivisions.most_specific.iso_code,
@@ -122,8 +122,8 @@ def view_nearest(count, upstream_type =None):
                 "country_name": geo_obj.country.name,
                 "continent":    geo_obj.continent.code
             }
-            squid_json[i]['geo_data'] = geo_dict
-        return json.dumps(squid_json)
+            cache_json[i]['geo_data'] = geo_dict
+        return json.dumps(cache_json)
     else:
         return json.dumps(None)
 
@@ -138,13 +138,13 @@ def view_nearest_verified(count):
 
     ip = web.ctx['ip']
 
-    squids = utilities.get_nearest_verified_squids(ip, count)
-    if squids:
-        squid_json = {}
-        for i, squid in enumerate(squids):
-            squid_json[i] = squid[0].jsonify()
-            squid_json[i]['distance'] = squid[1]
-            geo_obj = squid_json[i]['geo_data']
+    caches = utilities.get_nearest_verified_caches(ip, count)
+    if caches:
+        cache_json = {}
+        for i, cache in enumerate(caches):
+            cache_json[i] = cache[0].jsonify()
+            cache_json[i]['distance'] = cache[1]
+            geo_obj = cache_json[i]['geo_data']
             geo_dict = {
                 "city":   geo_obj.city.name,
                 "region_code":  geo_obj.subdivisions.most_specific.iso_code,
@@ -160,21 +160,21 @@ def view_nearest_verified(count):
                 "country_name": geo_obj.country.name,
                 "continent":    geo_obj.continent.code
             }
-            squid_json[i]['geo_data'] = geo_dict
-        return json.dumps(squid_json)
+            cache_json[i]['geo_data'] = geo_dict
+        return json.dumps(cache_json)
     else:
         return json.dumps(None)
 
-def view_allsquids():
+def view_allcaches():
     """
-        returns the all squids as a JSON formatted str
+        returns the all caches as a JSON formatted str
     """
-    squids = utilities.get_all_squids()
-    if squids:
-        squid_json = {}
-        for i, squid in enumerate(squids):
-            squid_json[i] = squid.jsonify()
-            geo_obj = squid_json[i]['geo_data']
+    caches = utilities.get_all_caches()
+    if caches:
+        cache_json = {}
+        for i, cache in enumerate(caches):
+            cache_json[i] = cache.jsonify()
+            geo_obj = cache_json[i]['geo_data']
             geo_dict = {
                 "city":   geo_obj.city.name,
                 "region_code":  geo_obj.subdivisions.most_specific.iso_code,
@@ -190,8 +190,8 @@ def view_allsquids():
                 "country_name": geo_obj.country.name,
                 "continent":    geo_obj.continent.code
             }
-            squid_json[i]['geo_data'] = geo_dict
-        return json.dumps(squid_json)
+            cache_json[i]['geo_data'] = geo_dict
+        return json.dumps(cache_json)
     else:
         return json.dumps(None)
 
