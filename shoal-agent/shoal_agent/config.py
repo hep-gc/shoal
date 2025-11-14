@@ -4,7 +4,6 @@ import re
 from os.path import exists, join, abspath
 import sys
 import logging
-import requests
 try:
     import configparser
 except ImportError:  # python < 3
@@ -40,7 +39,7 @@ dnsname = None
 interface = None
 interval = 30
 cloud = ''
-cache_type = 'cache'
+cache_type = 'squid'
 upstream = 'both'
 cache_port = 3128
 cache_auto_config = False
@@ -62,14 +61,14 @@ test_targeturl = "http://cvmfs-stratum-one.cern.ch/cvmfs/atlas.cern.ch/.cvmfswhi
 
 # auto config
 # get cache port based on detected cache type
-cache_process_name = 'cache'
-cache_user = 'cache'
+cache_process_name = 'squid'
+cache_user = 'squid'
 default_cache_port = 3128
 
 def detect_cache_type():
     try:
-        check_output(['pidof', '-s', 'cache'])
-        return 'cache', 'cache', 3128
+        check_output(['pidof', '-s', 'squid'])
+        return 'squid', 'squid', 3128
     except:
         pass
 
@@ -79,41 +78,27 @@ def detect_cache_type():
     except:
         pass
 
-    return 'cache', 'cache', 3128  
+    return 'squid', 'squid', 3128  
 
-def getString(content):
-    try:
-        formatted = bytes(content, 'utf-8')
-    except:
-        formatted = bytes(content) # for python 2
-    return formatted
-    
-def detect_upstream(cache_type):
-    if cache_type == 'varnish':
-        targeturl = "http://cvmfs-s1goc.opensciencegrid.org:8000/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"
-        repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
-        if repo is None:
-            repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
-        file = requests.get(targeturl, timeout=2)
-        f = file.content
-        for line in f.splitlines():            
-            if line.startswith(getString('N')):
-                if getString(repo) in line:
-                    return 'cvmfs'
-        return 'frontier'
-    else:
-        return 'both'
-        
 detected_type, detected_user, detected_port = detect_cache_type()
 cache_type = detected_type
-cache_process_name = detected_type if detected_type == 'cache' else 'varnishd'
+cache_process_name = detected_type if detected_type == 'squid' else 'varnishd'
 cache_user = detected_user
 default_cache_port = detected_port
-upstream = detect_upstream(detected_type)
 
+if cache_type == 'varnish':
+    if exists('/etc/sysconfig/frontier-varnish'):
+        upstream = 'frontier'
+    elif exists('/etc/sysconfig/cvmfs-varnish'):
+        upstream = 'cvmfs'
+    else:
+        upstream = 'cvmfs'
+else:
+    upstream = 'both'
+    
 try:
     cache_pid = int(check_output(['pidof', '-s', cache_process_name]))
-    if cache_type == 'cache':
+    if cache_type == 'squid':
         cache_uid = getpwnam(cache_user)[2]
         def get_cache_port(filename):
             with open(filename) as f:
