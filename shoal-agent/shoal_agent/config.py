@@ -40,13 +40,13 @@ dnsname = None
 interface = None
 interval = 30
 cloud = ''
-cache_type = 'squid'
+cache_type = 'cache'
 upstream = 'both'
-squid_port = 3128
-squid_auto_config = False
+cache_port = 3128
+cache_auto_config = False
 log_file = '/var/log/shoal_agent.log'
 logging_level = logging.ERROR
-#this value should be false unless you wish the shoal server to neglect verifying this squid
+#this value should be false unless you wish the shoal server to neglect verifying this cache
 verified = False
 #this is the speed of the network interface card in terms of KB/s
 max_load = 122000
@@ -55,21 +55,21 @@ load_factor = 0.9
 sender_email = 'root@localhost'
 receiver_email = 'root@localhost'
 email_subject = 'Shoal Agent Notification'
-email_content = 'Hello, there is no cache servers running on the agent, please review the squid status. Trying to find a squid process automatically will be retried in 30 min. Thanks!'
+email_content = 'Hello, there is no cache servers running on the agent, please review the cache status. Trying to find a cache process automatically will be retried in 30 min. Thanks!'
 last_sent_email = '/var/tmp/last_sent_email'
 
 test_targeturl = "http://cvmfs-stratum-one.cern.ch/cvmfs/atlas.cern.ch/.cvmfswhitelist"
 
 # auto config
 # get cache port based on detected cache type
-cache_process_name = 'squid'
-cache_user = 'squid'
+cache_process_name = 'cache'
+cache_user = 'cache'
 default_cache_port = 3128
 
 def detect_cache_type():
     try:
-        check_output(['pidof', '-s', 'squid'])
-        return 'squid', 'squid', 3128
+        check_output(['pidof', '-s', 'cache'])
+        return 'cache', 'cache', 3128
     except:
         pass
 
@@ -79,7 +79,7 @@ def detect_cache_type():
     except:
         pass
 
-    return 'squid', 'squid', 3128  
+    return 'cache', 'cache', 3128  
 
 def getString(content):
     try:
@@ -106,14 +106,14 @@ def detect_upstream(cache_type):
         
 detected_type, detected_user, detected_port = detect_cache_type()
 cache_type = detected_type
-cache_process_name = detected_type if detected_type == 'squid' else 'varnishd'
+cache_process_name = detected_type if detected_type == 'cache' else 'varnishd'
 cache_user = detected_user
 default_cache_port = detected_port
 upstream = detect_upstream(detected_type)
 
 try:
     cache_pid = int(check_output(['pidof', '-s', cache_process_name]))
-    if cache_type == 'squid':
+    if cache_type == 'cache':
         cache_uid = getpwnam(cache_user)[2]
         def get_cache_port(filename):
             with open(filename) as f:
@@ -124,20 +124,20 @@ try:
                             if int(lineList[1].split(':')[0],16) == 0:
                                 return int(lineList[1].split(':')[1],16)
                 return None
-        squid_port = get_cache_port('/proc/' + str(cache_pid) + '/net/tcp') or default_cache_port
-        squid_port = get_cache_port('/proc/' + str(cache_pid) + '/net/tcp6') or squid_port
-        squid_auto_config = True
+        cache_port = get_cache_port('/proc/' + str(cache_pid) + '/net/tcp') or default_cache_port
+        cache_port = get_cache_port('/proc/' + str(cache_pid) + '/net/tcp6') or cache_port
+        cache_auto_config = True
     elif cache_type == 'varnish':
         cmdline = check_output(['ps', '-p', str(cache_pid), '-o', 'args', '--no-headers']).decode('utf-8')
         port_match = re.search(r'-a\s+(?:http=)?:(\d+)', cmdline)
         if port_match:
-            squid_port = int(port_match.group(1))
-            squid_auto_config = True
+            cache_port = int(port_match.group(1))
+            cache_auto_config = True
         else:
-            squid_port = default_cache_port
+            cache_port = default_cache_port
 except:
-    squid_port = default_cache_port
-    print("Couldn't auto config the squid port, use the default one ", squid_port)
+    cache_port = default_cache_port
+    print("Couldn't auto config the cache port, use the default one ", cache_port)
 # get external_ip
 external_ip = stun.get_ip_info()[1]
 # get dnsname
@@ -264,8 +264,8 @@ if config_file.has_option("logging", "logging_level"):
         sys.exit(1)
 
 
-if config_file.has_option("general", "squid_port") and not squid_auto_config:
-    squid_port = config_file.get("general", "squid_port")
+if config_file.has_option("general", "cache_port") and not cache_auto_config:
+    cache_port = config_file.get("general", "cache_port")
     
 if config_file.has_option("general", "max_load"):
     max_load = config_file.get("general", "max_load")
