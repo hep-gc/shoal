@@ -29,7 +29,7 @@ setup(name='shoal-client',
           'requests>=2.6.0',
           'netifaces>=0.10.0'
       ],
-      description='A squid cache publishing and advertising tool designed to work in fast changing environments',
+      description='A squid and varnish cache publishing and advertising tool designed to work in fast changing environments',
       long_description=long_description,
       long_description_content_type="text/markdown",
       author='Mike Chester, Colson Drimiel, Ian Gable, Alex Lam, Rob Prior, Ryan Taylor, Steve Traylen, Marcus Ebert, Da Meng',
