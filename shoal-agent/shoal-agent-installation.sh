@@ -105,7 +105,7 @@ else
     exit 0
 fi
 
-# add user/group shoal/squid/varnish
+# add user/group shoal/cache/varnish
 groupadd -f shoal
 useradd shoal -g shoal 2>/dev/null
 
@@ -193,7 +193,7 @@ if $USE_NOT_DEFAULT; then
     fi
 
     setEachNewValue $CONFIG_FILE interval "interval is at which the shoal-agent will contact the shoal server" $DEFAULT_INTERVAL $OLD_INTERVAL
-    setEachNewValue $CONFIG_FILE admin_email "admin email is used for contact in case of issues with the shoal-agent or squid" $DEFAULT_ADMIN_EMAIL $OLD_ADMIN_EMAIL
+    setEachNewValue $CONFIG_FILE admin_email "admin email is used for contact in case of issues with the shoal-agent or cache" $DEFAULT_ADMIN_EMAIL $OLD_ADMIN_EMAIL
     setEachNewValue $CONFIG_FILE amqp_server_url "this is the RabbitMQ server ip" $DEFAULT_AMQP_SERVER_URL $OLD_AMQP_SERVER_URL
     setEachNewValue $CONFIG_FILE amqp_port "this is the port number for amqp connection" $DEFAULT_AMQP_PORT $OLD_AMQP_PORT
     setEachNewValue $CONFIG_FILE amqp_virtual_host "this is used for RabbitMQ virtual host" $DEFAULT_AMQP_VIRTUAL_HOST $OLD_AMQP_VIRTUAL_HOST
