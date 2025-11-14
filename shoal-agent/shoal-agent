@@ -56,7 +56,7 @@ def broadcast_my_ip():
     
     while 1:
         if cache_available:
-            data = (BROADCAST_ID + str(my_ip) + ":" + str(config.squid_port)).encode()
+            data = (BROADCAST_ID + str(my_ip) + ":" + str(config.squid_port) + ":" + config.cache_type + ":" + config.upstream).encode()
             s.sendto(data, ('<broadcast>', PORT))
             logging.info("sent service announcement")
         else:
