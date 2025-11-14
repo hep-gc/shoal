@@ -56,7 +56,7 @@ def broadcast_my_ip():
     
     while 1:
         if cache_available:
-            data = (BROADCAST_ID + str(my_ip) + ":" + str(config.squid_port)).encode()
+            data = (BROADCAST_ID + str(my_ip) + ":" + str(config.cache_port)).encode()
             s.sendto(data, ('<broadcast>', PORT))
             logging.info("sent service announcement")
         else:
@@ -261,7 +261,7 @@ def main():
     data = {
         'uuid': uuid.uuid1().hex,
         'hostname': socket.gethostname(),
-        'squid_port': config.squid_port,
+        'cache_port': config.cache_port,
         'cache_type': config.cache_type,
         'verified': config.verified,
         'max_load': config.max_load,
@@ -331,7 +331,7 @@ def main():
             except:
                 test_ip = external_ip
     last_test_time = time.time()
-    available = functionalTest(test_ip, config.squid_port)
+    available = functionalTest(test_ip, config.cache_port)
     cache_available = available
     
     try:
@@ -364,7 +364,7 @@ def main():
             if current_time - last_test_time > test_interval:
                 # redo functional test for every test_invertal time
                 last_test_time = current_time
-                available = functionalTest(test_ip, config.squid_port)
+                available = functionalTest(test_ip, config.cache_port)
                 cache_available = available
             if available:
                 test_interval = MEDIUM_INTERVAL
