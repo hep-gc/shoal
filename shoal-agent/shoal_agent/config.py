@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import requests
 import re
 from os.path import exists, join, abspath
 import sys
