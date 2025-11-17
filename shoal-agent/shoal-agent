@@ -176,7 +176,7 @@ def functionalTest(ip, port):
     try:
         if config.cache_type == 'varnish':
             if config.upstream == 'cvmfs':
-                targeturl = "http://cvmfs-s1goc.opensciencegrid.org:8000/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"
+                targeturl = f"http://{socket.gethostname()}:{port}/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"
                 repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
                 if repo is None:
                     repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
