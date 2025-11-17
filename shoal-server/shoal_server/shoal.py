@@ -588,7 +588,7 @@ class RabbitMQConsumer(Thread):
                     cache_type=data.get('cache_type', 'cache'),
                     upstream=data.get('upstream', 'Both')
 )
-        self.shoal[key] = new_cache
+                self.shoal[key] = new_cache
         self.acknowledge_message(basic_deliver.delivery_tag)
 
 
