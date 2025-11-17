@@ -378,6 +378,15 @@ if not skip_broadcast:
        pass
     p.join()
 
+if local_cache:
+    cache_type = local_cache.get('cache_type', 'squid')
+    upstream = local_cache.get('upstream', 'both').lower()
+    
+    if cache_type == 'varnish':
+        if frontier and upstream not in ['frontier', 'both']:
+            local_cache = None
+        elif not frontier and upstream not in ['cvmfs', 'both']:
+            local_cache = None
 
 ## read server data (if it can be read) into a dictionary called data
 # by default the server is only contacted if the force server flag is set or
