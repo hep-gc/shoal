@@ -483,7 +483,7 @@ if frontier:
             new_defaults += '(proxyurl=%s)' % proxy
     default_http_proxy = new_defaults
 
-if local_cache and local_cache['address']:
+if local_cache and local_cache['address'] and local_cache['address'] not in best_http_proxy:
     upstream = local_cache.get('upstream', 'both').lower()
     if frontier:
         if upstream in ['frontier', 'both']:
