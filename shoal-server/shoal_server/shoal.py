@@ -502,8 +502,14 @@ class RabbitMQConsumer(Thread):
             hostname = data['hostname']
             time_sent = data['timestamp']
             load = data['load']
-            cache_port = data['cache_port']
-
+            
+            if 'cache_port' in data:
+                cache_port = data['cache_port']
+            elif 'squid_port' in data:
+                cache_port = data['squid_port']
+            else:
+                raise KeyError('cache_port')
+                
         except KeyError as exc:
             logger.error(
                 "Message received was not the proper format (missing:%s), discarding...", exc)
@@ -582,7 +588,7 @@ class RabbitMQConsumer(Thread):
                     cache_type=data.get('cache_type', 'cache'),
                     upstream=data.get('upstream', 'Both')
 )
-                self.shoal[key] = new_cache
+        self.shoal[key] = new_cache
         self.acknowledge_message(basic_deliver.delivery_tag)
 
 
