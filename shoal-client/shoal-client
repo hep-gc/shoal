@@ -66,7 +66,8 @@ def get_local_cache(q, t):
         data, addr = s.recvfrom(1024) #wait for a packet
         data = data.decode('utf-8')
         if data.startswith(BROADCAST_ID):
-             if len(parts) >= 2:
+            parts = data[len(BROADCAST_ID):].split(':')
+            if len(parts) >= 2:
                 ip = parts[0]
                 port = parts[1]
                 cache_type = parts[2] if len(parts) > 2 else 'squid'  
