@@ -517,11 +517,11 @@ elif frontier:
             "FRONTIER_SERVER env variable unset, unable to run with --frontier option")
         sys.exit(1)
     (frontier_output, replacements) = re.subn(r'(\(.*?\))(\(proxyurl.*?\))',
-                                                r'\1' + best_http_proxy + r'\2',
+                                                r'\1' + best_http_proxy + default_http_proxy + r'\2',
                                                 frontier_var, 1)
     # if no replacmeents, then there was no proxyurl to begin with
     if replacements == 0:
-        frontier_output = frontier_output + best_http_proxy 
+        frontier_output = frontier_output + best_http_proxy + default_http_proxy 
     print(frontier_output)
 
 else:
