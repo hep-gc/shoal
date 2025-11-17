@@ -430,7 +430,7 @@ if data:
                     if cache_upstream not in ['cvmfs', 'both']:
                         continue
 
-            if not local_cache or not cache['private_ip'] or cache['private_ip'] != local_cache.split(':')[0]:
+            if not local_cache or not cache['private_ip'] or cache['private_ip'] != local_cache['address'].split(':')[0]:
                 # test the cache received from shoal server
                 available_cache = getAvailableIp(cache)
                 available_cache_ip = available_cache['available_cache_ip']
@@ -460,7 +460,7 @@ default_http_list = default_http_proxy.split(';')
 temp_default_http = ''
 for i, each_default in enumerate(default_http_list):
     each_default_ip = each_default.split('//')[1].split(':')[0] if len(each_default.split('//')) > 1 else each_default.split('//')[0].split(':')[0]
-    if (not local_cache or each_default_ip not in local_cache) and each_default_ip not in server_caches:
+    if (not local_cache or each_default_ip not in local_cache['address']) and each_default_ip not in server_caches:
         addon = '' if i == len(default_http_list) - 1 else ';'
         temp_default_http += each_default + addon
 default_http_proxy = temp_default_http
@@ -474,11 +474,11 @@ if frontier:
             new_defaults += '(proxyurl=%s)' % proxy
     default_http_proxy = new_defaults
 
-if local_cache:
+if local_cache['address']:
     if frontier:
-        best_http_proxy = "(proxyurl=http://" + local_cache + ")" + best_http_proxy
+        best_http_proxy = "(proxyurl=http://" + local_cache['address'] + ")" + best_http_proxy
     else:
-        best_http_proxy = "http://" + local_cache + ";" + best_http_proxy
+        best_http_proxy = "http://" + local_cache['address'] + ";" + best_http_proxy
 
 cvmfs_http_proxy = "\"" + best_http_proxy + default_http_proxy + "\""
 syslog.syslog(syslog.LOG_DEBUG, "Data parsing complete.")
