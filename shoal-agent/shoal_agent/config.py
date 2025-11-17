@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import requests
 import re
+import socket
 from os.path import exists, join, abspath
 import sys
 import logging
@@ -65,6 +66,7 @@ test_targeturl = "http://cvmfs-stratum-one.cern.ch/cvmfs/atlas.cern.ch/.cvmfswhi
 cache_process_name = 'squid'
 cache_user = 'squid'
 default_cache_port = 3128
+hostname = socket.gethostname()
 
 def detect_cache_type():
     try:
@@ -87,29 +89,28 @@ def getString(content):
     except:
         formatted = bytes(content) # for python 2
     return formatted
-
-def detect_upstream(cache_type):
+    
+def detect_upstream(cache_type, hostname, port):
     if cache_type == 'varnish':
-        targeturl = "http://cvmfs-s1goc.opensciencegrid.org:8000/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"
+        targeturl = f"http://{hostname}:{port}/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"
         repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
         if repo is None:
             repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
         file = requests.get(targeturl, timeout=2)
         f = file.content
-        for line in f.splitlines():            
+        for line in f.splitlines():
             if line.startswith(getString('N')):
                 if getString(repo) in line:
                     return 'cvmfs'
         return 'frontier'
     else:
         return 'both'
-        
+
 detected_type, detected_user, detected_port = detect_cache_type()
 cache_type = detected_type
 cache_process_name = detected_type if detected_type == 'squid' else 'varnishd'
 cache_user = detected_user
 default_cache_port = detected_port
-upstream = detect_upstream(detected_type)
 
 try:
     cache_pid = int(check_output(['pidof', '-s', cache_process_name]))
@@ -138,6 +139,9 @@ try:
 except:
     cache_port = default_cache_port
     print("Couldn't auto config the cache port, use the default one ", cache_port)
+
+upstream = detect_upstream(detected_type, hostname, cache_port)
+
 # get external_ip
 external_ip = stun.get_ip_info()[1]
 # get dnsname
