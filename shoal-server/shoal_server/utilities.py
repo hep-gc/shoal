@@ -277,6 +277,7 @@ def _is_available(cache):
                 cache.error = "Varnish CVMFS cache failed verification"
                 return False
             elif upstream == 'frontier':
+                proxystring = f"http://{cache.hostname}:{cache.cache_port}"
                 targeturl = proxystring + "/atlr"
                 file = requests.get(targeturl, headers={"X-frontier-id": "shoal-server-verification", "Cache-Control": "max-age=0"}, timeout=2)
                 if file.status_code == 200:
@@ -340,6 +341,7 @@ def _is_available(cache):
         return False
     
     return True
+
 
 
 
