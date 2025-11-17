@@ -443,7 +443,8 @@ if data:
                 # test the cache received from shoal server
                 available_cache = getAvailableIp(cache)
                 available_cache_ip = available_cache['available_cache_ip']
-                if available_cache_ip:
+                if available_cache_ip and available_cache_ip not in server_caches:
+                    server_caches.append(available_cache_ip)
                     time_cost = available_cache['time_cost']
                     if available_cache['cache_type'] == 'private':
                         server_available_private[time_cost] = (available_cache_ip, cache['cache_port'])
