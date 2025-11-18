@@ -478,12 +478,33 @@ if frontier:
     for proxy in tmpproxies:
         try:
             current_proxy_config = {'http': proxy}
-            response = requests.get("http://frontier.cern.ch", headers={"X-frontier-id": "test"}, proxies=current_proxy_config, timeout=2)
+            response = requests.get("http://frontier.cern.ch", headers={"X-frontier-id": "test"}, proxies=current_proxy_config, timeout=2, allow_redirects=False)
             if response.status_code == 200 and proxy != 'DIRECT' and proxy != "":
                 new_defaults += '(proxyurl=%s)' % proxy
         except:
             pass
-    default_http_proxy = new_defaults
+
+else:
+    new_defaults = ''
+    tmpproxies = default_http_proxy.split(';')
+    for proxy in tmpproxies:
+        try:
+            current_proxy_config = {'http': proxy}
+            response = requests.get(targeturl, proxies=current_proxy_config, timeout=2)
+            f = response.content
+            verified = False
+            for line in f.splitlines():
+                if line.startswith(bytes('N', 'utf-8')):
+                    if bytes(repo_name, 'utf-8') in line:
+                        verified = True
+                        break
+            if verified:
+                new_defaults += '%s;' % proxy
+        except:
+            pass
+
+default_http_proxy = new_defaults
+
 
 
 if local_cache and local_cache['address'] and local_cache['address'] not in best_http_proxy:
