@@ -263,7 +263,7 @@ def _is_available(cache):
     try:
         if cache_type == 'varnish':
             if upstream == 'cvmfs':
-                targeturl = f"http://{cache.hostname}:{cache.cache_port}/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"                
+                targeturl = proxystring + "/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"  
                 repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
                 if repo is None:
                     repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
@@ -277,7 +277,6 @@ def _is_available(cache):
                 cache.error = "Varnish CVMFS cache failed verification"
                 return False
             elif upstream == 'frontier':
-                proxystring = f"http://{cache.hostname}:{cache.cache_port}"
                 targeturl = proxystring + "/atlr"
                 file = requests.get(targeturl, headers={"X-frontier-id": "shoal-server-verification", "Cache-Control": "max-age=0"}, timeout=2)
                 if file.status_code == 200:
@@ -341,6 +340,7 @@ def _is_available(cache):
         return False
     
     return True
+
 
 
 
