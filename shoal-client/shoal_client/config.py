@@ -33,9 +33,9 @@ try:
             info = line.split('=')
             if info[0] == 'CVMFS_HTTP_PROXY' and info[1]:
                 cvmfs_proxies = info[1].strip()
-                if cvmfs_proxies.startswith('"'):
+                if cvmfs_proxies.startswith('"') or cvmfs_proxies.startswith("'"):
                     cvmfs_proxies = cvmfs_proxies[1:]
-                if cvmfs_proxies.endswith('"'):
+                if cvmfs_proxies.endswith('"') or cvmfs_proxies.endswith("'"):
                     cvmfs_proxies = cvmfs_proxies[:-1]
                 each_proxies = cvmfs_proxies.split(';')
                 for proxy in each_proxies:
