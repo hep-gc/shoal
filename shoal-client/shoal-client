@@ -492,10 +492,7 @@ if local_cache and local_cache['address'] and local_cache['address'] not in best
         if upstream in ['cvmfs', 'both']:
             best_http_proxy = "http://" + local_cache['address'] + ";" + best_http_proxy
 
-if frontier:
-    cvmfs_http_proxy = "\"" + best_http_proxy + "\""
-else:
-    cvmfs_http_proxy = "\"" + best_http_proxy + default_http_proxy + "\""
+cvmfs_http_proxy = "\"" + best_http_proxy + default_http_proxy + "\""
 
 syslog.syslog(syslog.LOG_DEBUG, "Data parsing complete.")
 
