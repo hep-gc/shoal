@@ -224,7 +224,7 @@ def functionalTest(ip, port, cache):
                     if line.startswith(bytes('N', 'utf-8')):
                         if bytes(repo, 'utf-8') in line:
                             return True
-                logger.error("%s failed verification on %s" % (ip, targeturl))
+                syslog.syslog(syslog.LOG_ERR, "%s failed verification on %s" % (ip, targeturl))
                 cache.error = "Varnish CVMFS cache failed verification"
                 return False
             elif upstream == 'frontier':
@@ -232,7 +232,7 @@ def functionalTest(ip, port, cache):
                 file = requests.get(targeturl, headers={"X-frontier-id": "shoal-server-verification", "Cache-Control": "max-age=0"}, timeout=2)
                 if file.status_code == 200:
                     return True
-                logger.error("%s failed verification on %s" % (ip, targeturl))
+                syslog.syslog(syslog.LOG_ERR, "%s failed verification on %s" % (ip, targeturl))
                 cache.error = "Varnish Frontier cache failed verification. Status: %s" % file.status_code
                 return False
         else:
