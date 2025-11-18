@@ -270,7 +270,7 @@ def functionalTest(ip, port, cache):
             return timer
 
     except Exception as exc:
-        logger.error("%s timeout or error: %s" % (ip, str(exc)))
+        syslog.syslog(syslog.LOG_ERR, "%s timeout or error: %s" % (ip, str(exc)))
         cache.error = "Error during verification"
         return False
 
