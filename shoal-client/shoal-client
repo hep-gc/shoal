@@ -225,7 +225,6 @@ def functionalTest(ip, port, cache):
                         if bytes(repo, 'utf-8') in line:
                             return True
                 syslog.syslog(syslog.LOG_ERR, "%s failed verification on %s" % (ip, targeturl))
-                cache.error = "Varnish CVMFS cache failed verification"
                 return False
             elif upstream == 'frontier':
                 targeturl = proxystring + "/atlr"
@@ -233,7 +232,6 @@ def functionalTest(ip, port, cache):
                 if file.status_code == 200:
                     return True
                 syslog.syslog(syslog.LOG_ERR, "%s failed verification on %s" % (ip, targeturl))
-                cache.error = "Varnish Frontier cache failed verification. Status: %s" % file.status_code
                 return False
         else:
             for targeturl in paths:
@@ -271,7 +269,6 @@ def functionalTest(ip, port, cache):
 
     except Exception as exc:
         syslog.syslog(syslog.LOG_ERR, "%s timeout or error: %s" % (ip, str(exc)))
-        cache.error = "Error during verification"
         return False
 
     return True
