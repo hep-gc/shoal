@@ -214,7 +214,7 @@ def functionalTest(ip, port, cache):
     try:
         if cache_type == 'varnish':
             if upstream == 'cvmfs':
-                targeturl = "http://cvmfs-s1goc.opensciencegrid.org:8000/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"
+                targeturl = proxystring + "/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"  
                 repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
                 if repo is None:
                     repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
