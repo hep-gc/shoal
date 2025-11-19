@@ -475,37 +475,56 @@ default_http_proxy = temp_default_http
 if frontier:
     new_defaults = ''
     tmpproxies = default_http_proxy.split(';')
+
     for proxy in tmpproxies:
         try:
             current_proxy_config = {'http': proxy}
-            response = requests.get("http://frontier.cern.ch", headers={"X-frontier-id": "test"}, proxies=current_proxy_config, timeout=2, allow_redirects=False)
+            response = requests.get("http://frontier.cern.ch", headers={"X-frontier-id": "test"}, proxies=current_proxy_config, timeout=2, allow_redirects=False) 
             if response.status_code == 200 and proxy != 'DIRECT' and proxy != "":
                 new_defaults += '(proxyurl=%s)' % proxy
+            elif response.status_code == 301 and proxy != 'DIRECT' and proxy != "":
+                targeturl = proxy + "/atlr"
+                response = requests.get(targeturl, headers={"X-frontier-id": "shoal-server-verification", "Cache-Control": "max-age=0"}, timeout=2)
+                if response.status_code == 200:
+                    new_defaults += '(proxyurl=%s)' % proxy
         except:
             pass
+
+    default_http_proxy = new_defaults
 
 else:
     new_defaults = ''
     tmpproxies = default_http_proxy.split(';')
     for proxy in tmpproxies:
+        if proxy != 'DIRECT' and proxy != "":
+            continue
         try:
             current_proxy_config = {'http': proxy}
-            response = requests.get(targeturl, proxies=current_proxy_config, timeout=2)
-            f = response.content
             verified = False
-            for line in f.splitlines():
-                if line.startswith(bytes('N', 'utf-8')):
-                    if bytes(repo_name, 'utf-8') in line:
-                        verified = True
+
+            for targeturl in paths:
+                try:
+                    repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+                    if repo is None:
+                        repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+                    response = requests.get(targeturl, proxies=current_proxy_config, timeout=2)
+                    f = response.content
+
+                    for line in f.splitlines():
+                        if line.startswith(bytes('N', 'utf-8')):
+                            if bytes(repo, 'utf-8') in line:
+                                verified = True
+                                break
+                    if verified:
                         break
+                except:
+                    pass
             if verified:
                 new_defaults += '%s;' % proxy
         except:
             pass
 
-default_http_proxy = new_defaults
-
-
+    default_http_proxy = new_defaults
 
 if local_cache and local_cache['address'] and local_cache['address'] not in best_http_proxy:
     upstream = local_cache.get('upstream', 'both').lower()
