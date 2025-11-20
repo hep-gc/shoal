@@ -253,7 +253,7 @@ def _is_available(cache):
     ip = str(cache.public_ip or cache.private_ip)
     port = str(cache.cache_port)
     hostname = cache.hostname
-    cache_type = cache.cache_type if hasattr(cache, 'cache_type') else 'cache'
+    cache_type = cache.cache_type if hasattr(cache, 'cache_type') else 'squid'
     upstream = cache.upstream.lower() if hasattr(cache, 'upstream') else 'both'
     
     paths = config.paths
@@ -343,6 +343,7 @@ def _is_available(cache):
         return False
     
     return True
+
 
 
 
