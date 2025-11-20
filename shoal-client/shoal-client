@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 """
     Very simple client script used to get nearest cache server using the RESTful API.
 """
@@ -30,6 +30,7 @@ from shoal_client import config as config
 syslog.openlog("shoal-client")
 
 server_default = config.shoal_server_url
+server_cvmfs = config.cvmfs_url
 server_conditions = config.conditions_url
 
 server = server_default
@@ -52,9 +53,10 @@ shoal_server_timeout = 30
 paths = config.paths
 force_server = False
 
-def get_local_cache(q, t):
+def get_local_cache(q, t, frontier):
     PORT = 50000
-    BROADCAST_ID = "fna349fn" #to make sure we don't confuse or get confused by other programs
+    BROADCAST_IDS = ["fna349fn", "fna350fn"] #to make sure we don't confuse or get confused by other programs
+     
 
     from socket import socket, AF_INET, SOCK_DGRAM
 
@@ -65,13 +67,30 @@ def get_local_cache(q, t):
     try:
         data, addr = s.recvfrom(1024) #wait for a packet
         data = data.decode('utf-8')
-        if data.startswith(BROADCAST_ID):
-            parts = data[len(BROADCAST_ID):].split(':')
+        if data.startswith(BROADCAST_IDS[0]):
+            parts = data[len(BROADCAST_IDS[0]):].split(':')
             if len(parts) >= 2:
                 ip = parts[0]
                 port = parts[1]
                 cache_type = parts[2] if len(parts) > 2 else 'squid'  
-                upstream = parts[3] if len(parts) > 3 else 'both'    
+                upstream = parts[3] if len(parts) > 3 else 'both'   
+                if frontier and upstream not in ['frontier', 'both']:
+                    return
+                elif not frontier and upstream not in ['cvmfs', 'both']:
+                    return
+                result = {'address': ip + ':' + port,'cache_type': cache_type if cache_type else 'squid','upstream': upstream if upstream else 'both','is_old_agent': len(parts) < 3}
+                q.put(result)
+        elif data.startswith(BROADCAST_IDS[1]):
+            parts = data[len(BROADCAST_IDS[1]):].split(':')
+            if len(parts) >= 2:
+                ip = parts[0]
+                port = parts[1]
+                cache_type = parts[2] if len(parts) > 2 else 'squid'
+                upstream = parts[3] if len(parts) > 3 else 'both'
+                if frontier and upstream not in ['frontier', 'both']:
+                    return
+                elif not frontier and upstream not in ['cvmfs', 'both']:
+                    return
                 result = {'address': ip + ':' + port,'cache_type': cache_type,'upstream': upstream,'is_old_agent': len(parts) < 3}
                 q.put(result)
     except:
@@ -150,8 +169,8 @@ def parseServerData(jsonStr):
 
     # TODO should load this from a config file as it has to match the server
     # Nested properties (i.e geo_data) needs to be handled separately
-    dataTypes = ["load", "distance", "cache_port", "last_active", "created", \
-                 "external_ip", "hostname", "public_ip", "private_ip", "local","cache_type" , "upstream"]
+    dataTypes = ["load", "distance", "squid_port", "last_active", "created", \
+                 "external_ip", "hostname", "public_ip", "private_ip", "local"]
 
     geoDataTypes = ["city", "region_name", "area_code", "time_zone", "dma_code", \
                     "metro_code", "country_code3", "latitude", "postal_code", \
@@ -199,79 +218,60 @@ def getString(content):
         formatted = bytes(content) # for python 2
     return formatted
 
-def functionalTest(ip, port, cache):
+def functionalTest(ip, port):
     """
     A list of paths are tested to see all repos are working, returns the "True" if it is verified or "False" if it cannot be
     """
     proxystring = "http://%s:%s" % (ip, port)
-    #set proxy
-    proxies = {
-        "http":proxystring,
-    }
-    cache_type = cache.get('cache_type', 'cache')
-    upstream = cache.get('upstream', 'both').lower()
+    proxies = {'http': proxystring}
 
-    try:
-        if cache_type == 'varnish':
-            if upstream == 'cvmfs':
-                targeturl = proxystring + "/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"  
-                repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
-                if repo is None:
-                    repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
-                file = requests.get(targeturl, timeout=2)
-                f = file.content
-                for line in f.splitlines():
-                    if line.startswith(bytes('N', 'utf-8')):
-                        if bytes(repo, 'utf-8') in line:
-                            return True
-                syslog.syslog(syslog.LOG_ERR, "%s failed verification on %s" % (ip, targeturl))
-                return False
-            elif upstream == 'frontier':
+    if frontier:
+        try:
+            start_time = time.time()           
+            proxies = {'http': proxystring}
+            response = requests.get("http://frontier.cern.ch", headers={"X-frontier-id": "test"}, proxies=proxies, timeout=2, allow_redirects=False)
+            if response.status_code == 200 and proxystring != 'DIRECT' and proxystring != "":
+                return time.time() - start_time, 'frontier'
+            elif response.status_code == 301 and proxystring != 'DIRECT' and proxystring != "":
                 targeturl = proxystring + "/atlr"
-                file = requests.get(targeturl, headers={"X-frontier-id": "shoal-server-verification", "Cache-Control": "max-age=0"}, timeout=2)
-                if file.status_code == 200:
-                    return True
-                syslog.syslog(syslog.LOG_ERR, "%s failed verification on %s" % (ip, targeturl))
-                return False
-        else:
+                response = requests.get(targeturl, headers={"X-frontier-id": "shoal-server-verification", "Cache-Control": "max-age=0"}, timeout=2) 
+                if response.status_code == 200:
+                    return time.time() - start_time, 'frontier'
+            return False, None
+        except:
+            return False, None
+         
+    else:
+        if not proxystring or proxystring == 'DIRECT':
+            return False, None
+        try:
+            start_time = time.time()
+            verified = False
             for targeturl in paths:
-                #if a url checks out testflag set to true, otherwise fails verification at end of loop
-                testflag = False
                 try:
-                    # print("Trying", targeturl)
                     repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
                     if repo is None:
                         repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
-                    file = requests.get(targeturl, proxies=proxies, timeout=2)
-                    f = file.content
+                    response = requests.get(targeturl, proxies=proxies, timeout=2)
+                    f = response.content
                     for line in f.splitlines():
-                        if line.startswith(getString('N')):
-                            if getString(repo) in line:
-                                testflag = True
-                    if testflag is False:
-                        syslog.syslog(syslog.LOG_ERR, "%s failed verification on %s" % (ip, targeturl))
-                        return None
+                        if line.startswith(bytes('N', 'utf-8')):
+                            if bytes(repo, 'utf-8') in line:
+                                verified = True
+                                break
+                    if verified:
+                        break
                 except:
-                    # note that this would catch any RE errors aswell but they are
-                    # specified in the config and all fit the pattern.
-                    syslog.syslog(syslog.LOG_ERR, "%s timeout or proxy error on %s repo" % (ip, targeturl))
-                    return None
+                    pass
 
-            start_time = time.time()
-            for targeturl in paths:
-                try:
-                    file = requests.get(targeturl, proxies=proxies, timeout=2)
-                except Exception as exe:
-                    syslog.syslog(syslog.LOG_ERR, "%s timeout or proxy error on %s repo" % (ip, targeturl))
-                    return None
-            timer = time.time() - start_time
-            return timer
+            if verified:
+                return time.time() - start_time,  'cvmfs'
+     
+        except:
+            pass
 
-    except Exception as exc:
-        syslog.syslog(syslog.LOG_ERR, "%s timeout or error: %s" % (ip, str(exc)))
-        return False
-
-    return True
+        return False, None
+	    
 
 def getAvailableIp(cache):
     """
@@ -280,7 +280,7 @@ def getAvailableIp(cache):
     """
     cache_private_ip = str(cache['private_ip']) if cache['private_ip'] else None
     cache_public_ip = str(cache['public_ip']) if cache['public_ip'] else None
-    cache_port = cache['cache_port']
+    cache_port = cache['squid_port']
 
     client_private_ip = None
     client_private_ip_not_found = False
@@ -314,12 +314,12 @@ def getAvailableIp(cache):
             client_subnet = '.'.join(client_private_ip.split('.')[:2])
             same_subnet = cache_subnet == client_subnet
         if (same_subnet or client_private_ip_not_found):
-            test_time_cost = functionalTest(cache_private_ip, cache_port, cache)
+            test_time_cost = functionalTest(cache_private_ip, cache_port)[0]
             if test_time_cost:
                 return_cache_ip = cache_private_ip
                 cache_type = 'private'
     if not return_cache_ip and cache_public_ip:
-        test_time_cost = functionalTest(cache_public_ip, cache_port, cache)
+        test_time_cost = functionalTest(cache_public_ip, cache_port)[0]
         if test_time_cost:
             return_cache_ip = cache_public_ip
     return {'available_cache_ip': return_cache_ip, 'time_cost': test_time_cost, 'cache_type': cache_type}
@@ -348,7 +348,9 @@ get_args()
 if server == server_default:
     if frontier:
         server = server_conditions
-
+    
+    else:
+        server = server_cvmfs
 ## try to load default value from env variable
 try:
     syslog.syslog(syslog.LOG_INFO, "Checking Enviroment Variable for default proxy")
@@ -365,7 +367,7 @@ except KeyError as e:
 # Listen on local network for a local cache agent broadcast
 if not skip_broadcast:
     q = Queue()
-    p = Process(target=get_local_cache, args=(q,broadcast_timeout))
+    p = Process(target=get_local_cache, args=(q,broadcast_timeout, frontier))
     p.start()
     try:
        local_cache = q.get(block=True, timeout=broadcast_timeout)
@@ -379,11 +381,10 @@ if local_cache:
     cache_type = local_cache.get('cache_type', 'squid')
     upstream = local_cache.get('upstream', 'both').lower()
     
-    if cache_type == 'varnish':
-        if frontier and upstream not in ['frontier', 'both']:
-            local_cache = None
-        elif not frontier and upstream not in ['cvmfs', 'both']:
-            local_cache = None
+    if frontier and upstream not in ['frontier', 'both']:
+        local_cache = None
+    elif not frontier and upstream not in ['cvmfs', 'both']:
+        local_cache = None
 
 ## read server data (if it can be read) into a dictionary called data
 # by default the server is only contacted if the force server flag is set or
@@ -426,15 +427,6 @@ if data:
     for cache_key in list(data):
         cache = data[cache_key]
         try:
-            cache_type = cache.get('cache_type', 'cache').lower()
-            cache_upstream = cache.get('upstream', 'both').lower()
-            if cache_type == 'varnish':
-                if frontier:
-                    if cache_upstream not in ['frontier', 'both']:
-                        continue
-                else:
-                    if cache_upstream not in ['cvmfs', 'both']:
-                        continue
 
             if not local_cache or not cache['private_ip'] or cache['private_ip'] != local_cache['address'].split(':')[0]:
                 # test the cache received from shoal server
@@ -443,9 +435,9 @@ if data:
                 if available_cache_ip:
                     time_cost = available_cache['time_cost']
                     if available_cache['cache_type'] == 'private':
-                        server_available_private[time_cost] = (available_cache_ip, cache['cache_port'])
+                        server_available_private[time_cost] = (available_cache_ip, cache['squid_port'])
                     else:
-                        server_available_public[time_cost] = (available_cache_ip, cache['cache_port'])
+                        server_available_public[time_cost] = (available_cache_ip, cache['squid_port'])
         except KeyError as e:
             syslog.syslog(
                 syslog.LOG_ERR,
@@ -472,60 +464,30 @@ for i, each_default in enumerate(default_http_list):
 default_http_proxy = temp_default_http
 
 #need to reformat default string for frontier nodes
+new_defaults = ''
+tmpproxies = default_http_proxy.split(';')
+
 if frontier:
-    new_defaults = ''
-    tmpproxies = default_http_proxy.split(';')
-
     for proxy in tmpproxies:
-        try:
-            current_proxy_config = {'http': proxy}
-            response = requests.get("http://frontier.cern.ch", headers={"X-frontier-id": "test"}, proxies=current_proxy_config, timeout=2, allow_redirects=False) 
-            if response.status_code == 200 and proxy != 'DIRECT' and proxy != "":
-                new_defaults += '(proxyurl=%s)' % proxy
-            elif response.status_code == 301 and proxy != 'DIRECT' and proxy != "":
-                targeturl = proxy + "/atlr"
-                response = requests.get(targeturl, headers={"X-frontier-id": "shoal-server-verification", "Cache-Control": "max-age=0"}, timeout=2)
-                if response.status_code == 200:
-                    new_defaults += '(proxyurl=%s)' % proxy
-        except:
-            pass
-
-    default_http_proxy = new_defaults
-
-else:
-    new_defaults = ''
-    tmpproxies = default_http_proxy.split(';')
-    for proxy in tmpproxies:
-        if proxy != 'DIRECT' and proxy != "":
+        proxy = proxy.replace("https://", "").replace("http://", "")
+        if proxy == 'DIRECT' or proxy == "" or not proxy:
             continue
-        try:
-            current_proxy_config = {'http': proxy}
-            verified = False
-
-            for targeturl in paths:
-                try:
-                    repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
-                    if repo is None:
-                        repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
-                    response = requests.get(targeturl, proxies=current_proxy_config, timeout=2)
-                    f = response.content
-
-                    for line in f.splitlines():
-                        if line.startswith(bytes('N', 'utf-8')):
-                            if bytes(repo, 'utf-8') in line:
-                                verified = True
-                                break
-                    if verified:
-                        break
-                except:
-                    pass
-            if verified:
-                new_defaults += '%s;' % proxy
-        except:
-            pass
-
-    default_http_proxy = new_defaults
-
+        proxyinfo = proxy.split(':')
+        passed, upstream = functionalTest(proxyinfo[0], proxyinfo[1])
+        if passed and upstream == 'frontier':
+            new_defaults += '(proxyurl=%s)' % proxy
+else:
+   for proxy in tmpproxies:
+        proxy = proxy.replace("https://", "").replace("http://", "")
+        if proxy == 'DIRECT' or proxy == "" or not proxy:
+            continue
+        proxyinfo = proxy.split(':')
+        passed, upstream = functionalTest(proxyinfo[0], proxyinfo[1])
+        if passed and upstream == 'cvmfs' and proxy != 'DIRECT' and proxy != "":
+            new_defaults += '%s;' % proxy
+    
+default_http_proxy = new_defaults
+    
 if local_cache and local_cache['address'] and local_cache['address'] not in best_http_proxy:
     upstream = local_cache.get('upstream', 'both').lower()
     if frontier:
