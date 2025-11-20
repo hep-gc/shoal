@@ -193,7 +193,8 @@ class WebpyServer(Thread):
         self.app = None
         self.urls = (
             '/all/?(\d+)?/?', 'shoal_server.view.allcaches',
-            '/nearest/?(\d+)?/?', 'shoal_server.view.nearestcvmfs',
+            '/nearest/?(\d+)?/?', 'shoal_server.view.nearest',
+            '/nearestcvmfs/?(\d+)?/?', 'shoal_server.view.nearestcvmfs',
             '/nearestconditions/?(\d+)?/?', 'shoal_server.view.nearestconditions',
             '/nearestverified/?(\d+)?/?', 'shoal_server.view.nearestverified',
             '/wpad.dat', 'shoal_server.view.wpad',
