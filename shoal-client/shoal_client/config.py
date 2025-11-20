@@ -18,6 +18,7 @@ import logging
 """
 # set default values
 shoal_server_url = 'http://localhost:8080/nearest'
+cvmfs_url = 'http://localhost:8080/nearestcvmfs'
 conditions_url = 'http://localhost:8080/nearestconditions'
 default_cache_proxy = "DIRECT"
 paths = [
@@ -81,6 +82,9 @@ except:
 
 if config_file.has_option("general", "shoal_server_url"):
     shoal_server_url = config_file.get("general", "shoal_server_url")
+
+if config_file.has_option("general", "cvmfs_url"):
+    cvmfs_url = config_file.get("general", "cvmfs_url")
     
 if config_file.has_option("general", "conditions_url"):
     conditions_url = config_file.get("general", "conditions_url")
@@ -90,4 +94,3 @@ if config_file.has_option("general", "default_cache_proxy"):
 else:
     print("No default settings found in the config file, will use DIRECT as default. " \
           "Please check configuration file: %s" % path, file=sys.stderr)
-
