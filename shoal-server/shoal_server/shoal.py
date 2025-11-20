@@ -586,7 +586,7 @@ class RabbitMQConsumer(Thread):
                     local,
                     maxload,
                     time_sent,
-                    cache_type=data.get('cache_type', 'cache'),
+                    cache_type=data.get('cache_type', 'squid'),
                     upstream=data.get('upstream', 'Both')
 )
                 self.shoal[key] = new_cache
