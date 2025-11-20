@@ -65,7 +65,7 @@ class CacheNode(object):
             "created": self.created,
             "last_active": self.last_active,
             "hostname": self.hostname,
-            "cache_port": self.cache_port,
+            "squid_port": self.cache_port,
             "public_ip": self.public_ip,
             "private_ip": self.private_ip,
             "external_ip": self.external_ip,
