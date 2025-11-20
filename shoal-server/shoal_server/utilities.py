@@ -100,8 +100,11 @@ def get_nearest_verified_caches(ip, count=10, upstream_type= None):
 
         if upstream_type is not None and cache.upstream.lower() not in upstream_list:
             continue
-        
-        
+            
+        elif upstream_type is None:
+            cache_type = getattr(cache, 'cache_type', 'squid').lower()
+            if cache_type != 'squid':
+                continue
         try:
             maxload = cache.maxload
         except:
@@ -340,6 +343,7 @@ def _is_available(cache):
         return False
     
     return True
+
 
 
 
