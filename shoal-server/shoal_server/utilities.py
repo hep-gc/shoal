@@ -343,14 +343,3 @@ def _is_available(cache):
         return False
     
     return True
-
-
-
-
-
-
-
-
-
-
-
