@@ -211,13 +211,6 @@ def parseServerData(jsonStr):
     ## outDict in geo_data for each geoDataType holds a val
     return outDict
 
-def getString(content):
-    try:
-        formatted = bytes(content, 'utf-8')
-    except:
-        formatted = bytes(content) # for python 2
-    return formatted
-
 def functionalTest(ip, port):
     """
     A list of paths are tested to see all repos are working, returns the "True" if it is verified or "False" if it cannot be
