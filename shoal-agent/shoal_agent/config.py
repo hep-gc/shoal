@@ -91,8 +91,10 @@ def getString(content):
     return formatted
     
 def detect_upstream(cache_type, hostname, port):
+    proxystring = "http://%s:%s" % (hostname or '127.0.0.1', port)
     if cache_type == 'varnish':
-        targeturl = f"http://{hostname}:{port}/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"
+        
+        targeturl = proxystring + "/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"
         repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
         if repo is None:
             repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
