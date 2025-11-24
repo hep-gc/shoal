@@ -266,13 +266,11 @@ def functionalTest(ip, port):
 
             if verified:
                 return time.time() - start_time,  'cvmfs'
-     
         except:
             pass
 
         return False, None
 	    
-
 def getAvailableIp(cache):
     """
     Functional test for return caches from broadcast and shoal-server
