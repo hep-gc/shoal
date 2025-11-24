@@ -78,7 +78,7 @@ def get_local_cache(q, t, frontier):
                     return
                 elif not frontier and upstream not in ['cvmfs', 'both']:
                     return
-                result = {'address': ip + ':' + port,'cache_type': cache_type if cache_type else 'squid','upstream': upstream if upstream else 'both','is_old_agent': len(parts) < 3}
+                result = {'address': ip + ':' + port,'cache_type': cache_type if cache_type else 'squid','upstream': upstream if upstream else 'both'}
                 q.put(result)
         elif data.startswith(BROADCAST_IDS[1]):
             parts = data[len(BROADCAST_IDS[1]):].split(':')
@@ -91,7 +91,7 @@ def get_local_cache(q, t, frontier):
                     return
                 elif not frontier and upstream not in ['cvmfs', 'both']:
                     return
-                result = {'address': ip + ':' + port,'cache_type': cache_type,'upstream': upstream,'is_old_agent': len(parts) < 3}
+                result = {'address': ip + ':' + port,'cache_type': cache_type,'upstream': upstream}
                 q.put(result)
     except:
         # print("socket got a timeout")
