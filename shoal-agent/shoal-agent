@@ -35,7 +35,7 @@ from shoal_agent import config
 
 def broadcast_my_ip():
     PORT = 50000
-    BROADCAST_ID = ["fna349fn", "fna350fn"] #seperates broadcast of shoal-agent compatible(1) and incompatible(0) with varnish
+    BROADCAST_ID = ["fna349fn", "fna350fn"] #seperates broadcast of shoal-agent compatible(fna350fn) and incompatible(fna349fn) with varnish
     MULTICAST_TTL = 2
     global cache_available    
 
