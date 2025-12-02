@@ -61,7 +61,7 @@ def broadcast_my_ip():
             logging.info("sent service announcement")
         else:
             pass
-        sleep(60)
+        sleep(30)
 
 # Time interval to send data
 INTERVAL = config.interval
