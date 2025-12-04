@@ -34,14 +34,14 @@ except:
 from shoal_agent import config
 
 def broadcast_my_ip():
-    PORT = 50000
-    BROADCAST_ID = ["fna349fn", "fna350fn"] #seperates broadcast of shoal-agent compatible(fna350fn) and incompatible(fna349fn) with varnish
+    PORT = 50000 if config.cache_type == 'squid' else 50001 if config.upstream == 'cvmfs' else 50002
+    BROADCAST_ID = "fna349fn" #seperates broadcast of shoal-agent compatible(fna350fn) and incompatible(fna349fn) with varnish
     MULTICAST_TTL = 2
-    global cache_available    
+    global cache_available
 
     from time import sleep
     from socket import socket, AF_INET, SOCK_DGRAM, SOL_SOCKET, SO_BROADCAST, gethostbyname, gethostname
-    
+
     s = socket(AF_INET, SOCK_DGRAM) #create UDP socket
     s.bind(('', 0))
     # s.setsockopt(SOL_SOCKET, SO_BROADCAST, 1) #this is a broadcast socket
@@ -53,14 +53,10 @@ def broadcast_my_ip():
             my_ip = config.dnsname
         except:
             logging.error("No hostname found")
-    
+
     while 1:
-        if config.cache_type == "squid" and cache_available:
-            data = (BROADCAST_ID[0] + str(my_ip) + ":" + str(config.cache_port) + ":" + config.cache_type + ":" + config.upstream).encode()
-            s.sendto(data, ('<broadcast>', PORT))
-            logging.info("sent service announcement")
-        elif config.cache_type == "varnish" and cache_available:
-            data = (BROADCAST_ID[1] + str(my_ip) + ":" + str(config.cache_port) + ":" + config.cache_type + ":" + config.upstream).encode()
+        if cache_available:
+            data = (BROADCAST_ID + str(my_ip) + ":" + str(config.cache_port) + ":" + config.cache_type + ":" + config.upstream).encode()
             s.sendto(data, ('<broadcast>', PORT))
             logging.info("sent service announcement")
         else:
