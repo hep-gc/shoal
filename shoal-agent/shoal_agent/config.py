@@ -146,6 +146,9 @@ upstream = detect_upstream(detected_type, hostname, cache_port)
 
 # get external_ip
 external_ip = stun.get_ip_info()[1]
+if external_ip ==None:
+    external_ip = stun.get_ip_info(source_ip="0.0.0.0", stun_host="stun3.l.google.com", stun_port=19302)[1]
+
 # get dnsname
 try:
     dnsname = gethostbyaddr(external_ip)[0]
