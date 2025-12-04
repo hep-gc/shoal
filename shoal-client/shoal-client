@@ -63,13 +63,18 @@ def get_local_cache(q, t, frontier):
     BROADCAST_ID = "fna349fn" #to make sure we don't confuse or get confused by other programs
 
     from socket import socket, AF_INET, SOCK_DGRAM
+    import select
 
+    read_list = []
     for PORT in PORTS:
-
         s = socket(AF_INET, SOCK_DGRAM) #create UDP socket
         s.bind(('', PORT))
-        s.settimeout(t)
+        s.setblocking(0)
+        read_list.append(s)
 
+    readable = select.select(read_list, [], [], t)[0]
+
+    for s in readable:
         try:
             data, addr = s.recvfrom(1024) #wait for a packet
             data = data.decode('utf-8')
