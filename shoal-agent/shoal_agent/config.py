@@ -83,13 +83,6 @@ def detect_cache_type():
 
     return 'squid', 'squid', 3128  
     
-def getString(content):
-    try:
-        formatted = bytes(content, 'utf-8')
-    except:
-        formatted = bytes(content) # for python 2
-    return formatted
-    
 def detect_upstream(cache_type, hostname, port):
     proxystring = "http://%s:%s" % (hostname or '127.0.0.1', port)
     if cache_type == 'varnish':
@@ -101,8 +94,8 @@ def detect_upstream(cache_type, hostname, port):
         file = requests.get(targeturl, timeout=2)
         f = file.content
         for line in f.splitlines():
-            if line.startswith(getString('N')):
-                if getString(repo) in line:
+            if line.startswith(bytes('N', 'utf-8')):
+                if bytes(repo, 'utf-8') in line:
                     return 'cvmfs'
         return 'frontier'
     else:
