@@ -303,6 +303,8 @@ def _is_available(cache):
                 cache.error = "Error during verification"
                 return False
         else:
+            badpaths = 0
+            badflags = 0
             # test the ip with all the urls
             for targeturl in paths:
                 #if a url checks out testflag set to true, otherwise fails verification at end of loop
@@ -356,4 +358,5 @@ def _is_available(cache):
         return False
     
     return True
+
 
