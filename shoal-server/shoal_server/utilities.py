@@ -265,31 +265,44 @@ def _is_available(cache):
         
     try:
         if cache_type == 'varnish':
-            if upstream == 'cvmfs':
-                targeturl = proxystring + "/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"  
-                repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
-                if repo is None:
-                    repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
-                file = requests.get(targeturl, timeout=2)
-                f = file.content
-                for line in f.splitlines():
-                    if line.startswith(bytes('N', 'utf-8')):
-                        if bytes(repo, 'utf-8') in line:
-                            return True
-                logger.error("%s failed verification on %s" % (ip, targeturl))
-                cache.error = "Varnish CVMFS cache failed verification"
-                return False
-            elif upstream == 'frontier':
-                targeturl = proxystring + "/atlr"
-                file = requests.get(targeturl, headers={"X-frontier-id": "shoal-server-verification", "Cache-Control": "max-age=0"}, timeout=2)
-                if file.status_code == 200:
-                    return True
-                logger.error("%s failed verification on %s" % (ip, targeturl))
-                cache.error = "Varnish Frontier cache failed verification. Status: %s" % file.status_code
+            try:
+                if upstream == 'cvmfs':
+                    targeturl = proxystring + "/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"  
+                    logger.info("Trying %s", targeturl)
+                    repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+                    if repo is None:
+                        repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+                    file = requests.get(targeturl, timeout=2)
+                    f = file.content
+                    for line in f.splitlines():
+                        if line.startswith(bytes('N', 'utf-8')):
+                            if bytes(repo, 'utf-8') in line:
+                                return True
+                        if bytes('ERR_ACCESS_DENIED', 'utf-8') in line:
+                                    cache.error = "The cache is configured to prevent external access. Cache is configured for Local Access Only. Cannot verify %s" % (hostname)
+                                    logger.error(cache.error)
+                                    return False     
+                    logger.error("%s timeout or error: %s" % (ip, str(exc)))
+                    cache.error = "Error during verification"
+                    return False
+                elif upstream == 'frontier':
+                    targeturl = proxystring + "/atlr"
+                    logger.info("Trying %s", targeturl)
+                    file = requests.get(targeturl, headers={"X-frontier-id": "shoal-server-verification", "Cache-Control": "max-age=0"}, timeout=2)
+                    if file.status_code == 200:
+                        return True
+                    else: 
+                        logger.error("%s failed verification on %s" % (ip, targeturl))
+                        cache.error = "The cache is configured to prevent external access. Cache is configured for Local Access Only. Cannot verify %s" % (hostname)
+                        return False
+                    logger.error("%s timeout or error: %s" % (ip, str(exc)))
+                    cache.error = "Error during verification"
+                    return False
+            except:
+                logger.error("%s timeout or error: %s" % (ip, str(exc)))
+                cache.error = "Error during verification"
                 return False
         else:
-            badpaths = 0
-            badflags = 0
             # test the ip with all the urls
             for targeturl in paths:
                 #if a url checks out testflag set to true, otherwise fails verification at end of loop
@@ -343,3 +356,4 @@ def _is_available(cache):
         return False
     
     return True
+
