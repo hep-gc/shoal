@@ -17,7 +17,6 @@ import logging
    The first one found will be used.
 """
 # set default values
-shoal_server_url = 'http://localhost:8080/nearest'
 cvmfs_url = 'http://localhost:8080/nearestcvmfs'
 conditions_url = 'http://localhost:8080/nearestconditions'
 default_cache_proxy = "DIRECT"
@@ -79,9 +78,6 @@ except:
     raise
 
 # sets defaults to the options in config_file
-
-if config_file.has_option("general", "shoal_server_url"):
-    shoal_server_url = config_file.get("general", "shoal_server_url")
 
 if config_file.has_option("general", "cvmfs_url"):
     cvmfs_url = config_file.get("general", "cvmfs_url")

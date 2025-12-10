@@ -29,11 +29,9 @@ from shoal_client import config as config
 
 syslog.openlog("shoal-client")
 
-server_default = config.shoal_server_url
 server_cvmfs = config.cvmfs_url
 server_conditions = config.conditions_url
 
-server = server_default
 default_http_proxy = config.default_cache_proxy
 local_cache = None
 
@@ -53,6 +51,7 @@ shoal_server_timeout = 30
 paths = config.paths
 force_server = False
 
+
 def get_local_cache(q, t, frontier):
     PORTS = [50000]
     if frontier:
@@ -69,11 +68,10 @@ def get_local_cache(q, t, frontier):
     for PORT in PORTS:
         s = socket(AF_INET, SOCK_DGRAM) #create UDP socket
         s.bind(('', PORT))
-        s.setblocking(0)
+        s.setblocking(0) 
         read_list.append(s)
 
     readable = select.select(read_list, [], [], t)[0]
-
     for s in readable:
         try:
             data, addr = s.recvfrom(1024) #wait for a packet
@@ -92,7 +90,8 @@ def get_local_cache(q, t, frontier):
         except:
             # print("socket got a timeout")
             syslog.syslog(syslog.LOG_ERR, "Socket got a timeout")
-
+ 
+   
 def get_args():
     """
         gets server and dump variables from command line arguments
@@ -331,12 +330,11 @@ get_args()
 # reads data from a URL from a Shoal server, parses it, prepares a list of proxies
 # stored in cvmfs_http_proxy, executes command to set CVMFS proxies if dump is not specified.
 
-if server == server_default:
-    if frontier:
-        server = server_conditions
+if frontier:
+    server = server_conditions
     
-    else:
-        server = server_cvmfs
+else:
+    server = server_cvmfs
 ## try to load default value from env variable
 try:
     syslog.syslog(syslog.LOG_INFO, "Checking Enviroment Variable for default proxy")

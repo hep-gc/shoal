@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 # Author: Colson Drimiel <heprc-shoal@uvic.ca>
 # Copyright (C) 2013 University of Victoria
@@ -35,7 +35,7 @@ from shoal_agent import config
 
 def broadcast_my_ip():
     PORT = 50000 if config.cache_type == 'squid' else 50001 if config.upstream == 'cvmfs' else 50002
-    BROADCAST_ID = "fna349fn" #seperates broadcast of shoal-agent compatible(fna350fn) and incompatible(fna349fn) with varnish
+    BROADCAST_ID = "fna349fn"
     MULTICAST_TTL = 2
     global cache_available
 
