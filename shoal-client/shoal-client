@@ -66,21 +66,12 @@ def get_local_cache(q, t, frontier):
 
     read_list = []
     for PORT in PORTS:
-        syslog.syslog(syslog.LOG_ERR, "POOORT")
-        syslog.syslog(syslog.LOG_ERR, str(PORT))
         s = socket(AF_INET, SOCK_DGRAM) #create UDP socket
-        syslog.syslog(syslog.LOG_ERR, "socket")
-        syslog.syslog(syslog.LOG_ERR,str(s))
         s.bind(('', PORT))
         s.setblocking(0) 
         read_list.append(s)
-        syslog.syslog(syslog.LOG_ERR, "READLIST")
-        syslog.syslog(syslog.LOG_ERR, str(read_list))
-    syslog.syslog(syslog.LOG_ERR, "FINALREADLIST")
-    syslog.syslog(syslog.LOG_ERR, str(read_list))
 
     readable = select.select(read_list, [], [], t)[0]
-    syslog.syslog(syslog.LOG_ERR,str(readable))
     for s in readable:
         try:
             data, addr = s.recvfrom(1024) #wait for a packet
@@ -94,8 +85,6 @@ def get_local_cache(q, t, frontier):
                     cache_type = parts[2] if len(parts) > 2 else 'squid'
                     upstream = parts[3] if len(parts) > 3 else 'both'
                     result = {'address': ip + ':' + port,'cache_type': cache_type if cache_type else 'squid','upstream': upstream if upstream else 'both'}
-                    syslog.syslog(syslog.LOG_ERR, "RESULT")
-                    syslog.syslog(syslog.LOG_ERR, str(result))
                     q.put(result)
                     break
         except:
@@ -362,12 +351,10 @@ except KeyError as e:
 # Listen on local network for a local cache agent broadcast
 if not skip_broadcast:
     q = Queue()
-    syslog.syslog(syslog.LOG_ERR, "START===========")
     p = Process(target=get_local_cache, args=(q,broadcast_timeout, frontier))
     p.start()
     try:
        local_cache = q.get(block=True, timeout=broadcast_timeout)
-       syslog.syslog(syslog.LOG_ERR, "END===========")
     except Q.Empty:
        #continue
        #print("queue timeout !")
