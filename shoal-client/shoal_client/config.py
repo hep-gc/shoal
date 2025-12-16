@@ -17,8 +17,8 @@ import logging
    The first one found will be used.
 """
 # set default values
-cvmfs_url = 'http://localhost:8080/nearestcvmfs'
-conditions_url = 'http://localhost:8080/nearestconditions'
+cvmfs_url = 'http://shoal.heprc.uvic.ca/nearestcvmfs'
+conditions_url = 'http://shoal.heprc.uvic.ca/nearestconditions'
 default_cache_proxy = "DIRECT"
 paths = [
 "http://cvmfs-stratum-one.cern.ch/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
