@@ -16,14 +16,14 @@ geolitecity_path = shoal_dir
 geodomain_path = "/var/www/shoal/static/db/"
 geolitecity_url = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
 geolitecity_update = 2592000
-squid_cleanse_interval = 15
-squid_inactive_time = 180
-squid_verification = True
-squid_verify_interval = 60
-squid_max_load = 122000
-squid_verified_default = False
-squid_loadconstant = 1
-squid_distloadweight = 0.5
+cache_cleanse_interval = 15
+cache_inactive_time = 180
+cache_verification = True
+cache_verify_interval = 60
+cache_max_load = 122000
+cache_verified_default = False
+cache_loadconstant = 1
+cache_distloadweight = 0.5
 amqp_server_url = 'localhost'
 amqp_port       = 5672
 amqp_virtual_host = '/'
@@ -116,62 +116,62 @@ if config_file.has_option("general", "geolitecity_update"):
                "integer value.")
         sys.exit(1)
 
-if config_file.has_option("squid", "squid_cleanse_interval"):
+if config_file.has_option("cache", "cache_cleanse_interval"):
     try:
-        squid_cleanse_interval = config_file.getint("squid", "squid_cleanse_interval")
+        cache_cleanse_interval = config_file.getint("cache", "cache_cleanse_interval")
     except ValueError:
-        print ("Configuration file problem: squid_cleanse_interval must be an " \
+        print ("Configuration file problem: cache_cleanse_interval must be an " \
                "integer value.")
         sys.exit(1)
 
-if config_file.has_option("squid", "squid_inactive_time"):
+if config_file.has_option("cache", "cache_inactive_time"):
     try:
-        squid_inactive_time = config_file.getint("squid", "squid_inactive_time")
+        cache_inactive_time = config_file.getint("cache", "cache_inactive_time")
     except ValueError:
-        print ("Configuration file problem: squid_inactive_time must be an " \
+        print ("Configuration file problem: cache_inactive_time must be an " \
                "integer value.")
         sys.exit(1)
         
-if config_file.has_option("squid", "squid_verification"):
+if config_file.has_option("cache", "cache_verification"):
     try:
-        squid_verification = config_file.getboolean("squid", "squid_verification")
+        cache_verification = config_file.getboolean("cache", "cache_verification")
     except ValueError:
-        print ("Configuration file problem: squid_verification must be a boolean value")
+        print ("Configuration file problem: cache_verification must be a boolean value")
         sys.exit(1)
 
-if config_file.has_option("squid", "squid_verified_default"):
+if config_file.has_option("cache", "cache_verified_default"):
     try:
-        squid_verified_default = config_file.getboolean("squid", "squid_verified_default")
+        cache_verified_default = config_file.getboolean("cache", "cache_verified_default")
     except ValueError:
-        print ("Configuration file problem: squid_verified_default must be a boolean value")
+        print ("Configuration file problem: cache_verified_default must be a boolean value")
         sys.exit(1)
 
-if config_file.has_option("squid", "squid_verify_interval"):
+if config_file.has_option("cache", "cache_verify_interval"):
     try:
-        squid_verify_interval = config_file.getint("squid", "squid_verify_interval")
+        cache_verify_interval = config_file.getint("cache", "cache_verify_interval")
     except ValueError:
-        print ("Configuration file problem: squid_verify_interval must be a integer value")
+        print ("Configuration file problem: cache_verify_interval must be a integer value")
         sys.exit(1)
 
-if config_file.has_option("squid", "squid_max_load"):
+if config_file.has_option("cache", "cache_max_load"):
     try:
-        squid_max_load = config_file.getint("squid", "squid_max_load")
+        cache_max_load = config_file.getint("cache", "cache_max_load")
     except ValueError:
-        print ("Configuration file problem: squid_max_load must be a integer value")
+        print ("Configuration file problem: cache_max_load must be a integer value")
         sys.exit(1)
 
-if config_file.has_option("squid", "squid_loadconstant"):
+if config_file.has_option("cache", "cache_loadconstant"):
     try:
-        squid_loadconstant = config_file.getfloat("squid", "squid_loadconstant")
+        cache_loadconstant = config_file.getfloat("cache", "cache_loadconstant")
     except ValueError:
-        print ("Configuration file problem: squid_loadconstant must be a float value")
+        print ("Configuration file problem: cache_loadconstant must be a float value")
         sys.exit(1)
 
-if config_file.has_option("squid", "squid_distloadweight"):
+if config_file.has_option("cache", "cache_distloadweight"):
     try:
-        squid_distloadweight = config_file.getfloat("squid", "squid_distloadweight")
+        cache_distloadweight = config_file.getfloat("cache", "cache_distloadweight")
     except ValueError:
-        print ("Configuration file problem: squid_distloadweight must be a float value")
+        print ("Configuration file problem: cache_distloadweight must be a float value")
         sys.exit(1)
 
 if config_file.has_option("rabbitmq", "amqp_server_url"):

@@ -34,14 +34,14 @@ except:
 from shoal_agent import config
 
 def broadcast_my_ip():
-    PORT = 50000
-    BROADCAST_ID = "fna349fn" #to make sure we don't confuse or get confused by other programs
+    PORT = 50000 if config.cache_type == 'squid' else 50001 if config.upstream == 'cvmfs' else 50002
+    BROADCAST_ID = "fna349fn"
     MULTICAST_TTL = 2
-    global squid_available    
+    global cache_available
 
     from time import sleep
     from socket import socket, AF_INET, SOCK_DGRAM, SOL_SOCKET, SO_BROADCAST, gethostbyname, gethostname
-    
+
     s = socket(AF_INET, SOCK_DGRAM) #create UDP socket
     s.bind(('', 0))
     # s.setsockopt(SOL_SOCKET, SO_BROADCAST, 1) #this is a broadcast socket
@@ -53,10 +53,10 @@ def broadcast_my_ip():
             my_ip = config.dnsname
         except:
             logging.error("No hostname found")
-    
+
     while 1:
-        if squid_available:
-            data = (BROADCAST_ID + str(my_ip) + ":" + str(config.squid_port)).encode()
+        if cache_available:
+            data = (BROADCAST_ID + str(my_ip) + ":" + str(config.cache_port) + ":" + config.cache_type + ":" + config.upstream).encode()
             s.sendto(data, ('<broadcast>', PORT))
             logging.info("sent service announcement")
         else:
@@ -69,7 +69,7 @@ privAddressList = ['172.' + str(x) for x in range(16, 32)] + ['10.', '192.168.']
 PRIVATE_ADDRESS = tuple(privAddressList)
 LOG_FORMAT = '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)s] - %(message)s'
 test_targeturl = config.test_targeturl
-squid_available = False
+cache_available = False
 
 def SIGTERM_handler(signal, frame):
 
@@ -93,7 +93,7 @@ def amqp_send(data, topics=['info']):
             host=config.amqp_server_url,
             port=config.amqp_port,
         )
-    else: 
+    else:
         parameters = pika.ConnectionParameters(
             host=config.amqp_server_url,
             port=config.amqp_port,
@@ -174,18 +174,40 @@ def functionalTest(ip, port):
     }
     targeturl = test_targeturl   
     try:
-        # print("Trying", targeturl)
-        repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
-        if repo is None:
-            repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
-        file = requests.get(targeturl, proxies=proxies, timeout=2)
-        f = file.content
-        for line in f.splitlines():            
-            if line.startswith(getString('N')):
-                if getString(repo) in line:
+        if config.cache_type == 'varnish':
+            if config.upstream == 'cvmfs':
+                targeturl = proxystring + "/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"
+                repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+                if repo is None:
+                    repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+                file = requests.get(targeturl, timeout=2)
+                f = file.content
+                for line in f.splitlines():            
+                    if line.startswith(getString('N')):
+                        if getString(repo) in line:
+                            return True
+                logging.error("%s failed verification on %s" % (ip, targeturl))
+                return False
+            elif config.upstream == 'frontier':
+                targeturl = proxystring + "/atlr"
+                file = requests.get(targeturl, headers={"X-frontier-id": "shoal-agent-test", "Cache-Control": "max-age=0"}, timeout=2)
+                if file.status_code == 200:
                     return True
-        logging.error("%s failed verification on %s" % (ip, targeturl))
-        return False
+                logging.error("%s failed verification on %s" % (ip, targeturl))
+                return False
+        else:
+            # print("Trying", targeturl)
+            repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+            if repo is None:
+                repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+            file = requests.get(targeturl, proxies=proxies, timeout=2)
+            f = file.content
+            for line in f.splitlines():            
+                if line.startswith(getString('N')):
+                    if getString(repo) in line:
+                        return True
+            logging.error("%s failed verification on %s" % (ip, targeturl))
+            return False
     except:
         # note that this would catch any RE errors aswell but they are
         # specified in the config and all fit the pattern.
@@ -226,11 +248,12 @@ def writeEmailTime(time_to_write):
     except:
         logging.error("Have error when writing the time stamp to the last sent email file")
 
-def main():
-    # Sets up uuid, hostname, squid_port, public/private/external ip, and interface
-    # Establishes connection and publishes the load and ip of the squid server using
+def main(): 
+    # Sets up uuid, hostname, cache_port, public/private/external ip, and interface
+    # Establishes connection and publishes the load and ip of the cache server using
+
     # a json formatted amqp message at regular intervals
-    global squid_available
+    global cache_available
     SHORT_INTERVAL = 60 * 30
     MEDIUM_INTERVAL = 60 * 60 * 6
     LONG_INTERVAL = 60 * 60 * 24
@@ -238,9 +261,11 @@ def main():
     data = {
         'uuid': uuid.uuid1().hex,
         'hostname': socket.gethostname(),
-        'squid_port': config.squid_port,
+        'cache_port': config.cache_port,
+        'cache_type': config.cache_type,
         'verified': config.verified,
-        'max_load': config.max_load
+        'max_load': config.max_load,
+        'upstream': config.upstream,
     }
 
     public_ip, private_ip = get_ip_addresses()
@@ -266,7 +291,7 @@ def main():
             #not sure this is needed, if the key doesn't exist it will be created
             pass
     else:
-        logging.error("Shoal-Agent was unable to find a public IP or external IP for this squid."
+        logging.error("Shoal-Agent was unable to find a public IP or external IP for this cache server."
                       " Please set an external IP in shoal-agent config file.")
         sys.exit(1)
 
@@ -293,7 +318,7 @@ def main():
     # enable the sigterm signal handler to log before exit
     signal.signal(signal.SIGTERM, SIGTERM_handler)
 
-    logging.info("test if the squid is running successfully")
+    logging.info("test if the %s cache is running successfully" %config.cache_type)
 
     try:
         test_ip = list(private_ip.values())[0]
@@ -306,8 +331,9 @@ def main():
             except:
                 test_ip = external_ip
     last_test_time = time.time()
-    available = functionalTest(test_ip, config.squid_port)
-    squid_available = available
+    available = functionalTest(test_ip, config.cache_port)
+    cache_available = available
+    
     try:
         # if has history email time
         with open(config.last_sent_email) as f:
@@ -323,6 +349,7 @@ def main():
         if not available:
             sendEmail()
             writeEmailTime(last_email_time)
+    
     test_interval = SHORT_INTERVAL
     
     logging.info("shoal-agent configured, starting up")
@@ -337,8 +364,8 @@ def main():
             if current_time - last_test_time > test_interval:
                 # redo functional test for every test_invertal time
                 last_test_time = current_time
-                available = functionalTest(test_ip, config.squid_port)
-                squid_available = available
+                available = functionalTest(test_ip, config.cache_port)
+                cache_available = available
             if available:
                 test_interval = MEDIUM_INTERVAL
                 data['timestamp'] = time.time()
@@ -351,6 +378,7 @@ def main():
                     logging.error(exc)
             else:
                 test_interval = SHORT_INTERVAL
+                
                 try:
                     if current_time - last_email_time > LONG_INTERVAL:
                         sendEmail()
@@ -360,6 +388,7 @@ def main():
                 except Exception as exc:
                     logging.error("Have error when reading the last sent email time")
                     logging.error(exc)
+                
             time.sleep(INTERVAL)
         except KeyboardInterrupt:
             logging.info("shoal-agent exiting")

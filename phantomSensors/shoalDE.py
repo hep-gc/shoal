@@ -103,7 +103,7 @@ class shoalDecisionEngine(object):
         # create new launch configurations
         if self.launch_config_name not in existing_lc_names:
 
-            # Get ip of rabbitMQ server as user data for the launching squid
+            # Get ip of rabbitMQ server as user data for the launching cache proxy
             rabbitMQIP = config.get("general", "RABBIT_MQ_IP")
             # If provided with localhost need to convert that to public ip
             if rabbitMQIP == "localhost":
