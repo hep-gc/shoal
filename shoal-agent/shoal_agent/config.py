@@ -55,6 +55,7 @@ load_factor = 0.9
 
 sender_email = 'root@localhost'
 receiver_email = 'root@localhost'
+enable_email  = False
 email_subject = 'Shoal Agent Notification'
 email_content = 'Hello, there is no cache servers running on the agent, please review the cache status. Trying to find a cache process automatically will be retried in 30 min. Thanks!'
 last_sent_email = '/var/tmp/last_sent_email'
@@ -274,3 +275,7 @@ if config_file.has_option("general", "max_load"):
 
 if config_file.has_option("general", "admin_email"):
     receiver_email = config_file.get("general", "admin_email")
+
+if config_file.has_option("general", "enable_email"):
+    enable_email = config_file.get("general", "enable_email")
+
