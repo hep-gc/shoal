@@ -1,24 +1,24 @@
 # Shoal README
 
-A squid cache publishing and advertising tool designed to work in fast changing environments. 
+A squid and varnish cache publishing and advertising tool designed to work in fast changing environments. 
 
 ## Overview
 
-The purpose of shoal is to allow you to build a continually updated list of squid caches. Each squid runs 
-shoal-agent which uses AMQP messages to publish the existence and load of the squid to the central shoal-server. 
-Shoal-server keeps a list of squids in memory and removes any squid which has not sent it a message recently. 
-The IPs of all squid servers are geo-referenced. Clients contact the squid server using a REST interface to 
-retrieve an ordered list of the nearest squids. The diagram below should give you some idea how this works:
+The purpose of shoal is to allow you to build a continually updated list of squid and varnish caches. Each squid and varnish runs 
+shoal-agent which uses AMQP messages to publish the existence and load of the cache to the central shoal-server. 
+Shoal-server keeps a list of caches in memory and removes any cache which has not sent it a message recently. 
+The IPs of all cache servers are geo-referenced. Clients contact the cache server using a REST interface to 
+retrieve an ordered list of the nearest caches. The diagram below should give you some idea how this works:
 
  ![shoal diagram](https://raw.githubusercontent.com/hep-gc/shoal/master/gh-pages/shoal_diagram.png)
 
 ## Components
 
-**shoal-server** maintains the list of running squids. It uses RabbitMQ to handle incoming AMQP messages from 
-squid servers. It provides a REST interface for programatically retrieving a json formatted ordered list of squids.
+**shoal-server** maintains the list of running squid and varnish caches. It uses RabbitMQ to handle incoming AMQP messages from 
+cache servers. It provides a REST interface for programatically retrieving a json formatted ordered list of caches.
 It also provides a web interface for viewing the list.
 
-**shoal-agent** runs on squid servers and publishes the load and IP of the squid server to the shoal-server using 
+**shoal-agent** runs on squid and varnish cache servers and publishes the load and IP of the cache server to the shoal-server using 
 a json formatted AMQP message at regular intervals. This agent is designed to be trivially installed in a
 few seconds with python's pip tool.
 

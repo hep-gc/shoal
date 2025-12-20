@@ -4,29 +4,29 @@
 **Shoal Server** provides two services that can be utilized by clients.
 
 ### RESTful API
-Clients can use the Shoal Server RESTful API to retrieve a list of nearest squids. Assuming Shoal Server is running on `localhost` the following commands can be used:
+Clients can use the Shoal Server RESTful API to retrieve a list of nearest varnish and squids. Assuming Shoal Server is running on `localhost` the following commands can be used:
 
-- To get a list of the default 5 nearest verified squids use:
+- To get a list of the default 5 nearest verified varnish and squids use:
   - `http:localhost/nearestverified`
-- To retrieve a variable size of nearest verified squids you can use `http://localhost/nearestverified/<# of squids>`. For example to retrieve the closest 20 squid servers you can use:
+- To retrieve a variable size of nearest verified varnish and squids you can use `http://localhost/nearestverified/<# of caches>`. For example to retrieve the closest 20 varnish and squid servers you can use:
   - `http://localhost/nearestverified/20`
 
 - The extension 'nearest' returns the same as 'nearestverified', specifically `http://localhost/nearestverified/20` is the same as `http://localhost/nearest/20`.  Previously these did different things, but their functionality has now been merged. Both are kept to maintain compatibility with previous versions of Shoal Client.
 
-- To get a list of all squids stored in shoal use:
+- To get a list of all varnish and squids stored in shoal use:
   - `http://localhost/all`
  
 ### WPAD
 Shoal Server has a basic implementation of the [WPAD](http://en.wikipedia.org/wiki/Web_Proxy_Autodiscovery_Protocol) standard.
 
-- To retrieve a WPAD file containing the 5 closest squids you can visit:
+- To retrieve a WPAD file containing the 5 closest varnish and squids you can visit:
   - `http://localhost/wpad.dat`
 
 ### Optional Features
 The new release of shoal has several new optional features
 - Verification
   - The new verification feature ids toggleable in the shoal_server configuration file
-  - Shoal server will verify the squids advertised by shoal agents by checking their connectivity and attempting to download a common file from a repo on the proxy.
+  - Shoal server will verify the varnish and squids advertised by shoal agents by checking their connectivity and attempting to download a common file from a repo on the proxy.
 - Access Levels (requires GeoIP domain database**)
   - Shoal server will intelligently serve proxies to requesters based on Access Levels
   - Access Levels are configurable on the shoal-agents with 3 levels of access

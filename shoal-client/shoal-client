@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 """
-    Very simple client script used to get nearest squid server using the RESTful API.
+    Very simple client script used to get nearest cache server using the RESTful API.
 """
 try:
     import urllib.request as UrlRequest
@@ -29,16 +29,18 @@ from shoal_client import config as config
 
 syslog.openlog("shoal-client")
 
-server = config.shoal_server_url
-default_http_proxy = config.default_squid_proxy
-local_squid = None
+server_cvmfs = config.cvmfs_url
+server_conditions = config.conditions_url
+
+default_http_proxy = config.default_cache_proxy
+local_cache = None
 
 data = None
 server_available_private = {}
 server_available_public = {}
-server_squids = []
+server_caches = []
 frontier = False
-numsquids = 2
+numcaches = 2
 dump = False
 skip_broadcast = False
 best_http_proxy = ''
@@ -49,27 +51,47 @@ shoal_server_timeout = 30
 paths = config.paths
 force_server = False
 
-def get_local_squid(q, t):
-    PORT = 50000
+
+def get_local_cache(q, t, frontier):
+    PORTS = [50000]
+    if frontier:
+        PORTS.append(50002)
+    else:
+        PORTS.append(50001)
+
     BROADCAST_ID = "fna349fn" #to make sure we don't confuse or get confused by other programs
 
     from socket import socket, AF_INET, SOCK_DGRAM
-    
-    s = socket(AF_INET, SOCK_DGRAM) #create UDP socket
-    s.bind(('', PORT))
-    s.settimeout(t)
-    
-    try:
-        data, addr = s.recvfrom(1024) #wait for a packet
-        data = data.decode('utf-8')
-        if data.startswith(BROADCAST_ID):
-            # print("got service announcement from", data[len(BROADCAST_ID):])
-            q.put(data[len(BROADCAST_ID):])
-    except:
-        # print("socket got a timeout")
-        syslog.syslog(syslog.LOG_ERR, "Socket got a timeout")
+    import select
 
+    read_list = []
+    for PORT in PORTS:
+        s = socket(AF_INET, SOCK_DGRAM) #create UDP socket
+        s.bind(('', PORT))
+        s.setblocking(0) 
+        read_list.append(s)
 
+    readable = select.select(read_list, [], [], t)[0]
+    for s in readable:
+        try:
+            data, addr = s.recvfrom(1024) #wait for a packet
+            data = data.decode('utf-8')
+            if data.startswith(BROADCAST_ID):
+                # print("got service announcement from", data[len(BROADCAST_ID):])
+                parts = data[len(BROADCAST_ID):].split(':')
+                if len(parts) >= 2:
+                    ip = parts[0]
+                    port = parts[1]
+                    cache_type = parts[2] if len(parts) > 2 else 'squid'
+                    upstream = parts[3] if len(parts) > 3 else 'both'
+                    result = {'address': ip + ':' + port,'cache_type': cache_type if cache_type else 'squid','upstream': upstream if upstream else 'both'}
+                    q.put(result)
+                    break
+        except:
+            # print("socket got a timeout")
+            syslog.syslog(syslog.LOG_ERR, "Socket got a timeout")
+ 
+   
 def get_args():
     """
         gets server and dump variables from command line arguments
@@ -77,7 +99,7 @@ def get_args():
     global server
     global dump
     global frontier
-    global numsquids
+    global numcaches
     global skip_broadcast
     global force_server
 
@@ -91,14 +113,14 @@ def get_args():
     p.add_option("-f", "--frontier", action="store_true", dest="frontier",
                  help="Outputs a string suitable for use as a frontier proxy eviroment variable" +
                  "instead of executing a cvfms-talk command to update the active configuration.")
-    p.add_option("-n", "--squids", action="store", type="int", dest="numsquids",
-                 help="Specifies the number of squids to retrieve" +
+    p.add_option("-n", "--caches", action="store", type="int", dest="numcaches",
+                 help="Specifies the number of caches to retrieve" +
                  "from the shoal-server (default is 2).")
     p.add_option("-k", "--skip-broadcast", action="store_true",  dest="skip_broadcast",
-                 help="Tells the shoal client to skip waiting for a local squid broadcast" +
+                 help="Tells the shoal client to skip waiting for a local cache broadcast" +
                  "signal to avoid a fruitless timeout.")
     p.add_option("-o", "--force-server", action="store_true",  dest="force_server",
-                 help="Forces the shoal client to contact the shoal server for additional squids" +
+                 help="Forces the shoal client to contact the shoal server for additional caches" +
                  "even if a local one is found via broadcast.")
     (options, args) = p.parse_args()
 
@@ -108,8 +130,8 @@ def get_args():
         dump = True
     if options.frontier:
         frontier = True
-    if options.numsquids:
-        numsquids = options.numsquids
+    if options.numcaches:
+        numcaches = options.numcaches
     if options.skip_broadcast:
         skip_broadcast = True
     if options.force_server:
@@ -149,21 +171,21 @@ def parseServerData(jsonStr):
                     "longitude", "country_code", "country_name", "continent"]
 
     # don't really care about data here
-    # it is just a simple way to get number of nearest squids
+    # it is just a simple way to get number of nearest caches
     p = re.compile("\"" + dataTypes[0] + "\": ([^,}]+)")
-    numNearestSquids = len(p.findall(jsonStr.decode('utf-8')))
+    numNearestCaches = len(p.findall(jsonStr.decode('utf-8')))
     ## compiles regex "load": ([^,}]+), although it doesn't really matter that fact that it's a load
-    ## this will find the number of above matches in jsonStr and return into numNearestSquids
-    ## therefore each match in json is a 'nearest' squid
+    ## this will find the number of above matches in jsonStr and return into numNearestCaches
+    ## therefore each match in json is a 'nearest' cache
 
     # initalize the dictionaries
     outDict = {}
-    for i in range(0, numNearestSquids):
+    for i in range(0, numNearestCaches):
         outDict[unicode(str(i))] = {}
         outDict[unicode(str(i))][unicode("geo_data")] = {}
     ## creates a multidimensional dict with each key 1 being u'i' (i in unicode)
     ## and key 2 being "geo_data" for all entries
-    
+
     # TODO probably don't need seperate regexes
     # test using geodata one for both
     # for each item in dataTypes, compile a regex for that item and find all
@@ -183,64 +205,68 @@ def parseServerData(jsonStr):
     ## outDict in geo_data for each geoDataType holds a val
     return outDict
 
-def getString(content):
-    try:
-        formatted = bytes(content, 'utf-8')
-    except:
-        formatted = bytes(content) # for python 2
-    return formatted
-
 def functionalTest(ip, port):
     """
     A list of paths are tested to see all repos are working, returns the "True" if it is verified or "False" if it cannot be
     """
     proxystring = "http://%s:%s" % (ip, port)
-    #set proxy
-    proxies = {
-        "http":proxystring,
-    }
-    for targeturl in paths:
-        #if a url checks out testflag set to true, otherwise fails verification at end of loop
-        testflag = False
-        try:
-            # print("Trying", targeturl)
-            repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
-            if repo is None:
-                repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
-            file = requests.get(targeturl, proxies=proxies, timeout=2)
-            f = file.content
-            for line in f.splitlines():            
-                if line.startswith(getString('N')):
-                    if getString(repo) in line:
-                        testflag = True
-            if testflag is False:
-                syslog.syslog(syslog.LOG_ERR, "%s failed verification on %s" % (ip, targeturl))
-                return None
-        except:
-            # note that this would catch any RE errors aswell but they are
-            # specified in the config and all fit the pattern.
-            syslog.syslog(syslog.LOG_ERR, "%s timeout or proxy error on %s repo" % (ip, targeturl))
-            return None
-    
-    start_time = time.time()
-    for targeturl in paths:
-        try:
-            file = requests.get(targeturl, proxies=proxies, timeout=2)
-        except Exception as exe:
-            syslog.syslog(syslog.LOG_ERR, "%s timeout or proxy error on %s repo" % (ip, targeturl))
-            return None
-    timer = time.time() - start_time
-    return timer
+    proxies = {'http': proxystring}
 
-def getAvailableIp(squid):
+    if frontier:
+        try:
+            start_time = time.time()           
+            proxies = {'http': proxystring}
+            response = requests.get("http://frontier.cern.ch", headers={"X-frontier-id": "test"}, proxies=proxies, timeout=2, allow_redirects=False)
+            if response.status_code == 200 and proxystring != 'DIRECT' and proxystring != "":
+                return time.time() - start_time, 'frontier'
+            elif response.status_code == 301 and proxystring != 'DIRECT' and proxystring != "":
+                targeturl = proxystring + "/atlr"
+                response = requests.get(targeturl, headers={"X-frontier-id": "shoal-server-verification", "Cache-Control": "max-age=0"}, timeout=2) 
+                if response.status_code == 200:
+                    return time.time() - start_time, 'frontier'
+            return False, None
+        except:
+            return False, None
+         
+    else:
+        if not proxystring or proxystring == 'DIRECT':
+            return False, None
+        try:
+            start_time = time.time()
+            verified = False
+            for targeturl in paths:
+                try:
+                    repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+                    if repo is None:
+                        repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+                    response = requests.get(targeturl, proxies=proxies, timeout=2)
+                    f = response.content
+                    for line in f.splitlines():
+                        if line.startswith(bytes('N', 'utf-8')):
+                            if bytes(repo, 'utf-8') in line:
+                                verified = True
+                                break
+                    if verified:
+                        break
+                except:
+                    pass
+
+            if verified:
+                return time.time() - start_time,  'cvmfs'
+        except:
+            pass
+
+        return False, None
+	    
+def getAvailableIp(cache):
     """
-    Functioanl test for return squids from broadcast and shoal-server
+    Functional test for return caches from broadcast and shoal-server
     Test both private and public ip and return private ip first if available
     """
-    squid_private_ip = str(squid['private_ip']) if squid['private_ip'] else None
-    squid_public_ip = str(squid['public_ip']) if squid['public_ip'] else None
-    squid_port = squid['squid_port']    
-    
+    cache_private_ip = str(cache['private_ip']) if cache['private_ip'] else None
+    cache_public_ip = str(cache['public_ip']) if cache['public_ip'] else None
+    cache_port = cache['squid_port']
+
     client_private_ip = None
     client_private_ip_not_found = False
     try:
@@ -259,53 +285,56 @@ def getAvailableIp(squid):
 
     local = False
     try:
-        local = squid['local']
+        local = cache['local']
     except:
-        syslog.syslog(syslog.LOG_ERR, "Squid has no local attribute")
-  
-    return_squid_ip = None
+        syslog.syslog(syslog.LOG_ERR, "Cache has no local attribute")
+
+    return_cache_ip = None
     test_time_cost = None
-    squid_type = 'public'
-    if local and squid_private_ip:
+    cache_type = 'public'
+    if local and cache_private_ip:
         same_subnet = False
         if client_private_ip:
-            squid_subnet = '.'.join(squid_private_ip.split('.')[:2])
+            cache_subnet = '.'.join(cache_private_ip.split('.')[:2])
             client_subnet = '.'.join(client_private_ip.split('.')[:2])
-            same_subnet = squid_subnet == client_subnet
+            same_subnet = cache_subnet == client_subnet
         if (same_subnet or client_private_ip_not_found):
-            test_time_cost = functionalTest(squid_private_ip, squid_port)
+            test_time_cost = functionalTest(cache_private_ip, cache_port)[0]
             if test_time_cost:
-                return_squid_ip = squid_private_ip
-                squid_type = 'private'  
-    if not return_squid_ip and squid_public_ip:
-        test_time_cost = functionalTest(squid_public_ip, squid_port)
+                return_cache_ip = cache_private_ip
+                cache_type = 'private'
+    if not return_cache_ip and cache_public_ip:
+        test_time_cost = functionalTest(cache_public_ip, cache_port)[0]
         if test_time_cost:
-            return_squid_ip = squid_public_ip
-    return {'available_squid_ip': return_squid_ip, 'time_cost': test_time_cost, 'squid_type': squid_type}
+            return_cache_ip = cache_public_ip
+    return {'available_cache_ip': return_cache_ip, 'time_cost': test_time_cost, 'cache_type': cache_type}
 
-def getSortedSquids(squid_dict, current_list, target_num, frontier_format):
+def getSortedCaches(cache_dict, current_list, target_num, frontier_format):
     return_proxy = ''
-    return_squid = copy.deepcopy(current_list)
-    if len(squid_dict.keys()) > 0:
-        for item in sorted(squid_dict.items()):
-            if len(return_squid) < target_num:
-                return_squid.append(item[1][0])
+    return_cache = copy.deepcopy(current_list)
+    if len(cache_dict.keys()) > 0:
+        for item in sorted(cache_dict.items()):
+            if len(return_cache) < target_num:
+                return_cache.append(item[1][0])
                 if frontier_format:
                     return_proxy += '(proxyurl=http://%s:%s)' % (item[1][0], item[1][1])
                 else:
                     return_proxy += 'http://%s:%s;' % (item[1][0], item[1][1])
             else:
                 break
-    return return_proxy, return_squid    
+    return return_proxy, return_cache
 
 
 get_args()
 
+# reads data from a URL from a Shoal server, parses it, prepares a list of proxies
+# stored in cvmfs_http_proxy, executes command to set CVMFS proxies if dump is not specified.
 
-    # reads data from a URL from a Shoal server, parses it, prepares a list of proxies
-    # stored in cvmfs_http_proxy, executes command to set CVMFS proxies if dump is not specified.
-
-
+if frontier:
+    server = server_conditions
+    
+else:
+    server = server_cvmfs
 ## try to load default value from env variable
 try:
     syslog.syslog(syslog.LOG_INFO, "Checking Enviroment Variable for default proxy")
@@ -319,33 +348,41 @@ try:
 except KeyError as e:
     syslog.syslog(syslog.LOG_ERR, "No HTTP_PROXY enviroment variable found")
 
-# Listen on local network for a local squid agent broadcast
+# Listen on local network for a local cache agent broadcast
 if not skip_broadcast:
     q = Queue()
-    p = Process(target=get_local_squid, args=(q,broadcast_timeout))
+    p = Process(target=get_local_cache, args=(q,broadcast_timeout, frontier))
     p.start()
     try:
-       local_squid = q.get(block=True, timeout=broadcast_timeout)
+       local_cache = q.get(block=True, timeout=broadcast_timeout)
     except Q.Empty:
        #continue
        #print("queue timeout !")
        pass
     p.join()
 
+if local_cache:
+    cache_type = local_cache.get('cache_type', 'squid')
+    upstream = local_cache.get('upstream', 'both').lower()
+    
+    if frontier and upstream not in ['frontier', 'both']:
+        local_cache = None
+    elif not frontier and upstream not in ['cvmfs', 'both']:
+        local_cache = None
 
 ## read server data (if it can be read) into a dictionary called data
 # by default the server is only contacted if the force server flag is set or
-# no squid was found via local broadcast
-if local_squid is None or force_server:
+# no cache was found via local broadcast
+if local_cache is None or force_server:
     try:
         #if there is a bad proxy set we will never reach shoal-server
         #this goes direct to avoid any bad configuration
         proxy_handler = UrlRequest.ProxyHandler({})
         opener = UrlRequest.build_opener(proxy_handler)
         if server[-1] == "/":
-            server_url = server + "%s/" % (numsquids + 5)
+            server_url = server + "%s/" % (numcaches + 5)
         else:
-            server_url = server + "/%s/" % (numsquids + 5)
+            server_url = server + "/%s/" % (numcaches + 5)
         f = opener.open(server_url, timeout=shoal_server_timeout)
         # data = json.loads(f.read())
         data = parseServerData(f.read())
@@ -360,71 +397,92 @@ if local_squid is None or force_server:
     except Exception as ex:
         syslog.syslog(syslog.LOG_ERR, "Encountered unknown exception during request to shoal-server:")
         syslog.syslog(syslog.LOG_ERR, "%s" % ex)
-        syslog.syslog(syslog.LOG_ERR, "Continuing with defaults...")    
+        syslog.syslog(syslog.LOG_ERR, "Continuing with defaults...")
 
 
 
 
 # If the shoal_server was reachable
-## iterate through the data dict and use all hostname and squid_port keys
-## to create addresses for squids in best_http_proxy
+## iterate through the data dict and use all hostname and cache_port keys
+## to create addresses for caches in best_http_proxy
 # syslog.syslog(syslog.LOG_INFO, "Received data from server, processing.")
 
 if data:
-    for squid_key in list(data):
-        squid = data[squid_key]
+    for cache_key in list(data):
+        cache = data[cache_key]
         try:
-            if not local_squid or not squid['private_ip'] or squid['private_ip'] != local_squid.split(':')[0]:
-                # test the squid received from shoal server
-                available_squid = getAvailableIp(squid)
-                available_squid_ip = available_squid['available_squid_ip']
-                if available_squid_ip:
-                    time_cost = available_squid['time_cost']
-                    if available_squid['squid_type'] == 'private':
-                        server_available_private[time_cost] = (available_squid_ip, squid['squid_port'])
+
+            if not local_cache or not cache['private_ip'] or cache['private_ip'] != local_cache['address'].split(':')[0]:
+                # test the cache received from shoal server
+                available_cache = getAvailableIp(cache)
+                available_cache_ip = available_cache['available_cache_ip']
+                if available_cache_ip:
+                    time_cost = available_cache['time_cost']
+                    if available_cache['cache_type'] == 'private':
+                        server_available_private[time_cost] = (available_cache_ip, cache['squid_port'])
                     else:
-                        server_available_public[time_cost] = (available_squid_ip, squid['squid_port'])
+                        server_available_public[time_cost] = (available_cache_ip, cache['squid_port'])
         except KeyError as e:
             syslog.syslog(
                 syslog.LOG_ERR,
                 "The data returned from '%s' was missing the key: %s. "
                 "Please ensure the server is running the latest version "
                 "of Shoal-Server." % (server, e))
-    
-    new_proxy, new_squids = getSortedSquids(server_available_private, server_squids, numsquids, frontier)
+
+    new_proxy, new_caches = getSortedCaches(server_available_private, server_caches, numcaches, frontier)
     best_http_proxy += new_proxy
-    server_squids = new_squids
-    
-    new_proxy, new_squids = getSortedSquids(server_available_public, server_squids, numsquids, frontier)
+    server_caches = new_caches
+
+    new_proxy, new_caches = getSortedCaches(server_available_public, server_caches, numcaches, frontier)
     best_http_proxy += new_proxy
-    server_squids = new_squids
-    
-# remove duplicate default squid
+    server_caches = new_caches
+
+# remove duplicate default cache
 default_http_list = default_http_proxy.split(';')
 temp_default_http = ''
 for i, each_default in enumerate(default_http_list):
     each_default_ip = each_default.split('//')[1].split(':')[0] if len(each_default.split('//')) > 1 else each_default.split('//')[0].split(':')[0]
-    if (not local_squid or each_default_ip not in local_squid) and each_default_ip not in server_squids:            
+    if (not local_cache or each_default_ip not in local_cache['address']) and each_default_ip not in server_caches:
         addon = '' if i == len(default_http_list) - 1 else ';'
         temp_default_http += each_default + addon
 default_http_proxy = temp_default_http
 
 #need to reformat default string for frontier nodes
-if frontier:
-    new_defaults = ''
-    tmpproxies = default_http_proxy.split(';')
-    for proxy in tmpproxies:
-        if proxy != 'DIRECT' and proxy != "":
-            new_defaults += '(proxyurl=%s)' % proxy
-    default_http_proxy = new_defaults
+new_defaults = ''
+tmpproxies = default_http_proxy.split(';')
 
-if local_squid:
+if frontier:
+    for proxy in tmpproxies:
+        proxy = proxy.replace("https://", "").replace("http://", "")
+        if proxy == 'DIRECT' or proxy == "" or not proxy:
+            continue
+        proxyinfo = proxy.split(':')
+        passed, upstream = functionalTest(proxyinfo[0], proxyinfo[1])
+        if passed and upstream == 'frontier':
+            new_defaults += '(proxyurl=%s)' % proxy
+else:
+   for proxy in tmpproxies:
+        proxy = proxy.replace("https://", "").replace("http://", "")
+        if proxy == 'DIRECT' or proxy == "" or not proxy:
+            continue
+        proxyinfo = proxy.split(':')
+        passed, upstream = functionalTest(proxyinfo[0], proxyinfo[1])
+        if passed and upstream == 'cvmfs' and proxy != 'DIRECT' and proxy != "":
+            new_defaults += '%s;' % proxy
+    
+default_http_proxy = new_defaults
+    
+if local_cache and local_cache['address'] and local_cache['address'] not in best_http_proxy:
+    upstream = local_cache.get('upstream', 'both').lower()
     if frontier:
-        best_http_proxy = "(proxyurl=http://" + local_squid + ")" + best_http_proxy
+        if upstream in ['frontier', 'both']:
+            best_http_proxy = "(proxyurl=http://" + local_cache['address'] + ")" + best_http_proxy
     else:
-        best_http_proxy = "http://" + local_squid + ";" + best_http_proxy
+        if upstream in ['cvmfs', 'both']:
+            best_http_proxy = "http://" + local_cache['address'] + ";" + best_http_proxy
 
 cvmfs_http_proxy = "\"" + best_http_proxy + default_http_proxy + "\""
+
 syslog.syslog(syslog.LOG_DEBUG, "Data parsing complete.")
 
 if dump:
@@ -436,7 +494,7 @@ if dump:
     print(cvmfs_http_proxy)
 
 elif frontier:
-    #retrieve frontier env variable and insert new squids
+    #retrieve frontier env variable and insert new caches
     try:
         frontier_var = os.getenv("FRONTIER_SERVER", "")
     except:
@@ -449,7 +507,7 @@ elif frontier:
                                                 frontier_var, 1)
     # if no replacmeents, then there was no proxyurl to begin with
     if replacements == 0:
-        frontier_output = frontier_output + best_http_proxy + default_http_proxy
+        frontier_output = frontier_output + best_http_proxy + default_http_proxy 
     print(frontier_output)
 
 else:
@@ -489,4 +547,3 @@ else:
     except OSError as e:
         syslog.syslog(syslog.LOG_ERR, "Could not execute cvmfs_talk: %s" % e.strerror)
         sys.exit(e.errno)
-
