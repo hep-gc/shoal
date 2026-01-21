@@ -3,7 +3,7 @@
 %define unmangled_version 1.0.2
 %define release 1
 
-Summary: A squid cache publishing and advertising tool designed to work in fast changing environments
+Summary: A squid and varnish cache publishing and advertising tool designed to work in fast changing environments
 Name: %{name}
 Version: %{version}
 Release: %{release}%{?dist}
@@ -18,8 +18,8 @@ Url: http://github.com/hep-gc/shoal
 
 %description
 shoal-client is a simple python script typically configured to run with cron
-to check for new squids periodically. shoal-client will configure cvmfs to
-use the closest squid server to you by contacting the shoal server and then
+to check for new varnish and squids periodically. shoal-client will configure cvmfs to
+use the closest varnish or squid server to you by contacting the shoal server and then
 editing your local cvmfs config file, typically /etc/cvmfs/default.local.
 Before setting the cronjob in place make sure that shoal-client is
 configured correctly

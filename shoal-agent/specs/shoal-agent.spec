@@ -5,7 +5,7 @@
 %define group_shoal_num %(grep -c "^shoal" /etc/group)
 %define user_shoal_num %(grep -c "^shoal" /etc/passwd)
 
-Summary: A squid cache publishing and advertising tool designed to work in fast changing environments
+Summary: A squid and varnish cache publishing and advertising tool designed to work in fast changing environments
 Name: %{name}
 Version: %{version}
 Release: %{release}%{?dist}
@@ -30,12 +30,12 @@ BuildRequires: systemd
 Url: http://github.com/hep-gc/shoal
 
 %description
-shoal-agent runs on squid servers and publishes the load and IP of the
-squid server to the shoal-server using a json formatted AMQP message at
+shoal-agent runs on varnish and squid servers and publishes the load and IP of the
+varnish or squid server to the shoal-server using a json formatted AMQP message at
 regular intervals. The purpose of the shoal-agent is to advertise it's
 existence to a central shoal-server so that when new cloud compute nodes
 are booted they can contact the shoal-server and contextualize to the
-nearest squid proxy.
+nearest cache proxy.
 
 %prep
 %setup -n %{name}-%{unmangled_version}

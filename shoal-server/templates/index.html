@@ -5,9 +5,9 @@ $def with (now, total, shoal, page, pages, size)
 <script src="/static/js/jquery.min.js"></script>
 <script>
 $$(document).ready(function () {
-    $$(".squid-list").each(function (index) {
-        $$(".squid-row"+index).on('click', function(){
-            $$(".squid-panel"+index).toggle();
+    $$(".cache-list").each(function (index) {
+        $$(".cache-row"+index).on('click', function(){
+            $$(".cache-panel"+index).toggle();
         });
     });
 });
@@ -51,7 +51,7 @@ $$(document).ready(function () {
             $$(this).siblings().removeClass('asc selected');
             $$(this).siblings().removeClass('desc selected');
             var title = $$(this).text().toUpperCase();
-            var arrData = $$('table').find('tbody>tr.squid-list:has(td)').get();
+            var arrData = $$('table').find('tbody>tr.cache-list:has(td)').get();
             arrData.sort(function (a, b) {
                 var val1 = $$(a).children('td').eq(col).text().toUpperCase();
                 var val2 = $$(b).children('td').eq(col).text().toUpperCase();
@@ -85,7 +85,7 @@ $$(document).ready(function () {
                 $$('tbody').append(row);
                 var rowClass = $$(row).attr('class');
                 var rowNumber = rowClass.match(/\d+/g)[0];
-                var rowFind = 'tbody>tr.squid-panel' + rowNumber;
+                var rowFind = 'tbody>tr.cache-panel' + rowNumber;
                 var panelRow = $$('table').find(rowFind).get()[0];
                 $$('tbody').append(panelRow);
             });
@@ -99,11 +99,11 @@ $$(document).ready(function () {
 
 <div class="row" style="padding-left: 5%; padding-right: 5%;">
     <div class="col-md-6 col-md-offset-3" style="text-align:center">
-        <h2>List of Active Squids</h2>
+        <h2>List of Active Caches</h2>
         $if total > 0:
-            <h5 class="text-success">$total active in the last $squid_active_time seconds</h5>
+            <h5 class="text-success">$total active in the last $cache_active_time seconds</h5>
         $else:
-            <h5 class="text-info">None active in the last $squid_active_time seconds</h5>
+            <h5 class="text-info">None active in the last $cache_active_time seconds</h5>
         </div>
 <div class="row">
   <div class="col-md-12">
@@ -114,6 +114,9 @@ $$(document).ready(function () {
           <th>Hostname</th>
           <th class="hidden-xs">Public IP</th>
           <th class="hidden-xs">Private IP</th>
+	      <th>Port</th>
+	      <th>Cache</th>
+          <th>Upstream</th>
           <th>Bytes Out</th>
           <th>City</th>
           <th class="hidden-xs">Country</th>
@@ -126,47 +129,50 @@ $$(document).ready(function () {
        </tr>
       </thead>
       <tbody>
-        $for i,squid in enumerate(shoal):
-            $ last_msg = int(now - squid.last_active)
-            $ alive_time = int(now - squid.created); 
+        $for i,cache in enumerate(shoal):
+            $ last_msg = int(now - cache.last_active)
+            $ alive_time = int(now - cache.created); 
             $ hour = int(alive_time/60/60)
             $ minute = int((alive_time - hour*60*60) / 60)
             $ second = int(alive_time - hour*60*60 - minute*60)
     
-            $if last_msg < squid_active_time/3:
+            $if last_msg < cache_active_time/3:
                 $ state = 'success'
-            $elif last_msg >= squid_active_time/3 and last_msg < squid_active_time*2/3:
+            $elif last_msg >= cache_active_time/3 and last_msg < cache_active_time*2/3:
                 $ state = 'warning'
             $else:
                 $ state = 'danger'
-            $if squid.global_access == True:
+            $if cache.global_access == True:
                 $ access = 'Global'
             $else:
                 $ access = 'Private'
-            $if not squid.verified and squid.allow_verification == True:
+            $if not cache.verified and cache.allow_verification == True:
                 $ state = 'warning'
-            $if squid.drift_detected == True:
+            $if cache.drift_detected == True:
                 $ state = 'danger'
-            <tr class="$state squid-row$i squid-list">
+            <tr class="$state cache-row$i cache-list">
                 <td><span class="badge badge-$state">$((i+1)+(page-1)*size)</td>
-                <td>$squid.hostname</td>
-                <td class="hidden-xs">$squid.public_ip</td>
-                <td class="hidden-xs">$squid.private_ip</td>
-                <td>$float("{:.3f}".format(squid.load)) kB/s</td>
-                <td>$squid.geo_data.city.name</td>
-                <td class="hidden-xs">$squid.geo_data.country.name</td>
-                <td class="hidden-xs">$squid.geo_data.location.latitude</td>
-                <td class="hidden-xs">$squid.geo_data.location.longitude</td>
+                <td>$cache.hostname</td>
+                <td class="hidden-xs">$cache.public_ip</td>
+                <td class="hidden-xs">$cache.private_ip</td>
+                <td>$cache.cache_port</td>
+	            <td>$cache.cache_type</td>
+                <td>$cache.upstream</td>
+		        <td>$float("{:.3f}".format(cache.load)) kB/s</td>
+                <td>$cache.geo_data.city.name</td>
+                <td class="hidden-xs">$cache.geo_data.country.name</td>
+                <td class="hidden-xs">$cache.geo_data.location.latitude</td>
+                <td class="hidden-xs">$cache.geo_data.location.longitude</td>
                 <td class="hidden-xs">$(last_msg)s</td>
                 <td>$(hour)h$(minute)m$(second)s</td>
-                $if squid.drift_detected == True:
-                    <td style="text-align: center;"><b>$("%.1fs" % squid.drift_time)</b></td>
+                $if cache.drift_detected == True:
+                    <td style="text-align: center;"><b>$("%.1fs" % cache.drift_time)</b></td>
                 $else:
                     <td style="text-align: center;">✔</td>
                 <td>$access</td>
             </tr>
-            <tr class="$state squid-panel$i" style="display:none">
-                <td colspan="14">$squid.error</td>
+            <tr class="$state cache-panel$i" style="display:none">
+                <td colspan="14">$cache.error</td>
             </tr>
       </tbody>
     </table>

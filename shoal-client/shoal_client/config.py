@@ -17,8 +17,9 @@ import logging
    The first one found will be used.
 """
 # set default values
-shoal_server_url = 'http://localhost:8080/nearest'
-default_squid_proxy = "DIRECT"
+cvmfs_url = 'http://shoal.heprc.uvic.ca/nearestcvmfs'
+conditions_url = 'http://shoal.heprc.uvic.ca/nearestconditions'
+default_cache_proxy = "DIRECT"
 paths = [
 "http://cvmfs-stratum-one.cern.ch/cvmfs/atlas-condb.cern.ch/.cvmfswhitelist",
 "http://cernvmfs.gridpp.rl.ac.uk/cvmfs/sft.cern.ch/.cvmfswhitelist",
@@ -39,8 +40,8 @@ try:
                     cvmfs_proxies = cvmfs_proxies[:-1]
                 each_proxies = cvmfs_proxies.split(';')
                 for proxy in each_proxies:
-                    if proxy not in default_squid_proxy: 
-                        default_squid_proxy = proxy + ';' + default_squid_proxy 
+                    if proxy not in default_cache_proxy: 
+                        default_cache_proxy = proxy + ';' + default_cache_proxy 
 except:
     print("No default cvmfs http proxy found", file=sys.stderr)
 
@@ -77,12 +78,15 @@ except:
     raise
 
 # sets defaults to the options in config_file
-if config_file.has_option("general", "shoal_server_url"):
-    shoal_server_url = config_file.get("general", "shoal_server_url")
 
-if config_file.has_option("general", "default_squid_proxy"):
-    default_squid_proxy = config_file.get("general", "default_squid_proxy")
+if config_file.has_option("general", "cvmfs_url"):
+    cvmfs_url = config_file.get("general", "cvmfs_url")
+    
+if config_file.has_option("general", "conditions_url"):
+    conditions_url = config_file.get("general", "conditions_url")
+    
+if config_file.has_option("general", "default_cache_proxy"):
+    default_cache_proxy = config_file.get("general", "default_cache_proxy")
 else:
     print("No default settings found in the config file, will use DIRECT as default. " \
           "Please check configuration file: %s" % path, file=sys.stderr)
-

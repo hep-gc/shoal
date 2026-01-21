@@ -17,18 +17,18 @@ from shoal_server import utilities
 logger = logging.getLogger('shoal_server')
 logger.setLevel(config.logging_level)
 
-# Basic class to store and update information about each squid server.
-class SquidNode(object):
+# Basic class to store and update information about each cache server.
+class CacheNode(object):
 
-    def __init__(self, key, hostname, squid_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, allow_verification, drift_detected, drift_time, local, max_load=122000, last_active=time()):
+    def __init__(self, key, hostname, cache_port, public_ip, private_ip, external_ip, load, geo_data, verified, global_access, allow_verification, drift_detected, drift_time, local, max_load=122000, last_active=time(),cache_type="cache", upstream="Both"):
         """
-        constructor for SquidNode, time created is current time
+        constructor for CacheNode, time created is current time
         """
         self.key = key
         self.created = time()
         self.last_active = last_active
         self.hostname = hostname
-        self.squid_port = squid_port
+        self.cache_port = cache_port
         self.public_ip = public_ip
         self.private_ip = private_ip
         self.external_ip = external_ip
@@ -43,10 +43,15 @@ class SquidNode(object):
         self.last_verified = 0
         self.error = 'All systems OK!'
         self.local = local
+        self.cache_type=cache_type
+        if upstream: 
+            self.upstream = upstream
+        else:
+            self.upstream = "Both"
 
     def update(self, load, drift_detected, drift_time):
         """
-        updates SquidNode with current time, load and drift detection boolean value
+        updates CacheNode with current time, load and drift detection boolean value
         """
         self.last_active = time()
         self.load = load
@@ -54,13 +59,13 @@ class SquidNode(object):
 
     def jsonify(self):
         """
-        returns a dictionary with current Squid data
+        returns a dictionary with current Cache data
         """
         return dict({
             "created": self.created,
             "last_active": self.last_active,
             "hostname": self.hostname,
-            "squid_port": self.squid_port,
+            "squid_port": self.cache_port,
             "public_ip": self.public_ip,
             "private_ip": self.private_ip,
             "external_ip": self.external_ip,
@@ -69,8 +74,11 @@ class SquidNode(object):
             "verified": self.verified,
             "global_access": self.global_access,
             "max_load": self.max_load,
-            "local": self.local,},)
-
+            "local": self.local,
+            "cache_type": self.cache_type,
+            "upstream": self.upstream,   
+})
+                  
 # Main application that will monitor RabbitMQ and ShoalUpdate threads.
 class ThreadMonitor(Thread):
 
@@ -96,8 +104,8 @@ class ThreadMonitor(Thread):
         self.threads.append(update_thread)
 
         #check if verification is turned on in config
-        if config.squid_verification:
-            verify_thread = SquidVerifier(self.shoal)
+        if config.cache_verification:
+            verify_thread = CacheVerifier(self.shoal)
             verify_thread.daemon = True
             self.threads.append(verify_thread)
 
@@ -132,11 +140,11 @@ class ThreadMonitor(Thread):
         sys.exit()
 
 
-# ShoalUpdate is used for trimming inactive squids every set interval.
+# ShoalUpdate is used for trimming inactive caches every set interval.
 class ShoalUpdate(Thread):
 
-    INTERVAL = config.squid_cleanse_interval
-    INACTIVE = config.squid_inactive_time
+    INTERVAL = config.cache_cleanse_interval
+    INACTIVE = config.cache_inactive_time
 
     def __init__(self, shoal):
         """ShoalUpdate
@@ -157,14 +165,14 @@ class ShoalUpdate(Thread):
 
     def update(self):
         """
-        updates and pops squid from shoal if it's inactive
+        updates and pops cache from shoal if it's inactive
         """
         curr = time()
-        squid_key_list = list(self.shoal)
-        for squid_key in squid_key_list:
-            squid = self.shoal[squid_key]
-            if curr - squid.last_active > self.INACTIVE:
-                self.shoal.pop(squid.key)
+        cache_key_list = list(self.shoal)
+        for cache_key in cache_key_list:
+            cache = self.shoal[cache_key]
+            if curr - cache.last_active > self.INACTIVE:
+                self.shoal.pop(cache.key)
 
     def stop(self):
         """
@@ -172,7 +180,7 @@ class ShoalUpdate(Thread):
         """
         self.running = False
 
-# Webpy webserver used to serve up active squid lists and API calls. Can run as either the development server or under mod_wsgi.
+# Webpy webserver used to serve up active cache lists and API calls. Can run as either the development server or under mod_wsgi.
 class WebpyServer(Thread):
 
     def __init__(self, shoal):
@@ -184,8 +192,10 @@ class WebpyServer(Thread):
         web.config.debug = False
         self.app = None
         self.urls = (
-            '/all/?(\d+)?/?', 'shoal_server.view.allsquids',
+            '/all/?(\d+)?/?', 'shoal_server.view.allcaches',
             '/nearest/?(\d+)?/?', 'shoal_server.view.nearest',
+            '/nearestcvmfs/?(\d+)?/?', 'shoal_server.view.nearestcvmfs',
+            '/nearestconditions/?(\d+)?/?', 'shoal_server.view.nearestconditions',
             '/nearestverified/?(\d+)?/?', 'shoal_server.view.nearestverified',
             '/wpad.dat', 'shoal_server.view.wpad',
             '/(\d+)?/?', 'shoal_server.view.index',
@@ -224,7 +234,7 @@ class RabbitMQConsumer(Thread):
     EXCHANGE = config.amqp_exchange
     EXCHANGE_TYPE = config.amqp_exchange_type
     ROUTING_KEY = '#'
-    INACTIVE = config.squid_inactive_time
+    INACTIVE = config.cache_inactive_time
 
     def __init__(self, shoal):
         # constructor for RabbitMQConsumer, uses parent Thread constructor as well,
@@ -466,10 +476,10 @@ class RabbitMQConsumer(Thread):
 
     def on_message(self, unused_channel, basic_deliver, properties, body):
         """
-        Retreives information from data, and then updates each squid load in
+        Retreives information from data, and then updates each cache load in
         shoal if the public/private ip matches. Shoal's key will update with
         the load if there's a key in Shoal. geo_data will update or create a
-        new SquidNode if the time since the last timestamp is less than the
+        new CacheNode if the time since the last timestamp is less than the
         inactive time and a public/private ip exists
         """
         external_ip = public_ip = private_ip = None
@@ -493,8 +503,14 @@ class RabbitMQConsumer(Thread):
             hostname = data['hostname']
             time_sent = data['timestamp']
             load = data['load']
-            squid_port = data['squid_port']
-
+            
+            if 'cache_port' in data:
+                cache_port = data['cache_port']
+            elif 'squid_port' in data:
+                cache_port = data['squid_port']
+            else:
+                raise KeyError('cache_port')
+                
         except KeyError as exc:
             logger.error(
                 "Message received was not the proper format (missing:%s), discarding...", exc)
@@ -515,11 +531,11 @@ class RabbitMQConsumer(Thread):
         try:
             verified = data['verified']
         except KeyError:
-            verified = config.squid_verified_default
+            verified = config.cache_verified_default
         try:
             maxload = data['max_load']
         except KeyError:
-            maxload = config.squid_max_load
+            maxload = config.cache_max_load
 
         # attempt to detect misconfigured clocks and clock drifts,
         # allows for a 10 second grace period
@@ -545,7 +561,7 @@ class RabbitMQConsumer(Thread):
             self.shoal[key].update(load, drift_detected, drift_time)
         # if the difference in time since the last timestamp is less than the inactive time
         # and there exists a public or private ip, then the geo_data will update its location
-        # or create a new SquidNode for shoal if the geo_data doesn't exist
+        # or create a new CacheNode for shoal if the geo_data doesn't exist
         elif (curr - time_sent < self.INACTIVE) and (public_ip or private_ip):
             geo_data = utilities.get_geolocation(public_ip)
             if not geo_data:
@@ -553,10 +569,10 @@ class RabbitMQConsumer(Thread):
             if not geo_data:
                 logger.error("Unable to generate geo location data, discarding message")
             else:
-                new_squid = SquidNode(
+                new_cache = CacheNode(
                     key,
                     hostname,
-                    squid_port,
+                    cache_port,
                     public_ip,
                     private_ip,
                     external_ip,
@@ -569,22 +585,25 @@ class RabbitMQConsumer(Thread):
                     drift_time,
                     local,
                     maxload,
-                    time_sent)
-                self.shoal[key] = new_squid
+                    time_sent,
+                    cache_type=data.get('cache_type', 'squid'),
+                    upstream=data.get('upstream', 'both')
+)
+                self.shoal[key] = new_cache
         self.acknowledge_message(basic_deliver.delivery_tag)
 
 
-# SquidVerifier runs on an interval specified in the config file. Each interval it checks each
-# squid saves to the server to make sure it is ready for traffic and is servering files.
-# If a squid isn't responding to requests it is removed from the server, otherwise it is
+# CacheVerifier runs on an interval specified in the config file. Each interval it checks each
+# cache saves to the server to make sure it is ready for traffic and is servering files.
+# If a cache isn't responding to requests it is removed from the server, otherwise it is
 # tagged as verified.
-class SquidVerifier(Thread):
+class CacheVerifier(Thread):
 
-    INTERVAL = config.squid_verify_interval
+    INTERVAL = config.cache_verify_interval
 
     def __init__(self, shoal):
-        """SquidVerifier
-        constructor for SquidVerifier, uses parent Thread constructor as well
+        """CacheVerifier
+        constructor for CacheVerifier, uses parent Thread constructor as well
         """
         Thread.__init__(self)
         self.shoal = shoal
@@ -594,30 +613,30 @@ class SquidVerifier(Thread):
         """
         runs verify
         """
-        INTERVAL = config.squid_verify_interval
+        INTERVAL = config.cache_verify_interval
         self.running = True
         while self.running:
-            squid_key_list = list(web.shoal)
-            for squid_key in squid_key_list:
+            cache_key_list = list(web.shoal)
+            for cache_key in cache_key_list:
                 try:
-                    squid = web.shoal[squid_key]
+                    cache = web.shoal[cache_key]
                     current_time = time()
                     # In an ideal scenario shoal would continuously try to verify those
-                    # that are not verified. However since many squids use old agents
+                    # that are not verified. However since many caches use old agents
                     # its likely that they are not configured correctly and this would
                     # make the verification loop try and verify them over and over when
                     # they can't be. Instead they will be verified once every interval
                     # greatly reducing computing resource requirements for misconfigured agents.
-                    if (current_time - squid.last_verified) >= INTERVAL:
-                        utilities.verify(squid)
-                        squid.last_verified = time()
+                    if (current_time - cache.last_verified) >= INTERVAL:
+                        utilities.verify(cache)
+                        cache.last_verified = time()
                 except:
-                    logger.error("squid key %s has been removed during the loop", squid_key)
+                    logger.error("cache key %s has been removed during the loop", cache_key)
                     continue
             sleep(5)
 
     def stop(self):
         """
-        stops Squid_Verifier
+        stops Cache_Verifier
         """
         self.running = False

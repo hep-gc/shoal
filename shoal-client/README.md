@@ -1,9 +1,9 @@
 # Shoal Client README
 
-shoal-client will configure cvmfs to use the closest squid server to you by contacting the shoal server
+shoal-client will configure cvmfs to use the closest squid or varnish server to you by contacting the shoal server
 and using cvmfs-talk to update the active proxy configuration.
 
-shoal-client is a simple python script typically configured to run with cron to check for new squids 
+shoal-client is a simple python script typically configured to run with cron to check for new varnish and squids 
 periodically. Before setting the cronjob in place make sure that shoal-client is
 configured correctly (see Usage below).
 
@@ -39,7 +39,7 @@ Confirm the that you configured shoal-client as expected by checking the output 
 The output is a list of servers that will be set as proxies using cvmfs-talk. For example you will see 
 something like the following:
 
-    http://squid.example1.com:3128;http://squid.example2.com:3128;http://squid.example3.com:3128;http://squid.example4.com:3128;http://squid.example5.org:3128;DIRECT
+    http://squid.example1.com:3128;http://varnish.example2.com:6081;http://squid.example3.com:3128;http://squid.example4.com:3128;http://varnish.example5.org:6081;DIRECT
 
 If the output looks resonable now set a crontab entry to run shoal say every 30 minutes:
 
@@ -57,11 +57,11 @@ Example output when running `shoal-client --frontier`:
 | --- | --- |
 | -d or --dump | Print closest proxies to terminal for testing or debugging. |
 | -s `hostname` or --server `hostname`| Specifies URL of the desired shoal-server to contact. Takes precedence over the option in config file. |
-| -n `int` or --squids `int` | Specifies the number of squids to retrieve from the shoal-server. |
+| -n `int` or --caches `int` | Specifies the number of varnish and squids to retrieve from the shoal-server. |
 | -f or --frontier | Outputs a string appropriate for use as the frontier proxy enviroment variable instead of using cvmfs-talk to update the active proxy configuration. |
-| -k or --skip-broadcast | Skips waiting to hear from a shoal-agent on the local network and goes directly to the shoal server for a squid. Only reccomended when you know there is no squid//agent on the local network. |
+| -k or --skip-broadcast | Skips waiting to hear from a shoal-agent on the local network and goes directly to the shoal server for a varnish or squid. Only reccomended when you know there is no varnish or squid//agent on the local network. |
 
-Shoal client now uses the cvmfs_talk protocol. To view the list of returned squids issue:
+Shoal client now uses the cvmfs_talk protocol. To view the list of returned varnish and squids issue:
 
      cvmfs_talk proxy info
 

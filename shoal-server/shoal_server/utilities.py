@@ -56,21 +56,22 @@ def get_geolocation(ip):
         logger.exception(exc)
         return None
 
-def get_nearest_squids(ip, count=10):
+def get_nearest_caches(ip, count=10, upstream_type=None):
     """
-        Previously this function returned list of all squids ranked by geographical distance.
-        It makes sence that the returned list should always be of verified or same domain squids.
-        For this reason, this function now simply calls  get_nearest_verified_squids.
+        Previously this function returned list of all caches ranked by geographical distance.
+        It makes sence that the returned list should always be of verified or same domain caches.
+        For this reason, this function now simply calls  get_nearest_verified_caches.
     """
-    return get_nearest_verified_squids(ip, count)
+    return get_nearest_verified_caches(ip, count,upstream_type)
 
-def get_nearest_verified_squids(ip, count=10):
+def get_nearest_verified_caches(ip, count=10, upstream_type= None):
     """
-        Given an IP return a sorted list of nearest squids up to a given count
-        Takes into account the special cases where a squid cannot be verified
+        Given an IP return a sorted list of nearest caches up to a given count
+        Takes into account the special cases where a cache cannot be verified
         and will check the domain of the requester to see if it matches and if
         it does it will serve it to the requester
     """
+    upstream_list = [upstream_type, 'both']
     request_data = get_geolocation(ip)
     if not request_data:
         logger.debug("No geolocation for %s", str(ip))
@@ -84,55 +85,63 @@ def get_nearest_verified_squids(ip, count=10):
         logger.error(exc)
         return None
 
-    nearest_squids = []
+    nearest_caches = []
 
-    # computes the distance between each squid and the given ip address
-    # and sorts them in a list of squids based on distance vs load correlation
+    # computes the distance between each cache and the given ip address
+    # and sorts them in a list of caches based on distance vs load correlation
 
     earthrad = config.earthradius
-    b = config.squid_loadconstant
-    w = config.squid_distloadweight
+    b = config.cache_loadconstant
+    w = config.cache_distloadweight
     maxload = -1
-    squid_key_list = list(web.shoal)
-    for squid_key in squid_key_list:
-        squid = web.shoal[squid_key]
+    cache_key_list = list(web.shoal)
+    for cache_key in cache_key_list:
+        cache = web.shoal[cache_key]
+
+        if upstream_type is not None and cache.upstream.lower() not in upstream_list:
+            continue
+            
+        elif upstream_type is None:
+            cache_type = getattr(cache, 'cache_type', 'squid').lower()
+            if cache_type != 'squid':
+                continue
         try:
-            maxload = squid.maxload
+            maxload = cache.maxload
         except:
             #no maxload is sent from agent, using default value
-            maxload = config.squid_max_load
+            maxload = config.cache_max_load
 
-        # check if squid is verified or if verification is turned off in the config. or
+        # check if cache is verified or if verification is turned off in the config. or
         # if there is no global access but the requester is from the same domain
-        same_domain = checkDomain(ip, squid.public_ip)
-        if ((squid.verified or not config.squid_verification) and squid.global_access) or same_domain:
+        same_domain = checkDomain(ip, cache.public_ip)
+        if ((cache.verified or not config.cache_verification) and cache.global_access) or same_domain:
 
-            s_lat = float(squid.geo_data.location.latitude)
-            s_long = float(squid.geo_data.location.longitude)
+            s_lat = float(cache.geo_data.location.latitude)
+            s_long = float(cache.geo_data.location.longitude)
 
             distance = haversine(r_lat, r_long, s_lat, s_long)
             distancecost = distance/(earthrad * 3.14159265359) * (w)
-            loadcost = ((squid.load/maxload)**b) * (1-w)
-            new_squid = copy.deepcopy(squid)
+            loadcost = ((cache.load/maxload)**b) * (1-w)
+            new_cache = copy.deepcopy(cache)
             if same_domain: 
-                new_squid.local = True
-            nearest_squids.append((new_squid, distancecost+loadcost))
+                new_cache.local = True
+            nearest_caches.append((new_cache, distancecost+loadcost))
 
-    squids = sorted(nearest_squids, key=lambda k: (k[1]))
-    return squids[:count]
+    caches = sorted(nearest_caches, key=lambda k: (k[1]))
+    return caches[:count]
 
-def get_all_squids():
+def get_all_caches():
     """
-        Return a list of all active squids
+        Return a list of all active caches
     """
-    squids = []
+    caches = []
 
-    squid_key_list = list(web.shoal)
-    for squid_key in squid_key_list:
-        squid = web.shoal[squid_key]
-        squids.append(squid)
+    cache_key_list = list(web.shoal)
+    for cache_key in cache_key_list:
+        cache = web.shoal[cache_key]
+        caches.append(cache)
 
-    return squids
+    return caches
 
 def lookupDomain(temp_ip):
     try:
@@ -147,20 +156,20 @@ def lookupDomain(temp_ip):
         logger.error("Could not get the domain of ip %s", temp_ip)
         return None 
 
-def checkDomain(req_ip, squid_ip):
+def checkDomain(req_ip, cache_ip):
     """
     Check if two ips come from the same domain
     """
     try:
         req_domain = lookupDomain(req_ip)
-        squid_domain = lookupDomain(squid_ip)
-        if (req_domain == squid_domain) and squid_domain is not None:
+        cache_domain = lookupDomain(cache_ip)
+        if (req_domain == cache_domain) and cache_domain is not None:
             return True
         else:
             return False
     except Exception as exc:
         logger.error(exc)
-        logger.error("Could not compare the domain for the request ip %s and squid ip %s", req_ip, squid_ip)
+        logger.error("Could not compare the domain for the request ip %s and cache ip %s", req_ip, cache_ip)
         return False
 
 
@@ -198,104 +207,143 @@ def check_geolitecity_need_update():
 
 def generate_wpad(ip):
     """
-        Parses the JSON of nearest squids and provides the data as a wpad
+        Parses the JSON of nearest caches and provides the data as a wpad
     """
-    squids = get_nearest_squids(ip)
-    if squids:
+    caches = get_nearest_caches(ip)
+    if caches:
         proxy_str = ''
-        for squid in squids:
+        for cache in caches:
             try:
-                proxy_str += "PROXY http://{0}:{1};".format(squid[0].hostname, squid[0].squid_port)
+                proxy_str += "PROXY http://{0}:{1};".format(cache[0].hostname, cache[0].cache_port)
             except TypeError:
                 continue
         return proxy_str
     else:
         return None
 
-def verify(squid):
+def verify(cache):
     """
     This function is peridoically run by a daemon thread to
-    reverify that the squids in shoal are active
+    reverify that the caches in shoal are active
     """
 
     # only verify if it is gobally accessable
     try:
-        if squid.allow_verification:
+        if cache.allow_verification:
 
-            if not _is_available(squid):
-                logger.warning("Failed Verification: %s ", str(squid.public_ip or squid.private_ip))
-                squid.verified = False
-                squid.allow_verification = False
+            if not _is_available(cache):
+                logger.warning("Failed Verification: %s ", str(cache.public_ip or cache.private_ip))
+                cache.verified = False
+                cache.allow_verification = False
             else:
-                logger.info("VERIFIED:%s ", str(squid.public_ip or squid.private_ip))
-                logger.warning("Got Verification: %s ", str(squid.public_ip or squid.private_ip))
-                squid.verified = True
-                squid.global_access = True
+                logger.info("VERIFIED:%s ", str(cache.public_ip or cache.private_ip))
+                logger.warning("Got Verification: %s ", str(cache.public_ip or cache.private_ip))
+                cache.verified = True
+                cache.global_access = True
     except TypeError:
-        logger.info("VERIFIED: %s", str(squid.public_ip or squid.private_ip))
-        squid.verified = True
+        logger.info("VERIFIED: %s", str(cache.public_ip or cache.private_ip))
+        cache.verified = True
 
-def _is_available(squid):
+def _is_available(cache):
     """
     Downloads file thru proxy and assert its correctness to verify a given proxy
     A list of paths are tested to see all repos are working, the list can be found in
     config.py as "paths" returns the True if it is verified or False if it cannot be
     """
-    ip = str(squid.public_ip or squid.private_ip)
-    port = str(squid.squid_port)
-    hostname = squid.hostname
-
+    ip = str(cache.public_ip or cache.private_ip)
+    port = str(cache.cache_port)
+    hostname = cache.hostname
+    cache_type = cache.cache_type if hasattr(cache, 'cache_type') else 'squid'
+    upstream = cache.upstream.lower() if hasattr(cache, 'upstream') else 'both'
+    
     paths = config.paths
     proxystring = "http://%s:%s" % (ip, port)
     #set proxy
     proxies = {
         "http":proxystring,
     }
-    badpaths = 0
-    badflags = 0
-    # test the ip with all the urls
-    for targeturl in paths:
-        #if a url checks out testflag set to true, otherwise fails verification at end of loop
-        testflag = False
-        if badpaths < 4 and badflags < 4:
-            try:
-                logger.info("Trying %s", targeturl)
+        
+    try:
+        if cache_type == 'varnish':
+            if upstream == 'cvmfs':
+                targeturl = proxystring + "/cvmfs/oasis.opensciencegrid.org/.cvmfspublished"  
                 repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
                 if repo is None:
                     repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
-                file = requests.get(targeturl, proxies=proxies, timeout=2)
+                file = requests.get(targeturl, timeout=2)
                 f = file.content
                 for line in f.splitlines():
                     if line.startswith(bytes('N', 'utf-8')):
                         if bytes(repo, 'utf-8') in line:
-                            testflag = True
-                    if bytes('ERR_ACCESS_DENIED', 'utf-8') in line:
-                        squid.error = "The squid is configured to prevent external access. Squid is configured for Local Access Only. Cannot verify %s" % (hostname)
-                        logger.error(squid.error)
-                        return False
-                if testflag is False:
-                    badflags = badflags + 1
-                    logger.error(
-                        "%s failed verification on: %s. Currently %s out of %s IPs failing",
-                        ip, targeturl, badflags, len(paths))
-            except:
-                # note that this would catch any RE errors aswell but they are
-                # specified in the config and all fit the pattern.
-                badpaths = badpaths + 1
-                #logging.error(sys.exc_info()[1])
-                logger.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing on testing %s", targeturl, badpaths, len(paths), ip)
-            finally:
-                #Keep going
-                logger.debug("Next...")
+                            return True
+                cache.error = "The cache is configured to prevent external access. Cache is configured for Local Access Only. Cannot verify %s" % (hostname)
+                logger.error(cache.error)
+                return False
+            elif upstream == 'frontier':
+                targeturl = proxystring + "/atlr"
+                file = requests.get(targeturl, headers={"X-frontier-id": "shoal-server-verification", "Cache-Control": "max-age=0"}, timeout=2)
+                if file.status_code == 200:
+                    return True
+                cache.error = "The cache is configured to prevent external access. Cache is configured for Local Access Only. Cannot verify %s" % (hostname)
+                logger.error(cache.error)
+                return False
         else:
-            squid.error = "The squid firewall blocks the external access. Squid is configured for Local Access Only. Cannot verify %s" % (hostname)
-            logger.error("%s repos failing, squid failed on verification. Squid is configured for Local Access Only. Cannot verify %s", badpaths, hostname)
-            return False
+            badpaths = 0
+            badflags = 0
+            # test the ip with all the urls
+            for targeturl in paths:
+                #if a url checks out testflag set to true, otherwise fails verification at end of loop
+                testflag = False
+                if badpaths < 4 and badflags < 4:
+                    try:
+                        logger.info("Trying %s", targeturl)
+                        repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(1)
+                        if repo is None:
+                            repo = re.search("cvmfs\/(.+?)(\/|\.)|opt\/(.+?)(\/|\.)", targeturl).group(3)
+                        file = requests.get(targeturl, proxies=proxies, timeout=2)
+                        f = file.content
+                        for line in f.splitlines():
+                            if line.startswith(bytes('N', 'utf-8')):
+                                if bytes(repo, 'utf-8') in line:
+                                    testflag = True
+                            if bytes('ERR_ACCESS_DENIED', 'utf-8') in line:
+                                cache.error = "The cache is configured to prevent external access. Cache is configured for Local Access Only. Cannot verify %s" % (hostname)
+                                logger.error(cache.error)
+                                return False
+                        if testflag is False:
+                            badflags = badflags + 1
+                            logger.error(
+                                "%s failed verification on: %s. Currently %s out of %s IPs failing",
+                                ip, targeturl, badflags, len(paths))
+                    except:
+                        # note that this would catch any RE errors aswell but they are
+                        # specified in the config and all fit the pattern.
+                        badpaths = badpaths + 1
+                        #logging.error(sys.exc_info()[1])
+                        logger.error("Timeout or proxy error on %s repo. Currently %s out of %s repos failing on testing %s", targeturl, badpaths, len(paths), ip)
+                    finally:
+                        #Keep going
+                        logger.debug("Next...")
+                else:
+                    cache.error = "The cache firewall blocks the external access. Cache is configured for Local Access Only. Cannot verify %s" % (hostname)
+                    logger.error("%s repos failing, cache failed on verification. Cache is configured for Local Access Only. Cannot verify %s", badpaths, hostname)
+                    return False
+        
+            if badpaths < len(paths) and badflags < len(paths):
+                #if all the IP is able to connect to the test URLs, return True
+                return True
+            else:
+                cache.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. Cache is configured for Local Access Only. Cannot verify %s" % (badpaths, len(paths), badflags, len(paths), hostname)
+                logger.error(cache.error)
+                return False  
+                
+    except Exception as exc:
+        logger.error("%s timeout or error: %s" % (ip, str(exc)))
+        cache.error = "Error during verification"
+        return False
+    
+    return True
 
-    if badpaths < len(paths) and badflags < len(paths):
-        #if all the IP is able to connect to the test URLs, return True
-        return True
-    else:
-        squid.error = "%s/%s URLs have proxy errors and %s/%s URLs are unreachable. Squid is configured for Local Access Only. Cannot verify %s" % (badpaths, len(paths), badflags, len(paths), hostname)
-        logger.error(squid.error)
-        return False        
+
+
+

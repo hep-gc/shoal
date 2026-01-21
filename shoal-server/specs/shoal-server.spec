@@ -4,7 +4,7 @@
 %define release 1
 %define __python /usr/bin/python3
 
-Summary: A squid cache publishing and advertising tool designed to work in fast changing environments
+Summary: A squid and varnish cache publishing and advertising tool designed to work in fast changing environments
 Name: %{name}
 Version: %{version}
 Release: %{release}%{?dist}
@@ -17,9 +17,9 @@ Requires: pygeoip >= 0.2.5 pika >= 0.9.11 web.py >= 0.3 python-requests >= 1.1.0
 Url: http://github.com/hep-gc/shoal
 
 %description
-shoal-server maintains the list of running squids. It uses RabbitMQ to handle
-incoming AMQP messages from squid servers. It provides a REST interface
-for programatically retrieving a json formatted ordered list of squids.
+shoal-server maintains the list of running varnish and squids. It uses RabbitMQ to handle
+incoming AMQP messages from varnish and squid servers. It provides a REST interface
+for programatically retrieving a json formatted ordered list of varnish and squids.
 It also provides a web interface for viewing the list.
 
 %prep
