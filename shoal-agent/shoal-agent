@@ -216,6 +216,9 @@ def functionalTest(ip, port):
     return True
 
 def sendEmail():
+    enable_email = config.enable_email
+    if not enable_email:
+        return
     try:
         msg = EmailMessage()
         msg.set_content(config.email_content)
